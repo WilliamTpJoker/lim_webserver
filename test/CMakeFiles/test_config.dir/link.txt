@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/test_config.dir/test_config.cpp.o  -o ../output/test_config ../lib/liblibconet.a -lyaml-cpp -lpthread -ldl 

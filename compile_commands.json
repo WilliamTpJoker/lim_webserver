@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/home/book/Webserver/src",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/config.cpp.o -c /home/book/Webserver/src/config.cpp",
+  "file": "/home/book/Webserver/src/config.cpp"
+},
+{
+  "directory": "/home/book/Webserver/src",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/log.cpp.o -c /home/book/Webserver/src/log.cpp",
+  "file": "/home/book/Webserver/src/log.cpp"
+},
+{
+  "directory": "/home/book/Webserver/src",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/main.cpp.o -c /home/book/Webserver/src/main.cpp",
+  "file": "/home/book/Webserver/src/main.cpp"
+},
+{
+  "directory": "/home/book/Webserver/src",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/util.cpp.o -c /home/book/Webserver/src/util.cpp",
+  "file": "/home/book/Webserver/src/util.cpp"
+},
+{
+  "directory": "/home/book/Webserver/test",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_config.dir/test_config.cpp.o -c /home/book/Webserver/test/test_config.cpp",
+  "file": "/home/book/Webserver/test/test_config.cpp"
+},
+{
+  "directory": "/home/book/Webserver/test",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_log.dir/test_log.cpp.o -c /home/book/Webserver/test/test_log.cpp",
+  "file": "/home/book/Webserver/test/test_log.cpp"
+}
+]
