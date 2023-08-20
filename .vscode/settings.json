@@ -49,7 +49,12 @@
     "complex": "cpp",
     "iomanip": "cpp",
     "cfenv": "cpp",
-    "cinttypes": "cpp"
+    "cinttypes": "cpp",
+    "bitset": "cpp",
+    "regex": "cpp",
+    "set": "cpp",
+    "valarray": "cpp",
+    "unordered_set": "cpp"
   },
   "C_Cpp.errorSquiggles": "enabled",
   "C_Cpp_Runner.cCompilerPath": "gcc",

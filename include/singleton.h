@@ -25,9 +25,9 @@ namespace lim_webserver
     class SingletonPtr final
     {
     public:
-        static std::shared_ptr<T> GetInstance()
+        static Shared_ptr<T> GetInstance()
         {
-            static auto ins = std::make_shared<T>();
+            static auto ins = MakeShared<T>();
             return ins;
         }
     };

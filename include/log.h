@@ -14,17 +14,12 @@
 #include <assert.h>
 #include <unordered_map>
 
-#define LIM_DEFAULT_PATTERN "%d%T[%c] [%p] %f:%l %r %t %F"
+#define LIM_DEFAULT_PATTERN "%d%T[%c][%p]%f:%l %r %t %F%T%m%n"
 
 /**
  * @brief 使用流式方式将设定的日志级别的日志写入到logger
  */
-#define LIM_LOG_LEVEL(logger, level)                                                              \
-    logger->log(level,                                                                            \
-                lim_webserver::MakeShared<lim_webserver::LogEvent>(logger, __FILE__, __LINE__, 0, \
-                                                                   lim_webserver::GetThreadId(),  \
-                                                                   lim_webserver::GetFiberId(),   \
-                                                                   time(0), level))
+#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::MakeShared<lim_webserver::LogEvent>(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), lim_webserver::GetFiberId(), time(0), level)).getSS()
 
 /**
  * @brief 使用流式方式将日志级别debug的日志写入到logger
@@ -95,7 +90,7 @@ namespace lim_webserver
         uint64_t getTime() const { return m_time; }
         LogLevel getLevel() const { return m_level; }
         std::string getContent() const { return m_ss.str(); }
-        const std::stringstream &getSS() const { return m_ss; }
+        std::stringstream &getSS() { return m_ss; }
 
         Shared_ptr<Logger> getLogger() const { return m_logger; }
 
@@ -111,6 +106,26 @@ namespace lim_webserver
         uint64_t m_time;              // 时间戳
         std::stringstream m_ss;       // 内容流
         Shared_ptr<Logger> m_logger;
+    };
+    /**
+     * @brief 日志事件包装器
+     */
+    class LogEventWrap
+    {
+    public:
+        LogEventWrap(Shared_ptr<LogEvent> e)
+            : m_event(e)
+        {
+        }
+
+        ~LogEventWrap();
+
+        Shared_ptr<LogEvent> getEvent() const { return m_event; }
+
+        std::stringstream &getSS() { return m_event->getSS(); }
+
+    private:
+        Shared_ptr<LogEvent> m_event;
     };
     /**
      * @brief 日志格式器

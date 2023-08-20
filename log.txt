@@ -1,3 +1,0 @@
-2023-08-19 18:07:36	[root] [DEBUG] /home/book/Webserver/test/test_log.cpp:13 0 61121 0
-2023-08-19 18:07:36	[root] [DEBUG] /home/book/Webserver/test/test_log.cpp:19 0 61121 0
-2023-08-19 18:07:36	[root] [FATAL] /home/book/Webserver/test/test_log.cpp:20 0 61121 0

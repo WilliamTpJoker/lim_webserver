@@ -21,7 +21,10 @@ namespace lim_webserver
             return std::string("UNKNOWN");
         }
     }
-
+    LogEventWrap::~LogEventWrap()
+    {
+        m_event->getLogger()->log(m_event->getLevel(), m_event);
+    }
     class MessageFormatItem : public LogFormatter::FormatItem
     {
     public:
@@ -268,16 +271,16 @@ namespace lim_webserver
      * @brief LogAppender 子类的成员函数实现
      */
     FileLogAppender::FileLogAppender(const std::string &filename)
-        : m_filename(filename) 
-        {
-            reopen();
-        }
+        : m_filename(filename)
+    {
+        reopen();
+    }
 
     void FileLogAppender::log(LogLevel level, Shared_ptr<LogEvent> event)
     {
         if (level >= m_Level)
         {
-            m_filestream << m_formatter->format(event)<<"\n";
+            m_filestream << m_formatter->format(event);
         }
     }
 
@@ -295,7 +298,7 @@ namespace lim_webserver
     {
         if (level >= m_Level)
         {
-            std::cout << m_formatter->format(event) << std ::endl;
+            std::cout << m_formatter->format(event);
         }
     }
 
