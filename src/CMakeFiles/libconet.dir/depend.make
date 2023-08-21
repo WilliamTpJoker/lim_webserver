@@ -8,6 +8,7 @@ src/CMakeFiles/libconet.dir/config.cpp.o: include/singleton.h
 src/CMakeFiles/libconet.dir/config.cpp.o: include/util.h
 
 src/CMakeFiles/libconet.dir/log.cpp.o: src/log.cpp
+src/CMakeFiles/libconet.dir/log.cpp.o: include/config.h
 src/CMakeFiles/libconet.dir/log.cpp.o: include/log.h
 src/CMakeFiles/libconet.dir/log.cpp.o: include/singleton.h
 src/CMakeFiles/libconet.dir/log.cpp.o: include/util.h

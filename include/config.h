@@ -1,6 +1,7 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <boost/lexical_cast.hpp>
@@ -196,16 +197,16 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::string 到 std::unordered_set<T> 的转换，
+     * LexicalCast 的偏特化，针对 std::string 到 std::set<T> 的转换，
      */
     template <typename T>
-    class LexicalCast<std::string, std::unordered_set<T>>
+    class LexicalCast<std::string, std::set<T>>
     {
     public:
-        std::unordered_set<T> operator()(const std::string &source)
+        std::set<T> operator()(const std::string &source)
         {
             YAML::Node node = YAML::Load(source);
-            std::unordered_set<T> config_set;
+            std::set<T> config_set;
             if (node.IsSequence())
             {
                 std::stringstream ss;
@@ -222,13 +223,13 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::unordered_set<T> 到 std::string 的转换，
+     * LexicalCast 的偏特化，针对 std::set<T> 到 std::string 的转换，
      */
     template <typename T>
-    class LexicalCast<std::unordered_set<T>, std::string>
+    class LexicalCast<std::set<T>, std::string>
     {
     public:
-        std::string operator()(const std::unordered_set<T> &source)
+        std::string operator()(const std::set<T> &source)
         {
             YAML::Node node;
             for (const auto &item : source)
@@ -252,10 +253,25 @@ namespace lim_webserver
     class ConfigVar : public ConfigVarBase
     {
     public:
+        using onChangeCallBack = std::function<void(const T &old_val, const T &new_val)>;
+
         ConfigVar(const std::string &name, const T &default_val, const std::string &description = "")
             : ConfigVarBase(name, description), m_val(default_val) {}
 
         T getValue() const { return m_val; }
+
+        void setValue(const T v)
+        {
+            if (v == m_val)
+            {
+                return;
+            }
+            for (auto &i : m_callback_map)
+            {
+                i.second(m_val, v);
+            }
+            m_val = v;
+        }
 
         std::string toString() override
         {
@@ -274,7 +290,7 @@ namespace lim_webserver
         {
             try
             {
-                m_val = FromStringFN()(val); // 将字符串转换成配置类型
+                setValue(FromStringFN()(val)); // 将字符串转换成配置类型
             }
             catch (const std::exception &e)
             {
@@ -283,8 +299,19 @@ namespace lim_webserver
             return false;
         }
 
+        void addListener(uint64_t key, onChangeCallBack callback) { m_callback_map[key] = callback;}
+        void delListener(uint64_t key) { m_callback_map.erase(key); }
+        void clearListener() {m_callback_map.clear();}
+
+        onChangeCallBack getListener(uint64_t key)
+        {
+            auto it = m_callback_map.find(key);
+            return it == m_callback_map.end() ? nullptr : it->second;
+        }
+
     private:
         T m_val;
+        std::unordered_map<uint64_t, onChangeCallBack> m_callback_map; // 变更回调函数
     };
 
     class Config

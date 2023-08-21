@@ -13,6 +13,8 @@ config.h
 /home/book/Webserver/src/log.cpp
 log.h
 /home/book/Webserver/src/log.h
+config.h
+/home/book/Webserver/src/config.h
 
 /home/book/Webserver/src/main.cpp
 iostream
@@ -31,6 +33,8 @@ util.h
 /home/book/Webserver/src/util.h
 
 include/config.h
+functional
+-
 memory
 -
 sstream

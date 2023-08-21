@@ -9,6 +9,7 @@ src/CMakeFiles/libconet.dir/config.cpp.o
  include/util.h
 src/CMakeFiles/libconet.dir/log.cpp.o
  /home/book/Webserver/src/log.cpp
+ include/config.h
  include/log.h
  include/singleton.h
  include/util.h

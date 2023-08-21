@@ -47,6 +47,7 @@
 #define LIM_LOG_FATAL(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::FATAL)
 
 #define LIM_LOG_ROOT() lim_webserver::LoggerMgr::GetInstance()->getRoot()
+#define LIM_LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace lim_webserver
 {
@@ -61,7 +62,8 @@ namespace lim_webserver
         INFO,    // INFO级别
         WARN,    // WARN级别
         ERROR,   // ERROR级别
-        FATAL    // FATAL级别
+        FATAL,   // FATAL级别
+        OFF      // 关闭级别
     };
     /**
      * @brief 日志级别处理器
@@ -69,7 +71,8 @@ namespace lim_webserver
     class LogLevelHandler
     {
     public:
-        static std::string ToString(LogLevel level); // 将日志级别转换成文本输出
+        static std::string ToString(LogLevel level);        // 将日志级别转换成文本输出
+        static LogLevel FromString(const std::string &val); // 将文本转换成日志级别
     };
 
     /**
@@ -137,6 +140,7 @@ namespace lim_webserver
 
         std::string format(Shared_ptr<LogEvent> event);
         const std::string &getPattern() const { return m_pattern; }
+        bool isError() { return m_error; }
 
     public:
         class FormatItem
@@ -161,38 +165,39 @@ namespace lim_webserver
         virtual ~LogAppender(){};
 
         virtual void log(LogLevel Level, Shared_ptr<LogEvent> event) = 0;
+        virtual std::string toYamlString() = 0;
 
-        void setFormatter(Shared_ptr<LogFormatter> formatter) { m_formatter = std::move(formatter); }
+        void setFormatter(Shared_ptr<LogFormatter> formatter) { m_formatter = formatter; }
         Shared_ptr<LogFormatter> getFormatter() const { return m_formatter; }
 
+        void setLevel(LogLevel level) { m_level = level; }
+        LogLevel getLevel() const { return m_level; }
+        void setLogger(Shared_ptr<Logger> logger) { m_logger = logger; }
+
     protected:
-        LogLevel m_Level;
+        LogLevel m_level;
         Shared_ptr<LogFormatter> m_formatter;
+        Shared_ptr<Logger> m_logger;
     };
     /**
      * @brief 日志器
      */
-    class Logger
+    class Logger : public std::enable_shared_from_this<Logger>
     {
     public:
-        Logger();
-        Logger(const std::string &name, LogLevel level, const std::string &pattern);
+        Logger(const std::string &name = "root");
         // 输出日志
         void log(LogLevel level, const Shared_ptr<LogEvent> &event);
-
-        void debug(Shared_ptr<LogEvent> event); // 写debug级别的日志
-        void info(Shared_ptr<LogEvent> event);  // 写info级别的日志
-        void warn(Shared_ptr<LogEvent> event);  // 写warn级别的日志
-        void error(Shared_ptr<LogEvent> event); // 写error级别的日志
-        void fatal(Shared_ptr<LogEvent> event); // 写fatal级别的日志
 
         // 添加日志输出地
         void addAppender(Shared_ptr<LogAppender> appender);
         // 删除日志输出地
         void delAppender(Shared_ptr<LogAppender> appender);
+        // 清空日志输出地
+        void clearAppender() { m_appenders.clear(); }
 
         // 设置该日志的默认格式器(不会同步到已存在的日志输出地)
-        void setFormatter(const std::string &pattern) { m_formatter = std::make_shared<LogFormatter>(pattern); }
+        void setFormatter(const std::string &pattern) { m_formatter = MakeShared<LogFormatter>(pattern); }
         // 获取该日志的默认格式器
         const Shared_ptr<LogFormatter> &getFormatter() const { return m_formatter; }
 
@@ -206,6 +211,9 @@ namespace lim_webserver
 
         // 获取日志的名称
         const std::string &getName() const { return m_name; }
+
+        // 打印成Yaml格式字符串
+        std::string toYamlString();
 
     private:
         std::string m_name;                             // 日志名称
@@ -221,6 +229,8 @@ namespace lim_webserver
     public:
         void log(LogLevel Level, Shared_ptr<LogEvent> event) override;
 
+        std::string toYamlString();
+
     private:
     };
     /**
@@ -235,6 +245,8 @@ namespace lim_webserver
         // 重新打开文件，打开成功返回true
         bool reopen();
 
+        std::string toYamlString();
+
     private:
         std::string m_filename;
         std::ofstream m_filestream;
@@ -247,6 +259,7 @@ namespace lim_webserver
         // 传入日志器名称来获取日志器,如果不存在,返回全局日志器
         Shared_ptr<Logger> getLogger(const std::string &name);
         Shared_ptr<Logger> getRoot() const { return m_root; }
+        std::string toYamlString();
 
     private:
         std::unordered_map<std::string, Shared_ptr<Logger>> m_logger_map;
