@@ -18,6 +18,12 @@ src/CMakeFiles/libconet.dir/main.cpp.o: include/log.h
 src/CMakeFiles/libconet.dir/main.cpp.o: include/singleton.h
 src/CMakeFiles/libconet.dir/main.cpp.o: include/util.h
 
+src/CMakeFiles/libconet.dir/thread.cpp.o: src/thread.cpp
+src/CMakeFiles/libconet.dir/thread.cpp.o: include/log.h
+src/CMakeFiles/libconet.dir/thread.cpp.o: include/singleton.h
+src/CMakeFiles/libconet.dir/thread.cpp.o: include/thread.h
+src/CMakeFiles/libconet.dir/thread.cpp.o: include/util.h
+
 src/CMakeFiles/libconet.dir/util.cpp.o: src/util.cpp
 src/CMakeFiles/libconet.dir/util.cpp.o: include/util.h
 

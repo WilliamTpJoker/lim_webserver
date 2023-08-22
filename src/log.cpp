@@ -203,7 +203,7 @@ namespace lim_webserver
     thread_local static const std::unordered_map<char, Shared_ptr<LogFormatter::FormatItem>> format_item_map{
 #define FN(CH, ITEM_NAME) \
     {                     \
-        CH, lim_webserver::MakeShared<ITEM_NAME>()}
+        CH, MakeShared<ITEM_NAME>()}
         FN('p', LevelFormatItem),
         FN('f', FileNameFormatItem),
         FN('l', LineFormatItem),

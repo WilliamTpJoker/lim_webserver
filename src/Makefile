@@ -209,6 +209,33 @@ main.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+thread.o: thread.cpp.o
+
+.PHONY : thread.o
+
+# target to build an object file
+thread.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/thread.cpp.o
+.PHONY : thread.cpp.o
+
+thread.i: thread.cpp.i
+
+.PHONY : thread.i
+
+# target to preprocess a source file
+thread.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/thread.cpp.i
+.PHONY : thread.cpp.i
+
+thread.s: thread.cpp.s
+
+.PHONY : thread.s
+
+# target to generate assembly for a file
+thread.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/thread.cpp.s
+.PHONY : thread.cpp.s
+
 util.o: util.cpp.o
 
 .PHONY : util.o
@@ -254,6 +281,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... thread.o"
+	@echo "... thread.i"
+	@echo "... thread.s"
 	@echo "... util.o"
 	@echo "... util.i"
 	@echo "... util.s"

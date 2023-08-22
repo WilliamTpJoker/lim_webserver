@@ -71,8 +71,10 @@ namespace lim_webserver
     class LogLevelHandler
     {
     public:
-        static std::string ToString(LogLevel level);        // 将日志级别转换成文本输出
-        static LogLevel FromString(const std::string &val); // 将文本转换成日志级别
+        // 将日志级别转换成文本输出
+        static std::string ToString(LogLevel level);
+        // 将文本转换成日志级别
+        static LogLevel FromString(const std::string &val);
     };
 
     /**
@@ -85,19 +87,26 @@ namespace lim_webserver
                  uint32_t thread_id, uint32_t fiber_id, uint64_t time, LogLevel level = LogLevel::DEBUG)
             : m_logger(logger), m_file(file), m_line(line), m_elapse(elapse), m_threadId(thread_id), m_fiberId(fiber_id), m_time(time), m_level(level) {}
 
+        // 获得文件路径
         const char *getFile() const { return m_file; }
+        // 获得事件行号
         int32_t getLine() const { return m_line; }
+        // 获得启动时常
         uint32_t getElapse() const { return m_elapse; }
+        // 获得线程id
         uint32_t getThreadId() const { return m_threadId; }
+        // 获得携程id
         uint32_t getFiberId() const { return m_fiberId; }
+        // 获得当前时间
         uint64_t getTime() const { return m_time; }
+        // 获得事件级别
         LogLevel getLevel() const { return m_level; }
+        // 获得事件内容
         std::string getContent() const { return m_ss.str(); }
+        // 获得事件内容流
         std::stringstream &getSS() { return m_ss; }
-
+        // 获得事件对应的日志器
         Shared_ptr<Logger> getLogger() const { return m_logger; }
-
-        void setLevel(LogLevel level) { m_level = level; }
 
     private:
         const char *m_file = nullptr; // 文件名
@@ -108,7 +117,7 @@ namespace lim_webserver
         uint32_t m_fiberId = 0;       // 协程id
         uint64_t m_time;              // 时间戳
         std::stringstream m_ss;       // 内容流
-        Shared_ptr<Logger> m_logger;
+        Shared_ptr<Logger> m_logger;  // 日志器
     };
     /**
      * @brief 日志事件包装器
@@ -117,18 +126,18 @@ namespace lim_webserver
     {
     public:
         LogEventWrap(Shared_ptr<LogEvent> e)
-            : m_event(e)
-        {
-        }
-
+            : m_event(e) {}
+        // 析构时输出日志
         ~LogEventWrap();
 
+        // 获得日志事件
         Shared_ptr<LogEvent> getEvent() const { return m_event; }
 
+        // 获得日志内容流，以便左移操作补充内容
         std::stringstream &getSS() { return m_event->getSS(); }
 
     private:
-        Shared_ptr<LogEvent> m_event;
+        Shared_ptr<LogEvent> m_event; // 事件
     };
     /**
      * @brief 日志格式器
@@ -138,23 +147,31 @@ namespace lim_webserver
     public:
         LogFormatter(const std::string &pattern);
 
+        // 构造字符流
         std::string format(Shared_ptr<LogEvent> event);
+        // 获得格式
         const std::string &getPattern() const { return m_pattern; }
+        // 判断格式是否异常 true：异常
         bool isError() { return m_error; }
 
+        // 格式器初始化
+        void init();
+
     public:
+        // 格式体虚父类
         class FormatItem
         {
         public:
             virtual ~FormatItem() {}
+
+            // 构造字符流
             virtual void format(std::ostream &os, Shared_ptr<LogEvent> event) = 0;
         };
-        void init();
 
     private:
-        std::string m_pattern;
-        std::vector<Shared_ptr<FormatItem>> m_items;
-        bool m_error = false;
+        std::string m_pattern;                       // 格式
+        std::vector<Shared_ptr<FormatItem>> m_items; // 格式体容器
+        bool m_error = false;                        // 异常标志符
     };
     /**
      * @brief 日志输出地
@@ -164,20 +181,28 @@ namespace lim_webserver
     public:
         virtual ~LogAppender(){};
 
+        // 输出日志，必须重构
         virtual void log(LogLevel Level, Shared_ptr<LogEvent> event) = 0;
+        // 输出为Yaml字符串格式，必须重构
         virtual std::string toYamlString() = 0;
 
+        // 设置格式器
         void setFormatter(Shared_ptr<LogFormatter> formatter) { m_formatter = formatter; }
-        Shared_ptr<LogFormatter> getFormatter() const { return m_formatter; }
+        // 获得格式器
+        const Shared_ptr<LogFormatter> &getFormatter() const { return m_formatter; }
 
+        // 设置输出地级别
         void setLevel(LogLevel level) { m_level = level; }
+        // 获得日志器级别
         LogLevel getLevel() const { return m_level; }
+
+        // 设置输出地所属的日志器
         void setLogger(Shared_ptr<Logger> logger) { m_logger = logger; }
 
     protected:
-        LogLevel m_level;
-        Shared_ptr<LogFormatter> m_formatter;
-        Shared_ptr<Logger> m_logger;
+        LogLevel m_level;                     // 级别
+        Shared_ptr<LogFormatter> m_formatter; // 格式器
+        Shared_ptr<Logger> m_logger;          // 日志器
     };
     /**
      * @brief 日志器
@@ -227,8 +252,10 @@ namespace lim_webserver
     class StdoutLogAppender : public LogAppender
     {
     public:
+        // 输出日志到控制台中
         void log(LogLevel Level, Shared_ptr<LogEvent> event) override;
 
+        // 打印成Yaml格式字符串
         std::string toYamlString();
 
     private:
@@ -240,16 +267,19 @@ namespace lim_webserver
     {
     public:
         FileLogAppender(const std::string &filename);
+
+        // 输出日志到文件中
         void log(LogLevel Level, Shared_ptr<LogEvent> event) override;
 
         // 重新打开文件，打开成功返回true
         bool reopen();
 
+        // 打印成Yaml格式字符串
         std::string toYamlString();
 
     private:
-        std::string m_filename;
-        std::ofstream m_filestream;
+        std::string m_filename;     // 文件名
+        std::ofstream m_filestream; // 文件流
     };
 
     class LoggerManager
@@ -258,14 +288,18 @@ namespace lim_webserver
         LoggerManager();
         // 传入日志器名称来获取日志器,如果不存在,返回全局日志器
         Shared_ptr<Logger> getLogger(const std::string &name);
+
+        // 使用全局日志器
         Shared_ptr<Logger> getRoot() const { return m_root; }
+
+        // 打印成Yaml格式字符串
         std::string toYamlString();
 
     private:
-        std::unordered_map<std::string, Shared_ptr<Logger>> m_logger_map;
-        Shared_ptr<Logger> m_root;
+        std::unordered_map<std::string, Shared_ptr<Logger>> m_logger_map; // 日志器容器
+        Shared_ptr<Logger> m_root;                                        // 全局日志器
     };
-    using LoggerMgr = lim_webserver::Singleton<LoggerManager>;
+    using LoggerMgr = Singleton<LoggerManager>;
 }
 
 #endif

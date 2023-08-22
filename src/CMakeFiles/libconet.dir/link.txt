@@ -1,2 +1,2 @@
-/usr/bin/ar qc ../lib/liblibconet.a  CMakeFiles/libconet.dir/config.cpp.o CMakeFiles/libconet.dir/log.cpp.o CMakeFiles/libconet.dir/main.cpp.o CMakeFiles/libconet.dir/util.cpp.o
+/usr/bin/ar qc ../lib/liblibconet.a  CMakeFiles/libconet.dir/config.cpp.o CMakeFiles/libconet.dir/log.cpp.o CMakeFiles/libconet.dir/main.cpp.o CMakeFiles/libconet.dir/thread.cpp.o CMakeFiles/libconet.dir/util.cpp.o
 /usr/bin/ranlib ../lib/liblibconet.a

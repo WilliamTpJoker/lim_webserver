@@ -132,9 +132,33 @@ src/CMakeFiles/libconet.dir/main.cpp.o.provides: src/CMakeFiles/libconet.dir/mai
 src/CMakeFiles/libconet.dir/main.cpp.o.provides.build: src/CMakeFiles/libconet.dir/main.cpp.o
 
 
+src/CMakeFiles/libconet.dir/thread.cpp.o: src/CMakeFiles/libconet.dir/flags.make
+src/CMakeFiles/libconet.dir/thread.cpp.o: src/thread.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/book/Webserver/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/CMakeFiles/libconet.dir/thread.cpp.o"
+	cd /home/book/Webserver/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/libconet.dir/thread.cpp.o -c /home/book/Webserver/src/thread.cpp
+
+src/CMakeFiles/libconet.dir/thread.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/libconet.dir/thread.cpp.i"
+	cd /home/book/Webserver/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/book/Webserver/src/thread.cpp > CMakeFiles/libconet.dir/thread.cpp.i
+
+src/CMakeFiles/libconet.dir/thread.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/libconet.dir/thread.cpp.s"
+	cd /home/book/Webserver/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/book/Webserver/src/thread.cpp -o CMakeFiles/libconet.dir/thread.cpp.s
+
+src/CMakeFiles/libconet.dir/thread.cpp.o.requires:
+
+.PHONY : src/CMakeFiles/libconet.dir/thread.cpp.o.requires
+
+src/CMakeFiles/libconet.dir/thread.cpp.o.provides: src/CMakeFiles/libconet.dir/thread.cpp.o.requires
+	$(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/thread.cpp.o.provides.build
+.PHONY : src/CMakeFiles/libconet.dir/thread.cpp.o.provides
+
+src/CMakeFiles/libconet.dir/thread.cpp.o.provides.build: src/CMakeFiles/libconet.dir/thread.cpp.o
+
+
 src/CMakeFiles/libconet.dir/util.cpp.o: src/CMakeFiles/libconet.dir/flags.make
 src/CMakeFiles/libconet.dir/util.cpp.o: src/util.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/book/Webserver/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/CMakeFiles/libconet.dir/util.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/book/Webserver/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object src/CMakeFiles/libconet.dir/util.cpp.o"
 	cd /home/book/Webserver/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/libconet.dir/util.cpp.o -c /home/book/Webserver/src/util.cpp
 
 src/CMakeFiles/libconet.dir/util.cpp.i: cmake_force
@@ -161,6 +185,7 @@ libconet_OBJECTS = \
 "CMakeFiles/libconet.dir/config.cpp.o" \
 "CMakeFiles/libconet.dir/log.cpp.o" \
 "CMakeFiles/libconet.dir/main.cpp.o" \
+"CMakeFiles/libconet.dir/thread.cpp.o" \
 "CMakeFiles/libconet.dir/util.cpp.o"
 
 # External object files for target libconet
@@ -169,10 +194,11 @@ libconet_EXTERNAL_OBJECTS =
 lib/liblibconet.a: src/CMakeFiles/libconet.dir/config.cpp.o
 lib/liblibconet.a: src/CMakeFiles/libconet.dir/log.cpp.o
 lib/liblibconet.a: src/CMakeFiles/libconet.dir/main.cpp.o
+lib/liblibconet.a: src/CMakeFiles/libconet.dir/thread.cpp.o
 lib/liblibconet.a: src/CMakeFiles/libconet.dir/util.cpp.o
 lib/liblibconet.a: src/CMakeFiles/libconet.dir/build.make
 lib/liblibconet.a: src/CMakeFiles/libconet.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/book/Webserver/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library ../lib/liblibconet.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/book/Webserver/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library ../lib/liblibconet.a"
 	cd /home/book/Webserver/src && $(CMAKE_COMMAND) -P CMakeFiles/libconet.dir/cmake_clean_target.cmake
 	cd /home/book/Webserver/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/libconet.dir/link.txt --verbose=$(VERBOSE)
 
@@ -184,6 +210,7 @@ src/CMakeFiles/libconet.dir/build: lib/liblibconet.a
 src/CMakeFiles/libconet.dir/requires: src/CMakeFiles/libconet.dir/config.cpp.o.requires
 src/CMakeFiles/libconet.dir/requires: src/CMakeFiles/libconet.dir/log.cpp.o.requires
 src/CMakeFiles/libconet.dir/requires: src/CMakeFiles/libconet.dir/main.cpp.o.requires
+src/CMakeFiles/libconet.dir/requires: src/CMakeFiles/libconet.dir/thread.cpp.o.requires
 src/CMakeFiles/libconet.dir/requires: src/CMakeFiles/libconet.dir/util.cpp.o.requires
 
 .PHONY : src/CMakeFiles/libconet.dir/requires
