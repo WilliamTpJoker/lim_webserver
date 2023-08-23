@@ -13,6 +13,7 @@
 #include <functional>
 #include <assert.h>
 #include <unordered_map>
+#include "thread.h"
 
 #define LIM_DEFAULT_PATTERN "%d%T[%c][%p]%f:%l %r %t %F%T%m%n"
 
@@ -65,6 +66,7 @@ namespace lim_webserver
         FATAL,   // FATAL级别
         OFF      // 关闭级别
     };
+
     /**
      * @brief 日志级别处理器
      */
@@ -119,6 +121,7 @@ namespace lim_webserver
         std::stringstream m_ss;       // 内容流
         Shared_ptr<Logger> m_logger;  // 日志器
     };
+
     /**
      * @brief 日志事件包装器
      */
@@ -139,6 +142,7 @@ namespace lim_webserver
     private:
         Shared_ptr<LogEvent> m_event; // 事件
     };
+
     /**
      * @brief 日志格式器
      */
@@ -173,12 +177,14 @@ namespace lim_webserver
         std::vector<Shared_ptr<FormatItem>> m_items; // 格式体容器
         bool m_error = false;                        // 异常标志符
     };
+
     /**
      * @brief 日志输出地
      */
     class LogAppender
     {
     public:
+        using MutexType = Spinlock;
         virtual ~LogAppender(){};
 
         // 输出日志，必须重构
@@ -187,9 +193,10 @@ namespace lim_webserver
         virtual std::string toYamlString() = 0;
 
         // 设置格式器
-        void setFormatter(Shared_ptr<LogFormatter> formatter) { m_formatter = formatter; }
+        void setFormatter(const std::string &pattern);
+        void setFormatter(Shared_ptr<LogFormatter> formatter);
         // 获得格式器
-        const Shared_ptr<LogFormatter> &getFormatter() const { return m_formatter; }
+        const Shared_ptr<LogFormatter> &getFormatter();
 
         // 设置输出地级别
         void setLevel(LogLevel level) { m_level = level; }
@@ -197,13 +204,15 @@ namespace lim_webserver
         LogLevel getLevel() const { return m_level; }
 
         // 设置输出地所属的日志器
-        void setLogger(Shared_ptr<Logger> logger) { m_logger = logger; }
+        void setLogger(Shared_ptr<Logger> logger);
 
     protected:
         LogLevel m_level;                     // 级别
         Shared_ptr<LogFormatter> m_formatter; // 格式器
         Shared_ptr<Logger> m_logger;          // 日志器
+        MutexType m_mutex;                    // 锁
     };
+
     /**
      * @brief 日志器
      */
@@ -219,21 +228,21 @@ namespace lim_webserver
         // 删除日志输出地
         void delAppender(Shared_ptr<LogAppender> appender);
         // 清空日志输出地
-        void clearAppender() { m_appenders.clear(); }
+        void clearAppender();
 
         // 设置该日志的默认格式器(不会同步到已存在的日志输出地)
-        void setFormatter(const std::string &pattern) { m_formatter = MakeShared<LogFormatter>(pattern); }
-        // 获取该日志的默认格式器
-        const Shared_ptr<LogFormatter> &getFormatter() const { return m_formatter; }
+        void setFormatter(const std::string &pattern);
+        void setFormatter(Shared_ptr<LogFormatter> formatter);
 
+        // 获取该日志的默认格式器
+        const Shared_ptr<LogFormatter> &getFormatter();
         // 获取日志的输出格式
-        const std::string &getPattern() const { return m_formatter->getPattern(); }
+        const std::string &getPattern();
 
         // 获取日志的默认级别
         LogLevel getLevel() const { return m_level; }
         // 设置日志的默认级别
         void setLevel(LogLevel val) { m_level = val; }
-
         // 获取日志的名称
         const std::string &getName() const { return m_name; }
 
@@ -245,6 +254,7 @@ namespace lim_webserver
         LogLevel m_level;                               // 日志级别
         std::list<Shared_ptr<LogAppender>> m_appenders; // Appender集合
         Shared_ptr<LogFormatter> m_formatter;           // 日志格式器
+        RWMutex m_mutex;                                // 锁
     };
     /**
      * @brief 输出到控制台Appender
@@ -285,6 +295,7 @@ namespace lim_webserver
     class LoggerManager
     {
     public:
+        using MutexType = Mutex;
         LoggerManager();
         // 传入日志器名称来获取日志器,如果不存在,返回全局日志器
         Shared_ptr<Logger> getLogger(const std::string &name);
@@ -296,6 +307,7 @@ namespace lim_webserver
         std::string toYamlString();
 
     private:
+        MutexType m_mutex;                                                // 锁
         std::unordered_map<std::string, Shared_ptr<Logger>> m_logger_map; // 日志器容器
         Shared_ptr<Logger> m_root;                                        // 全局日志器
     };

@@ -1,13 +1,15 @@
 #ifndef __THREAD_H__
 #define __THREAD_H__
 
-#include <thread>
-#include <functional>
-#include "util.h"
+
+#include "mutex.h"
+#include "log.h"
 
 namespace lim_webserver
 {
-    class Thread
+
+    // 线程
+    class Thread : Noncopyable
     {
     public:
         Thread(std::function<void()> callback, const std::string &name = "UNKNOWN");
@@ -35,6 +37,8 @@ namespace lim_webserver
         std::function<void()> m_callback;
         // 线程名称
         std::string m_name;
+        // 信号量
+        Semaphore m_semaphore;
     };
 
 }

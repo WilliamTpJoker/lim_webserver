@@ -1,5 +1,4 @@
 #include "thread.h"
-#include "log.h"
 
 namespace lim_webserver
 {
@@ -16,6 +15,7 @@ namespace lim_webserver
             LIM_LOG_ERROR(thread_logger) << "pthread_create thread fail, rt=" << rt << " name=" << name;
             throw std::logic_error("pthread_create error");
         }
+        m_semaphore.wait(); //等待初始化 确保各线程的执行顺序
     }
 
     Thread::~Thread()
@@ -56,6 +56,7 @@ namespace lim_webserver
         std::function<void()> callback;
         callback.swap(thread->m_callback);
 
+        thread->m_semaphore.notify(); //初始化完毕，唤醒
         callback();
         return 0;
     }

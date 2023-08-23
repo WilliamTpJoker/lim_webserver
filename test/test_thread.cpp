@@ -1,9 +1,14 @@
-#include "lim.h"
+#include "thread.h"
+#include "log.h"
 #include <unistd.h>
 
 using namespace lim_webserver;
 
 Shared_ptr<Logger> g_logger = LIM_LOG_ROOT();
+RWMutex s_rwmutex;
+Mutex s_mutex;
+
+int count=0;
 
 void func1()
 {
@@ -11,23 +16,43 @@ void func1()
                            << " this.name:" << Thread::GetThis()->getName()
                            << " id:" << GetThreadId()
                            << " this.id:" << Thread::GetThis()->getId();
-    sleep(20);
+    for(int i=0;i<10000000;++i)
+    {
+        // RWMutex::WriteLock lock(s_rwmutex);
+        Mutex::Lock lock(s_mutex);
+        ++count;
+    }
+}
+
+void func2() {
+    while(true) {
+        LIM_LOG_INFO(g_logger) << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    }
+}
+
+void func3() {
+    while(true) {
+        LIM_LOG_INFO(g_logger) << "========================================";
+    }
 }
 
 int main(int argc, char **argv)
 {
-    LIM_LOG_INFO(g_logger) << "thread_test_begin";
+    LIM_LOG_INFO(g_logger) << "thread test begin";
     std::vector<Shared_ptr<Thread>> thread_vec;
-    for (int i=0; i < 5; ++i)
+    for (int i=0; i < 2; ++i)
     {
-        Shared_ptr<Thread> thr = MakeShared<Thread>(&func1, "name_" + std::to_string(i));
+        Shared_ptr<Thread> thr = MakeShared<Thread>(&func2, "name_" + std::to_string(2*i));
+        Shared_ptr<Thread> thr2 = MakeShared<Thread>(&func3, "name_" + std::to_string(2*i+1));
         thread_vec.emplace_back(thr);
+        thread_vec.emplace_back(thr2);
     }
 
-    for (int i=0; i < 5; ++i)
+    for (int i=0; i < thread_vec.size(); ++i)
     {
         thread_vec[i]->join();
     }
-
+    LIM_LOG_INFO(g_logger) << "thread test end";
+    LIM_LOG_INFO(g_logger) << "count="<<count;
     return 0;
 }

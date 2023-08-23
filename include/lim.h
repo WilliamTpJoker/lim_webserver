@@ -6,5 +6,7 @@
 #include "config.h"
 #include "util.h"
 #include "thread.h"
+#include "mutex.h"
+#include "noncopyable.h"
 
 #endif
