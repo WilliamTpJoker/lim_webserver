@@ -36,7 +36,7 @@ void test_lexical()
 
 void test_change_callback()
 {
-    g_int_value_config->addListener(10, [](const int &old_val, const int &new_val)
+    g_int_value_config->addListener([](const int &old_val, const int &new_val)
                                     { std::cout << "old value:" << old_val << ",new value:" << new_val << std::endl; });
 
     LIM_LOG_INFO(LIM_LOG_ROOT()) << g_int_value_config->getValue();
@@ -66,12 +66,25 @@ void test_log()
     LIM_LOG_DEBUG(LIM_LOG_ROOT()) << "hello root";
 }
 
+void test_visit()
+{
+    Config::LoadFromYaml("./config/log.yaml");
+    auto f = [](Shared_ptr<ConfigVarBase> var)
+    {
+        LIM_LOG_INFO(LIM_LOG_ROOT()) << "name=" << var->getName()
+                                     << " description=" << var->getDescription()
+                                     << " value=" << var->toString();
+    };
+    Config::Visit(f);
+}
+
 int main(int argc, char **argv)
 {
     // test_yaml();
     // test_config();
     // test_lexical();
     // test_change_callback();
-    test_log();
+    // test_log();
+    test_visit();
     return 0;
 }

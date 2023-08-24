@@ -5,10 +5,12 @@
 #include <memory>
 #include <sstream>
 #include <boost/lexical_cast.hpp>
-#include "log.h"
 #include <regex>
 #include <yaml-cpp/yaml.h>
 #include <unordered_set>
+
+#include "log.h"
+#include "thread.h"
 
 namespace lim_webserver
 {
@@ -253,23 +255,33 @@ namespace lim_webserver
     class ConfigVar : public ConfigVarBase
     {
     public:
+        using RWMutexType = RWMutex;
         using onChangeCallBack = std::function<void(const T &old_val, const T &new_val)>;
 
         ConfigVar(const std::string &name, const T &default_val, const std::string &description = "")
             : ConfigVarBase(name, description), m_val(default_val) {}
 
-        T getValue() const { return m_val; }
+        T getValue()
+        {
+            RWMutexType::ReadLock lock(m_mutex);
+            return m_val;
+        }
 
         void setValue(const T v)
         {
-            if (v == m_val)
             {
-                return;
+                RWMutexType::ReadLock lock(m_mutex);
+                if (v == m_val)
+                {
+                    return;
+                }
+                for (auto &i : m_callback_map)
+                {
+
+                    i.second(m_val, v);
+                }
             }
-            for (auto &i : m_callback_map)
-            {
-                i.second(m_val, v);
-            }
+            RWMutexType::WriteLock lock(m_mutex);
             m_val = v;
         }
 
@@ -277,11 +289,11 @@ namespace lim_webserver
         {
             try
             {
-                return ToStringFN()(m_val); // 将配置转换成字符串类型
+                return ToStringFN()(getValue()); // 将配置转换成字符串类型
             }
             catch (const std::exception &e)
             {
-                LIM_LOG_ERROR(LIM_LOG_ROOT()) << "ConfigVar::toString exception" << e.what() << " convert:" << typeid(m_val).name() << "to string";
+                LIM_LOG_ERROR(LIM_LOG_ROOT()) << "ConfigVar::toString exception" << e.what() << " convert:" << typeid(getValue()).name() << "to string";
             }
             return "";
         }
@@ -294,17 +306,33 @@ namespace lim_webserver
             }
             catch (const std::exception &e)
             {
-                LIM_LOG_ERROR(LIM_LOG_ROOT()) << "ConfigVar::fromString exception" << e.what() << " convert:string to" << typeid(m_val).name();
+                LIM_LOG_ERROR(LIM_LOG_ROOT()) << "ConfigVar::fromString exception" << e.what() << " convert:string to" << typeid(getValue()).name();
             }
             return false;
         }
 
-        void addListener(uint64_t key, onChangeCallBack callback) { m_callback_map[key] = callback;}
-        void delListener(uint64_t key) { m_callback_map.erase(key); }
-        void clearListener() {m_callback_map.clear();}
+        uint64_t addListener(onChangeCallBack callback)
+        {
+            static uint64_t s_func_id = 0;
+            RWMutexType::WriteLock lock(m_mutex);
+            ++s_func_id;
+            m_callback_map[s_func_id] = callback;
+            return s_func_id;
+        }
+        void delListener(uint64_t key)
+        {
+            RWMutexType::WriteLock lock(m_mutex);
+            m_callback_map.erase(key);
+        }
+        void clearListener()
+        {
+            RWMutexType::WriteLock lock(m_mutex);
+            m_callback_map.clear();
+        }
 
         onChangeCallBack getListener(uint64_t key)
         {
+            RWMutexType::ReadLock lock(m_mutex);
             auto it = m_callback_map.find(key);
             return it == m_callback_map.end() ? nullptr : it->second;
         }
@@ -312,17 +340,18 @@ namespace lim_webserver
     private:
         T m_val;
         std::unordered_map<uint64_t, onChangeCallBack> m_callback_map; // 变更回调函数
+        RWMutexType m_mutex;                                           // 锁
     };
 
     class Config
     {
     public:
         using ConfigVarMap = std::unordered_map<std::string, Shared_ptr<ConfigVarBase>>;
+        using RWMutexType = RWMutex;
 
         template <class T>
         static typename lim_webserver::Shared_ptr<ConfigVar<T>> Lookup(const std::string &name, const T &default_value, const std::string &description = "")
         {
-
             auto tmp = Lookup<T>(name);
             if (tmp)
             {
@@ -334,7 +363,7 @@ namespace lim_webserver
             if (std::regex_match(name, pattern))
             {
                 typename lim_webserver::Shared_ptr<ConfigVar<T>> v = lim_webserver::MakeShared<ConfigVar<T>>(name, default_value, description);
-                GetConfigs()[name] = v;
+                AddConfigVar<T>(name, v);
                 return v;
             }
             else
@@ -347,6 +376,7 @@ namespace lim_webserver
         template <class T>
         static typename lim_webserver::Shared_ptr<ConfigVar<T>> Lookup(const std::string &name)
         {
+            RWMutexType::ReadLock lock(GetMutex());
             auto it = GetConfigs().find(name);
             if (it == GetConfigs().end())
             {
@@ -356,15 +386,31 @@ namespace lim_webserver
         }
         // 从Yaml读取配置
         static void LoadFromYaml(const YAML::Node &yaml_file);
+        static void LoadFromYaml(const std::string &file);
 
         static Shared_ptr<ConfigVarBase> LookupBase(const std::string &name);
+        static void Visit(std::function<void(Shared_ptr<ConfigVarBase>)> callback);
 
     private:
+        template <class T>
+        static void AddConfigVar(const std::string &name, typename lim_webserver::Shared_ptr<ConfigVar<T>> &v)
+        {
+            RWMutexType::WriteLock lock(GetMutex());
+            GetConfigs()[name] = v;
+        }
+
         static ConfigVarMap &GetConfigs()
         {
             static ConfigVarMap s_configs;
             return s_configs;
         }
+
+        static RWMutexType &GetMutex()
+        {
+            static RWMutexType s_mutex;
+            return s_mutex;
+        }
+
         // 将Yaml配置文件解析
         static void analysisYaml(const std::string &prefix, const YAML::Node &node, std::list<std::pair<std::string, const YAML::Node>> &output);
         // 根据正则递归解析

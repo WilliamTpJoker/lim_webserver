@@ -1,1 +1,18 @@
-[2023-08-21 22:28:33] [DEBUG] [/home/book/Webserver/test/test_config.cpp:64]	hello root
+[2023-08-24 16:20:36] [INFO] [/home/book/Webserver/test/test_config.cpp:74]	name=logs description=logs config value=- name: root
+  level: DEBUG
+  formatter: "[%d] [%p] [%f:%l]%T%m%n"
+  appenders:
+    - type: FileLogAppender
+      file: ./log/root_log.txt
+      level: DEBUG
+    - type: StdoutLogAppender
+- name: system
+  level: DEBUG
+  formatter: "[%d] [%p] [%f]%T%m%n"
+  appenders:
+    - type: FileLogAppender
+      file: ./log/system_log.txt
+    - type: StdoutLogAppender
+[2023-08-24 16:20:36] [INFO] [/home/book/Webserver/test/test_config.cpp:74]	name=system.port description=system port value=8088
+[2023-08-24 16:20:36] [INFO] [/home/book/Webserver/test/test_config.cpp:74]	name=system.inc_vec description=system port value=- 1
+- 2

@@ -283,6 +283,8 @@ namespace lim_webserver
 
         // 重新打开文件，打开成功返回true
         bool reopen();
+        // 检测文件是否存在
+        bool fileExist();
 
         // 打印成Yaml格式字符串
         std::string toYamlString();
@@ -295,8 +297,9 @@ namespace lim_webserver
     class LoggerManager
     {
     public:
-        using MutexType = Mutex;
+        using MutexType = Spinlock;
         LoggerManager();
+        
         // 传入日志器名称来获取日志器,如果不存在,返回全局日志器
         Shared_ptr<Logger> getLogger(const std::string &name);
 

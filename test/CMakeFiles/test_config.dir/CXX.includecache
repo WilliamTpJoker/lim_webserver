@@ -23,14 +23,16 @@ sstream
 -
 boost/lexical_cast.hpp
 -
-log.h
-include/log.h
 regex
 -
 yaml-cpp/yaml.h
 -
 unordered_set
 -
+log.h
+include/log.h
+thread.h
+include/thread.h
 
 include/log.h
 util.h

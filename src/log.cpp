@@ -414,6 +414,11 @@ namespace lim_webserver
     {
         if (level >= m_level)
         {
+            if (!fileExist())
+            {
+                std::cout << "file: " << m_filename << " deleted, create new one" << std::endl;
+                reopen();
+            }
             MutexType::Lock lock(m_mutex);
             std::string s;
             if (m_formatter)
@@ -439,6 +444,12 @@ namespace lim_webserver
         }
         m_filestream.open(m_filename);
         return !!m_filestream;
+    }
+
+    bool FileLogAppender::fileExist()
+    {
+        std::ifstream file(m_filename);
+        return file.good();
     }
 
     void StdoutLogAppender::log(LogLevel level, Shared_ptr<LogEvent> event)
@@ -790,7 +801,7 @@ namespace lim_webserver
                 }
             };
 
-            g_log_defines->addListener(0XFF1234, log_listener_func);
+            g_log_defines->addListener(log_listener_func);
         }
     };
 

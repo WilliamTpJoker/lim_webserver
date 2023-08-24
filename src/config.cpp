@@ -42,7 +42,7 @@ namespace lim_webserver
 
         for (auto &i : all_nodes)
         {
-            std::string &key = i.first; //config参数
+            std::string &key = i.first; // config参数
             if (key.empty())
             {
                 continue;
@@ -66,10 +66,28 @@ namespace lim_webserver
         }
     }
 
+    void Config::LoadFromYaml(const std::string &file)
+    {
+        std::cout << "Load yaml config from " << file << std::endl;
+        YAML::Node r = YAML::LoadFile(file);
+        Config::LoadFromYaml(r);
+    }
+
     Shared_ptr<ConfigVarBase> Config::LookupBase(const std::string &name)
     {
+        RWMutexType::ReadLock lock(GetMutex());
         auto it = GetConfigs().find(name);
         return it == GetConfigs().end() ? nullptr : it->second;
+    }
+
+    void Config::Visit(std::function<void(Shared_ptr<ConfigVarBase>)> callback)
+    {
+        RWMutexType::ReadLock lock(GetMutex());
+        ConfigVarMap &m = GetConfigs();
+        for (auto it = m.begin(); it != m.end(); ++it)
+        {
+            callback(it->second);
+        }
     }
 
 }

@@ -1,0 +1,15 @@
+logs:
+  - name: root
+    level: DEBUG
+    formatter: "[%d] [%p] [%f:%l]%T%m%n"
+    appenders:
+      - type: 0
+  - name: system
+    level: DEBUG
+    formatter: "[%d] [%p] [%f]%T%m%n"
+    appenders:
+      - type: 1
+        file: ./log/thread_test.txt
+
+system:
+  port: 8088
