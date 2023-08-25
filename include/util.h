@@ -1,5 +1,5 @@
-#ifndef _UTIL_H_
-#define _UTIL_H_
+#ifndef __LIM_UTIL_H__
+#define __LIM_UTIL_H__
 
 #include <pthread.h>
 #include <unistd.h>
@@ -8,24 +8,37 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <memory>
+#include <vector>
+
+#include "common.h"
 
 namespace lim_webserver
 {
-    // 类智能指针
-    template <class T>
-    using Shared_ptr = std::shared_ptr<T>;
-
-    // 创建智能指针类
-    template <typename T, typename... Args>
-    std::shared_ptr<T> MakeShared(Args &&...args)
-    {
-        return std::make_shared<T>(std::forward<Args>(args)...);
-    }
-
-    // 获得当前线程
+    
+    /** 获取线程的ID */
     pid_t GetThreadId();
-    //获得当前携程
+
+    /** 获取携程的ID */
     uint32_t GetFiberId();
+
+    /**
+     * @brief 收集函数调用栈信息。
+     *
+     * @param bt    用于存储转换后的调用栈信息的向量。
+     * @param size  从调用栈中收集的地址数量。
+     * @param skip  跳过的起始栈帧数目，用于排除不必要的信息。
+     */
+    void BackTrace(std::vector<std::string> &bt, int size, int skip=0);
+
+    /**
+     * @brief 将函数调用栈转换为格式化的字符串表示。
+     *
+     * @param size   从调用栈中收集的地址数量。
+     * @param skip   跳过的起始栈帧数目，用于排除不必要的信息。
+     * @param prefix 每行前缀，通常是输出的日志级别和位置信息。
+     * @return       格式化的字符串，表示调用栈。
+     */
+    std::string BackTraceToString(int size, int skip=0, const std::string &prefix = "");
 }
 
 #endif

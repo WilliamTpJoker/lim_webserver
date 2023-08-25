@@ -121,6 +121,7 @@ clean: src/CMakeFiles/libconet.dir/clean
 # Directory level rules for directory test
 
 # Convenience name for "all" pass in the directory.
+test/all: test/CMakeFiles/test_util.dir/all
 test/all: test/CMakeFiles/test_thread.dir/all
 test/all: test/CMakeFiles/test_config.dir/all
 test/all: test/CMakeFiles/test_log.dir/all
@@ -128,6 +129,7 @@ test/all: test/CMakeFiles/test_log.dir/all
 .PHONY : test/all
 
 # Convenience name for "clean" pass in the directory.
+test/clean: test/CMakeFiles/test_util.dir/clean
 test/clean: test/CMakeFiles/test_thread.dir/clean
 test/clean: test/CMakeFiles/test_config.dir/clean
 test/clean: test/CMakeFiles/test_log.dir/clean
@@ -138,6 +140,43 @@ test/clean: test/CMakeFiles/test_log.dir/clean
 test/preinstall:
 
 .PHONY : test/preinstall
+
+#=============================================================================
+# Target rules for target test/CMakeFiles/test_util.dir
+
+# All Build rule for target.
+test/CMakeFiles/test_util.dir/all: src/CMakeFiles/libconet.dir/all
+	$(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/depend
+	$(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/book/Webserver/CMakeFiles --progress-num=14,15 "Built target test_util"
+.PHONY : test/CMakeFiles/test_util.dir/all
+
+# Include target in all.
+all: test/CMakeFiles/test_util.dir/all
+
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+test/CMakeFiles/test_util.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/book/Webserver/CMakeFiles 9
+	$(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_util.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/book/Webserver/CMakeFiles 0
+.PHONY : test/CMakeFiles/test_util.dir/rule
+
+# Convenience name for target.
+test_util: test/CMakeFiles/test_util.dir/rule
+
+.PHONY : test_util
+
+# clean rule for target.
+test/CMakeFiles/test_util.dir/clean:
+	$(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/clean
+.PHONY : test/CMakeFiles/test_util.dir/clean
+
+# clean rule for target.
+clean: test/CMakeFiles/test_util.dir/clean
+
+.PHONY : clean
 
 #=============================================================================
 # Target rules for target test/CMakeFiles/test_thread.dir

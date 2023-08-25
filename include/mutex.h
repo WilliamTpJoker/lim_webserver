@@ -1,40 +1,70 @@
 #ifndef __LIM_MUTEX_H__
 #define __LIM_MUTEX_H__
 
-#include "noncopyable.h"
 #include <pthread.h>
 #include <thread>
 #include <functional>
 #include <semaphore.h>
 
+#include "noncopyable.h"
+
 namespace lim_webserver
 {
     /**
-     * @brief 信号量
+     * @brief 信号量类
      */
     class Semaphore : Noncopyable
     {
     public:
+        /**
+         * @brief 构造函数
+         *
+         * @param count 信号量初始计数
+         */
         Semaphore(uint32_t count = 0);
+        /**
+         * @brief 析构函数
+         */
         ~Semaphore();
 
+        /**
+         * @brief 等待信号量
+         */
         void wait();
+
+        /**
+         * @brief 释放信号量
+         */
         void notify();
 
     private:
-        sem_t m_semaphore;
+        sem_t m_semaphore; // 信号量实例
     };
 
     /**
-     * @brief 局部锁模板
+     * @brief 局部互斥锁模板
+     *
+     * @tparam T 互斥锁类型
      */
     template <class T>
     class ScopedLock
     {
     public:
+        /**
+         * @brief 构造函数，加锁
+         *
+         * @param mutex 互斥锁实例
+         */
         ScopedLock(T &mutex) : m_mutex(mutex) { lock(); }
+
+        /**
+         * @brief 析构函数，解锁
+         */
         ~ScopedLock() { unlock(); }
 
+        /**
+         * @brief 加锁
+         */
         void lock()
         {
             if (!m_locked)
@@ -44,6 +74,9 @@ namespace lim_webserver
             }
         }
 
+        /**
+         * @brief 解锁
+         */
         void unlock()
         {
             if (m_locked)
@@ -54,20 +87,33 @@ namespace lim_webserver
         }
 
     private:
-        T &m_mutex;
-        bool m_locked;
+        T &m_mutex;    // 互斥锁实例
+        bool m_locked; // 锁标志符
     };
 
     /**
-     * @brief 读锁模板
+     * @brief 读锁模板，用于加读锁
+     *
+     * @tparam T 互斥锁类型
      */
     template <class T>
     class ReadScopedLock
     {
     public:
+        /**
+         * @brief 构造函数，加读锁
+         *
+         * @param mutex 读写锁实例
+         */
         ReadScopedLock(T &mutex) : m_mutex(mutex) { lock(); }
+        /**
+         * @brief 析构函数，解锁
+         */
         ~ReadScopedLock() { unlock(); }
 
+        /**
+         * @brief 加读锁
+         */
         void lock()
         {
             if (!m_locked)
@@ -77,6 +123,9 @@ namespace lim_webserver
             }
         }
 
+        /**
+         * @brief 解锁
+         */
         void unlock()
         {
             if (m_locked)
@@ -87,20 +136,33 @@ namespace lim_webserver
         }
 
     private:
-        T &m_mutex;
-        bool m_locked;
+        T &m_mutex;    // 读写锁实例
+        bool m_locked; // 锁标志符
     };
 
     /**
-     * @brief 写锁模板
+     * @brief 写锁模板，用于加写锁
+     *
+     * @tparam T 互斥锁类型
      */
     template <class T>
     class WriteScopedLock
     {
     public:
+        /**
+         * @brief 构造函数，加写锁
+         *
+         * @param mutex 读写锁实例
+         */
         WriteScopedLock(T &mutex) : m_mutex(mutex) { lock(); }
+        /**
+         * @brief 析构函数，解锁
+         */
         ~WriteScopedLock() { unlock(); }
 
+        /**
+         * @brief 加写锁
+         */
         void lock()
         {
             if (!m_locked)
@@ -110,6 +172,9 @@ namespace lim_webserver
             }
         }
 
+        /**
+         * @brief 解锁
+         */
         void unlock()
         {
             if (m_locked)
@@ -120,8 +185,8 @@ namespace lim_webserver
         }
 
     private:
-        T &m_mutex;
-        bool m_locked;
+        T &m_mutex;    // 读写锁实例
+        bool m_locked; // 锁标志符
     };
 
     /**
@@ -131,14 +196,27 @@ namespace lim_webserver
     {
     public:
         using Lock = ScopedLock<Mutex>;
+
+        /**
+         * @brief 构造函数，初始化互斥锁
+         */
         Mutex() { pthread_mutex_init(&m_mutex, nullptr); }
+        /**
+         * @brief 析构函数，销毁互斥锁
+         */
         ~Mutex() { pthread_mutex_destroy(&m_mutex); }
 
+        /**
+         * @brief 加锁操作
+         */
         void lock() { pthread_mutex_lock(&m_mutex); }
+        /**
+         * @brief 解锁操作
+         */
         void unlock() { pthread_mutex_unlock(&m_mutex); }
 
     private:
-        pthread_mutex_t m_mutex;
+        pthread_mutex_t m_mutex; // 互斥锁
     };
 
     /**
@@ -150,18 +228,30 @@ namespace lim_webserver
         using ReadLock = ReadScopedLock<RWMutex>;
         using WriteLock = WriteScopedLock<RWMutex>;
 
+        /**
+         * @brief 构造函数，初始化读写锁
+         */
         RWMutex() { pthread_rwlock_init(&m_mutex, nullptr); }
+        /**
+         * @brief 析构函数，销毁读写锁
+         */
         ~RWMutex() { pthread_rwlock_destroy(&m_mutex); }
 
-        // 读锁
+        /**
+         * @brief 获取读锁
+         */
         void rdlock() { pthread_rwlock_rdlock(&m_mutex); }
-        // 写锁
+        /**
+         * @brief 获取写锁
+         */
         void wrlock() { pthread_rwlock_wrlock(&m_mutex); }
-        // 解锁
+        /**
+         * @brief 解锁操作
+         */
         void unlock() { pthread_rwlock_unlock(&m_mutex); }
 
     private:
-        pthread_rwlock_t m_mutex;
+        pthread_rwlock_t m_mutex; // 读写锁
     };
 
     /**
@@ -205,13 +295,24 @@ namespace lim_webserver
     class Spinlock : Noncopyable
     {
     public:
-        // 局部锁
         using Lock = ScopedLock<Spinlock>;
 
+        /**
+         * @brief 构造函数，初始化自旋锁
+         */
         Spinlock() { pthread_spin_init(&m_mutex, 0); }
+        /**
+         * @brief 析构函数，销毁自旋锁
+         */
         ~Spinlock() { pthread_spin_destroy(&m_mutex); }
 
+        /**
+         * @brief 加锁操作
+         */
         void lock() { pthread_spin_lock(&m_mutex); }
+        /**
+         * @brief 解锁操作
+         */
         void unlock() { pthread_spin_unlock(&m_mutex); }
 
     private:

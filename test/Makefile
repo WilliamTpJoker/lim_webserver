@@ -114,6 +114,21 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+test/CMakeFiles/test_util.dir/rule:
+	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_util.dir/rule
+.PHONY : test/CMakeFiles/test_util.dir/rule
+
+# Convenience name for target.
+test_util: test/CMakeFiles/test_util.dir/rule
+
+.PHONY : test_util
+
+# fast build rule for target.
+test_util/fast:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/build
+.PHONY : test_util/fast
+
+# Convenience name for target.
 test/CMakeFiles/test_thread.dir/rule:
 	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_thread.dir/rule
 .PHONY : test/CMakeFiles/test_thread.dir/rule
@@ -239,6 +254,33 @@ test_thread.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_thread.dir/build.make test/CMakeFiles/test_thread.dir/test_thread.cpp.s
 .PHONY : test_thread.cpp.s
 
+test_util.o: test_util.cpp.o
+
+.PHONY : test_util.o
+
+# target to build an object file
+test_util.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/test_util.cpp.o
+.PHONY : test_util.cpp.o
+
+test_util.i: test_util.cpp.i
+
+.PHONY : test_util.i
+
+# target to preprocess a source file
+test_util.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/test_util.cpp.i
+.PHONY : test_util.cpp.i
+
+test_util.s: test_util.cpp.s
+
+.PHONY : test_util.s
+
+# target to generate assembly for a file
+test_util.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/test_util.cpp.s
+.PHONY : test_util.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -246,6 +288,7 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
+	@echo "... test_util"
 	@echo "... test_thread"
 	@echo "... test_config"
 	@echo "... edit_cache"
@@ -259,6 +302,9 @@ help:
 	@echo "... test_thread.o"
 	@echo "... test_thread.i"
 	@echo "... test_thread.s"
+	@echo "... test_util.o"
+	@echo "... test_util.i"
+	@echo "... test_util.s"
 .PHONY : help
 
 

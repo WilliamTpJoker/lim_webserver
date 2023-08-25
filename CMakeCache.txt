@@ -196,6 +196,9 @@ lim_webserver_BINARY_DIR:STATIC=/home/book/Webserver
 //Value Computed by CMake
 lim_webserver_SOURCE_DIR:STATIC=/home/book/Webserver
 
+//The directory containing a CMake configuration file for yaml-cpp.
+yaml-cpp_DIR:PATH=/usr/local/lib/cmake/yaml-cpp
+
 
 ########################
 # INTERNAL cache entries

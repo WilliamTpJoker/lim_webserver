@@ -127,6 +127,19 @@ libconet/fast:
 .PHONY : libconet/fast
 
 #=============================================================================
+# Target rules for targets named test_util
+
+# Build rule for target.
+test_util: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_util
+.PHONY : test_util
+
+# fast build rule for target.
+test_util/fast:
+	$(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/build
+.PHONY : test_util/fast
+
+#=============================================================================
 # Target rules for targets named test_thread
 
 # Build rule for target.
@@ -174,6 +187,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... libconet"
+	@echo "... test_util"
 	@echo "... test_thread"
 	@echo "... test_config"
 	@echo "... test_log"

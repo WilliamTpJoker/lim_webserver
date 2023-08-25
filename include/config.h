@@ -1,5 +1,5 @@
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#ifndef __LIM_CONFIG_H__
+#define __LIM_CONFIG_H__
 
 #include <functional>
 #include <memory>

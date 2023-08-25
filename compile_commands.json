@@ -31,6 +31,11 @@
 },
 {
   "directory": "/home/book/Webserver/test",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_util.dir/test_util.cpp.o -c /home/book/Webserver/test/test_util.cpp",
+  "file": "/home/book/Webserver/test/test_util.cpp"
+},
+{
+  "directory": "/home/book/Webserver/test",
   "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_thread.dir/test_thread.cpp.o -c /home/book/Webserver/test/test_thread.cpp",
   "file": "/home/book/Webserver/test/test_thread.cpp"
 },

@@ -1,8 +1,6 @@
-#ifndef _LOG_H_
-#define _LOG_H_
+#ifndef __LIM_LOG_H__
+#define __LIM_LOG_H__
 
-#include "util.h"
-#include "singleton.h"
 #include <string>
 #include <stdint.h>
 #include <list>
@@ -13,48 +11,73 @@
 #include <functional>
 #include <assert.h>
 #include <unordered_map>
+
+#include "util.h"
 #include "thread.h"
+#include "singleton.h"
 
 #define LIM_DEFAULT_PATTERN "%d%T[%c][%p]%f:%l %r %t %F%T%m%n"
 
 /**
- * @brief 使用流式方式将设定的日志级别的日志写入到logger
+ * @brief 使用流式方式将设定的日志级别的日志事件写入到logger
+ *
+ * @param logger 目标日志器
+ * @param level  事件级别
  */
 #define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::MakeShared<lim_webserver::LogEvent>(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), lim_webserver::GetFiberId(), time(0), level)).getSS()
 
 /**
- * @brief 使用流式方式将日志级别debug的日志写入到logger
+ * @brief 使用流式方式将日志级别debug的日志事件写入到logger
+ *
+ * @param logger 目标日志器
  */
 #define LIM_LOG_DEBUG(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::DEBUG)
 
 /**
- * @brief 使用流式方式将日志级别info的日志写入到logger
+ * @brief 使用流式方式将日志级别info的日志事件写入到logger
+ *
+ * @param logger 目标日志器
  */
 #define LIM_LOG_INFO(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::INFO)
 
 /**
- * @brief 使用流式方式将日志级别warn的日志写入到logger
+ * @brief 使用流式方式将日志级别warn的日志事件写入到logger
+ *
+ * @param logger 目标日志器
  */
 #define LIM_LOG_WARN(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::WARN)
 
 /**
- * @brief 使用流式方式将日志级别error的日志写入到logger
+ * @brief 使用流式方式将日志级别error的日志事件写入到logger
+ *
+ * @param logger 目标日志器
  */
 #define LIM_LOG_ERROR(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::ERROR)
 
 /**
- * @brief 使用流式方式将日志级别fatal的日志写入到logger
+ * @brief 使用流式方式将日志级别fatal的日志事件写入到logger
+ *
+ * @param logger 目标日志器
  */
 #define LIM_LOG_FATAL(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::FATAL)
 
+/**
+ * @brief 获取根日志器
+ */
 #define LIM_LOG_ROOT() lim_webserver::LoggerMgr::GetInstance()->getRoot()
+
+/**
+ * @brief 获取对应名字的日志器
+ *
+ * @param name 日志名称
+ */
 #define LIM_LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace lim_webserver
 {
     class Logger;
     /**
-     * @brief 日志级别
+     * @brief 日志级别枚举
      */
     enum class LogLevel
     {
@@ -68,46 +91,102 @@ namespace lim_webserver
     };
 
     /**
-     * @brief 日志级别处理器
+     * @brief 日志级别处理器类
      */
     class LogLevelHandler
     {
     public:
-        // 将日志级别转换成文本输出
+        /**
+         * @brief 将日志级别转换为对应的文本表示
+         */
         static std::string ToString(LogLevel level);
-        // 将文本转换成日志级别
+        /**
+         * @brief 将文本表示的日志级别转换为枚举值
+         */
         static LogLevel FromString(const std::string &val);
     };
 
     /**
-     * @brief 日志事件
+     * @brief 日志事件类
      */
     class LogEvent
     {
     public:
+        /**
+         * @brief 构造函数，用于创建日志事件对象
+         *
+         * @param logger     日志器对象
+         * @param file       源文件名
+         * @param line       行号
+         * @param elapse     程序启动开始到现在的毫秒数
+         * @param thread_id  线程ID
+         * @param fiber_id   协程ID
+         * @param time       时间戳
+         * @param level      日志级别，默认为DEBUG级别
+         */
         LogEvent(Shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse,
                  uint32_t thread_id, uint32_t fiber_id, uint64_t time, LogLevel level = LogLevel::DEBUG)
             : m_logger(logger), m_file(file), m_line(line), m_elapse(elapse), m_threadId(thread_id), m_fiberId(fiber_id), m_time(time), m_level(level) {}
 
-        // 获得文件路径
+        /**
+         * @brief 获取文件路径。
+         *
+         * @return const char* 文件路径。
+         */
         const char *getFile() const { return m_file; }
-        // 获得事件行号
+        /**
+         * @brief 获取日志事件所在的行号。
+         *
+         * @return int32_t 行号。
+         */
         int32_t getLine() const { return m_line; }
-        // 获得启动时常
+        /**
+         * @brief 获取程序从启动到当前时刻的时长，以毫秒为单位。
+         *
+         * @return uint32_t 时长，单位：毫秒。
+         */
         uint32_t getElapse() const { return m_elapse; }
-        // 获得线程id
+        /**
+         * @brief 获取执行该日志事件的线程的ID。
+         *
+         * @return uint32_t 线程ID。
+         */
         uint32_t getThreadId() const { return m_threadId; }
-        // 获得携程id
+        /**
+         * @brief 获取执行该日志事件的协程的ID。
+         *
+         * @return uint32_t 协程ID。
+         */
         uint32_t getFiberId() const { return m_fiberId; }
-        // 获得当前时间
+        /**
+         * @brief 获取日志事件发生的时间戳。
+         *
+         * @return uint64_t 时间戳。
+         */
         uint64_t getTime() const { return m_time; }
-        // 获得事件级别
+        /**
+         * @brief 获取日志事件的级别。
+         *
+         * @return LogLevel 事件级别。
+         */
         LogLevel getLevel() const { return m_level; }
-        // 获得事件内容
+        /**
+         * @brief 获取日志事件的内容。
+         *
+         * @return std::string 日志内容。
+         */
         std::string getContent() const { return m_ss.str(); }
-        // 获得事件内容流
+        /**
+         * @brief 获取用于向日志事件内容中追加文本的内容流。
+         *
+         * @return std::stringstream& 内容流的引用。
+         */
         std::stringstream &getSS() { return m_ss; }
-        // 获得事件对应的日志器
+        /**
+         * @brief 获取与该日志事件关联的日志器。
+         *
+         * @return Shared_ptr<Logger> 日志器的智能指针。
+         */
         Shared_ptr<Logger> getLogger() const { return m_logger; }
 
     private:
@@ -299,7 +378,7 @@ namespace lim_webserver
     public:
         using MutexType = Spinlock;
         LoggerManager();
-        
+
         // 传入日志器名称来获取日志器,如果不存在,返回全局日志器
         Shared_ptr<Logger> getLogger(const std::string &name);
 
