@@ -262,6 +262,8 @@ namespace lim_webserver
      */
     class LogAppender
     {
+        friend class Logger;
+
     public:
         using MutexType = Spinlock;
         virtual ~LogAppender(){};
@@ -282,13 +284,10 @@ namespace lim_webserver
         // 获得日志器级别
         LogLevel getLevel() const { return m_level; }
 
-        // 设置输出地所属的日志器
-        void setLogger(Shared_ptr<Logger> logger);
-
     protected:
         LogLevel m_level;                     // 级别
         Shared_ptr<LogFormatter> m_formatter; // 格式器
-        Shared_ptr<Logger> m_logger;          // 日志器
+        bool m_custom_pattern = false;        // 自定义格式
         MutexType m_mutex;                    // 锁
     };
 
@@ -298,6 +297,7 @@ namespace lim_webserver
     class Logger : public std::enable_shared_from_this<Logger>
     {
     public:
+        using MutexType = Spinlock;
         Logger(const std::string &name = "root");
         // 输出日志
         void log(LogLevel level, const Shared_ptr<LogEvent> &event);
@@ -333,7 +333,7 @@ namespace lim_webserver
         LogLevel m_level;                               // 日志级别
         std::list<Shared_ptr<LogAppender>> m_appenders; // Appender集合
         Shared_ptr<LogFormatter> m_formatter;           // 日志格式器
-        RWMutex m_mutex;                                // 锁
+        MutexType m_mutex;                              // 锁
     };
     /**
      * @brief 输出到控制台Appender

@@ -18,7 +18,7 @@ namespace lim_webserver
     /** 获取线程的ID */
     pid_t GetThreadId();
 
-    /** 获取携程的ID */
+    /** 获取协程的ID */
     uint32_t GetFiberId();
 
     /**

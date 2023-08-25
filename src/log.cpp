@@ -223,32 +223,20 @@ namespace lim_webserver
     {
         MutexType::Lock lock(m_mutex);
         m_formatter = MakeShared<LogFormatter>(pattern);
-        if (m_formatter->isError())
-        {
-            std::cout << "log.name=" << m_logger->getName() << " has appender formatter=" << pattern << " is invalid" << std::endl;
-        }
+        m_custom_pattern = true;
     }
 
     void LogAppender::setFormatter(Shared_ptr<LogFormatter> formatter)
     {
         MutexType::Lock lock(m_mutex);
         m_formatter = formatter;
-        if (m_formatter->isError())
-        {
-            std::cout << "log.name=" << m_logger->getName() << " has appender formatter=" << formatter->getPattern() << " is invalid" << std::endl;
-        }
+        m_custom_pattern = true;
     }
 
     const Shared_ptr<LogFormatter> &LogAppender::getFormatter()
     {
         MutexType::Lock lock(m_mutex);
         return m_formatter;
-    }
-
-    void LogAppender::setLogger(Shared_ptr<Logger> logger)
-    {
-        MutexType::Lock lock(m_mutex);
-        m_logger = logger;
     }
 
     /**
@@ -263,7 +251,7 @@ namespace lim_webserver
 
     std::string Logger::toYamlString()
     {
-        RWMutex::ReadLock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         YAML::Node node;
         node["name"] = m_name;
         if (m_level != LogLevel::UNKNOWN)
@@ -288,7 +276,7 @@ namespace lim_webserver
     {
         if (level >= m_level)
         {
-            RWMutex::ReadLock lock(m_mutex);
+            MutexType::Lock lock(m_mutex);
             // 若该日志没有指定输出地，则默认在root的输出地中进行输出
             if (!m_appenders.empty())
             {
@@ -308,14 +296,18 @@ namespace lim_webserver
      */
     void Logger::addAppender(Shared_ptr<LogAppender> appender)
     {
-        RWMutex::WriteLock lock(m_mutex);
-        appender->setLogger(shared_from_this());
+        MutexType::Lock lock(m_mutex);
+        if (!appender->getFormatter())
+        {
+            MutexType::Lock ll(appender->m_mutex);
+            appender->m_formatter = m_formatter;
+        }
         m_appenders.emplace_back(appender);
     }
 
     void Logger::delAppender(Shared_ptr<LogAppender> appender)
     {
-        RWMutex::WriteLock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it)
         {
             if (*it == appender)
@@ -328,13 +320,13 @@ namespace lim_webserver
 
     void Logger::clearAppender()
     {
-        RWMutex::WriteLock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_appenders.clear();
     }
 
     void Logger::setFormatter(const std::string &pattern)
     {
-        RWMutex::WriteLock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_formatter = MakeShared<LogFormatter>(pattern);
         if (m_formatter->isError())
         {
@@ -344,7 +336,7 @@ namespace lim_webserver
 
     void Logger::setFormatter(Shared_ptr<LogFormatter> formatter)
     {
-        RWMutex::WriteLock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_formatter = formatter;
         if (m_formatter->isError())
         {
@@ -354,13 +346,13 @@ namespace lim_webserver
 
     const Shared_ptr<LogFormatter> &Logger::getFormatter()
     {
-        RWMutex::ReadLock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         return m_formatter;
     }
 
     const std::string &Logger::getPattern()
     {
-        RWMutex::ReadLock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         return m_formatter->getPattern();
     }
 
@@ -376,7 +368,7 @@ namespace lim_webserver
         {
             node["level"] = LogLevelHandler::ToString(m_level);
         }
-        if (m_formatter)
+        if (m_custom_pattern)
         {
             node["formatter"] = m_formatter->getPattern();
         }
@@ -395,7 +387,7 @@ namespace lim_webserver
         {
             node["level"] = LogLevelHandler::ToString(m_level);
         }
-        if (m_formatter)
+        if (m_custom_pattern)
         {
             node["formatter"] = m_formatter->getPattern();
         }
@@ -421,15 +413,7 @@ namespace lim_webserver
             }
             MutexType::Lock lock(m_mutex);
             std::string s;
-            if (m_formatter)
-            {
-                s = m_formatter->format(event);
-            }
-            else
-            {
-                // 重新使用了Logger的getFormatter函数，使用普通锁会在Logger内死锁，则在Logger内使用读写锁，log操作和getFormatter操作都为读操作
-                s = m_logger->getFormatter()->format(event);
-            }
+            s = m_formatter->format(event);
             m_filestream << s;
             m_filestream.flush();
         }
@@ -457,14 +441,7 @@ namespace lim_webserver
         if (level >= m_level)
         {
             MutexType::Lock lock(m_mutex);
-            if (m_formatter)
-            {
-                std::cout << m_formatter->format(event);
-            }
-            else
-            {
-                std::cout << m_logger->getFormatter()->format(event);
-            }
+            std::cout << m_formatter->format(event);
         }
     }
 
@@ -782,7 +759,15 @@ namespace lim_webserver
                         ap->setLevel(a.level);
                         if (!a.formatter.empty())
                         {
-                            ap->setFormatter(a.formatter);
+                            Shared_ptr<LogFormatter> formatter = MakeShared<LogFormatter>(a.formatter);
+                            if (formatter->isError())
+                            {
+                                std::cout << "log.name=" << i.name << " appender type=" << a.type << " formatter=" << a.formatter << " is invalid" << std::endl;
+                            }
+                            else
+                            {
+                                ap->setFormatter(formatter);
+                            }
                         }
                         logger->addAppender(ap);
                     }

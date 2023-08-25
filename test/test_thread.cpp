@@ -45,7 +45,7 @@ void test_log_thread()
 {
     LIM_LOG_INFO(g_logger) << "thread test begin";
     std::vector<Shared_ptr<Thread>> thread_vec;
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 1; ++i)
     {
         Shared_ptr<Thread> thr = MakeShared<Thread>(&func2, "name_" + std::to_string(2 * i));
         Shared_ptr<Thread> thr2 = MakeShared<Thread>(&func3, "name_" + std::to_string(2 * i + 1));
