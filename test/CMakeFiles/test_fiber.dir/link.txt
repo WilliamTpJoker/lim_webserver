@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/test_fiber.dir/test_fiber.cpp.o  -o ../output/test_fiber ../lib/liblibconet.a -lyaml-cpp -lpthread -ldl 

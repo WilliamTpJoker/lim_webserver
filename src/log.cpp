@@ -95,6 +95,17 @@ namespace lim_webserver
         }
     };
 
+    class ThreadNameFormatItem : public LogFormatter::FormatItem
+    {
+    public:
+        ThreadNameFormatItem(const std::string &str = "") {}
+        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        {
+            os << event->getThreadName();
+        }
+    };
+
+
     class FiberIdFormatItem : public LogFormatter::FormatItem
     {
     public:
@@ -192,6 +203,7 @@ namespace lim_webserver
      * %l 输出行号
      * %d 输出日志时间
      * %t 输出线程号
+     * %N 输出线程名
      * %F 输出协程号
      * %m 输出日志消息
      * %n 输出换行
@@ -209,6 +221,7 @@ namespace lim_webserver
         FN('l', LineFormatItem),
         FN('d', DateTimeFormatItem),
         FN('t', ThreadIdFormatItem),
+        FN('N', ThreadNameFormatItem),
         FN('F', FiberIdFormatItem),
         FN('m', MessageFormatItem),
         FN('n', NewLineFormatItem),

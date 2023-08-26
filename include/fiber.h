@@ -10,18 +10,23 @@ namespace lim_webserver
 {
     enum class FiberState
     {
-        INIT, // 初始状态，协程对象已创建但未开始执行
-        HOLD, // 暂停状态，协程执行被暂时挂起
-        EXEC, // 执行状态，协程正在执行中
-        TERM, // 终止状态，协程已执行完成并结束
-        READY // 就绪状态，协程已准备好被调度执行
+        INIT,  // 初始状态，协程对象已创建但未开始执行
+        HOLD,  // 暂停状态，协程执行被暂时挂起
+        EXEC,  // 执行状态，协程正在执行中
+        TERM,  // 终止状态，协程已执行完成并结束
+        READY, // 就绪状态，协程已准备好被调度执行
+        EXCEPT // 异常状态，协程执行中产生异常
     };
 
     class Fiber : public std::enable_shared_from_this<Fiber>
     {
+    private:
+        /**
+         * @brief 私有构造函数，用于创建主Fiber对象。
+         */
+        Fiber();
 
     public:
-        Fiber() = delete;
         /**
          * @brief 构造函数，用于创建Fiber对象。
          * @param callback  协程执行函数。
@@ -47,12 +52,20 @@ namespace lim_webserver
          */
         void swapOut();
 
+        uint64_t getId() { return m_id; }
+
     public:
+        static uint64_t GetFiberId();
         /**
          * @brief 获取当前线程关联的协程对象。
          * @return 协程对象的共享指针。
          */
         static Shared_ptr<Fiber> GetThis();
+        /**
+         * @brief 设置当前线程关联的协程对象。
+         * @param f 协程对象指针
+         */
+        static void SetThis(Fiber *f);
         /**
          * @brief 切换到协程调度中的下一个可执行协程。
          */
@@ -74,12 +87,12 @@ namespace lim_webserver
         static void MainFunc();
 
     private:
-        uint64_t m_id;                    // 协程ID
-        uint32_t m_stacksize;             // 协程栈大小
-        FiberState m_state;               // 协程状态
-        ucontext_t m_context;             // 协程上下文
-        void *m_stack = nullptr;          // 协程栈指针
-        std::function<void()> m_callback; // 协程执行的回调函数
+        uint64_t m_id = 0;                     // 协程ID
+        uint32_t m_stacksize = 0;              // 协程栈大小
+        FiberState m_state = FiberState::INIT; // 协程状态
+        ucontext_t m_context;                  // 协程上下文
+        void *m_stack = nullptr;               // 协程栈指针
+        std::function<void()> m_callback;      // 协程执行的回调函数
     };
 }
 

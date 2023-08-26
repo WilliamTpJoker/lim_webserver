@@ -155,6 +155,33 @@ config.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/config.cpp.s
 .PHONY : config.cpp.s
 
+fiber.o: fiber.cpp.o
+
+.PHONY : fiber.o
+
+# target to build an object file
+fiber.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/fiber.cpp.o
+.PHONY : fiber.cpp.o
+
+fiber.i: fiber.cpp.i
+
+.PHONY : fiber.i
+
+# target to preprocess a source file
+fiber.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/fiber.cpp.i
+.PHONY : fiber.cpp.i
+
+fiber.s: fiber.cpp.s
+
+.PHONY : fiber.s
+
+# target to generate assembly for a file
+fiber.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/fiber.cpp.s
+.PHONY : fiber.cpp.s
+
 log.o: log.cpp.o
 
 .PHONY : log.o
@@ -302,6 +329,9 @@ help:
 	@echo "... config.o"
 	@echo "... config.i"
 	@echo "... config.s"
+	@echo "... fiber.o"
+	@echo "... fiber.i"
+	@echo "... fiber.s"
 	@echo "... log.o"
 	@echo "... log.i"
 	@echo "... log.s"

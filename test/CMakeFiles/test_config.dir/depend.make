@@ -4,6 +4,7 @@
 test/CMakeFiles/test_config.dir/test_config.cpp.o: test/test_config.cpp
 test/CMakeFiles/test_config.dir/test_config.cpp.o: include/common.h
 test/CMakeFiles/test_config.dir/test_config.cpp.o: include/config.h
+test/CMakeFiles/test_config.dir/test_config.cpp.o: include/fiber.h
 test/CMakeFiles/test_config.dir/test_config.cpp.o: include/log.h
 test/CMakeFiles/test_config.dir/test_config.cpp.o: include/mutex.h
 test/CMakeFiles/test_config.dir/test_config.cpp.o: include/noncopyable.h

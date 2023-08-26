@@ -3,6 +3,7 @@
 
 test/CMakeFiles/test_log.dir/test_log.cpp.o: test/test_log.cpp
 test/CMakeFiles/test_log.dir/test_log.cpp.o: include/common.h
+test/CMakeFiles/test_log.dir/test_log.cpp.o: include/fiber.h
 test/CMakeFiles/test_log.dir/test_log.cpp.o: include/log.h
 test/CMakeFiles/test_log.dir/test_log.cpp.o: include/mutex.h
 test/CMakeFiles/test_log.dir/test_log.cpp.o: include/noncopyable.h

@@ -13,7 +13,8 @@ namespace lim_webserver
 
     uint32_t GetFiberId()
     {
-        return 0;
+        // return 0;
+        return Fiber::GetFiberId();
     }
 
     

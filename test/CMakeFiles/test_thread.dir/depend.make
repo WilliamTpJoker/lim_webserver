@@ -4,6 +4,7 @@
 test/CMakeFiles/test_thread.dir/test_thread.cpp.o: test/test_thread.cpp
 test/CMakeFiles/test_thread.dir/test_thread.cpp.o: include/common.h
 test/CMakeFiles/test_thread.dir/test_thread.cpp.o: include/config.h
+test/CMakeFiles/test_thread.dir/test_thread.cpp.o: include/fiber.h
 test/CMakeFiles/test_thread.dir/test_thread.cpp.o: include/log.h
 test/CMakeFiles/test_thread.dir/test_thread.cpp.o: include/mutex.h
 test/CMakeFiles/test_thread.dir/test_thread.cpp.o: include/noncopyable.h

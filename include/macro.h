@@ -9,27 +9,16 @@
 /**
  * @brief 断言宏封装
  */
-#define LIM_ASSERT(x)                                                           \
-    if (!(x))                                                                   \
-    {                                                                           \
-        LIM_LOG_ERROR(LIM_LOG_ROOT()) << "ASSERTION: " #x                       \
-                                      << "\nbacktrace:"                         \
-                                      << lim_webserver::BackTraceToString(100); \
-        assert(x);                                                              \
-    }
-
-/**
- * @brief 断言宏封装
- */
-#define LIM_ASSERT2(x, w)                                                       \
-    if (!(x))                                                                   \
-    {                                                                           \
-        LIM_LOG_ERROR(LIM_LOG_ROOT()) << "ASSERTION: " #x                       \
-                                      << "\n"                                   \
-                                      << w                                      \
-                                      << "\nbacktrace:"                         \
-                                      << lim_webserver::BackTraceToString(100); \
-        assert(x);                                                              \
-    }
+#define LIM_ASSERT(condition, ...)                                                  \
+    do                                                                              \
+    {                                                                               \
+        if (!(condition))                                                           \
+        {                                                                           \
+            LIM_LOG_ERROR(LIM_LOG_ROOT()) << "\nASSERTION: " << #condition << "\t"  \
+                                          << #__VA_ARGS__ << "\nbacktrace:"         \
+                                          << lim_webserver::BackTraceToString(100); \
+            assert(condition);                                                      \
+        }                                                                           \
+    } while (false)
 
 #endif

@@ -16,7 +16,7 @@
 #include "thread.h"
 #include "singleton.h"
 
-#define LIM_DEFAULT_PATTERN "%d%T[%c][%p]%f:%l %r %t %F%T%m%n"
+#define LIM_DEFAULT_PATTERN "%d%T%t %N%T%F%T[%c] [%p] %f:%l%T%m%n"
 
 /**
  * @brief 使用流式方式将设定的日志级别的日志事件写入到logger
@@ -24,7 +24,7 @@
  * @param logger 目标日志器
  * @param level  事件级别
  */
-#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::MakeShared<lim_webserver::LogEvent>(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), lim_webserver::GetFiberId(), time(0), level)).getSS()
+#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::MakeShared<lim_webserver::LogEvent>(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), lim_webserver::GetFiberId(), time(0), level, lim_webserver::Thread::GetThisThreadName())).getSS()
 
 /**
  * @brief 使用流式方式将日志级别debug的日志事件写入到logger
@@ -115,18 +115,20 @@ namespace lim_webserver
         /**
          * @brief 构造函数，用于创建日志事件对象
          *
-         * @param logger     日志器对象
-         * @param file       源文件名
-         * @param line       行号
-         * @param elapse     程序启动开始到现在的毫秒数
-         * @param thread_id  线程ID
-         * @param fiber_id   协程ID
-         * @param time       时间戳
-         * @param level      日志级别，默认为DEBUG级别
+         * @param logger        日志器对象
+         * @param file          源文件名
+         * @param line          行号
+         * @param elapse        程序启动开始到现在的毫秒数
+         * @param thread_id     线程ID
+         * @param fiber_id      协程ID
+         * @param time          时间戳
+         * @param level         日志级别，默认为DEBUG级别
+         * @param thread_name   线程名
          */
-        LogEvent(Shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse,
-                 uint32_t thread_id, uint32_t fiber_id, uint64_t time, LogLevel level = LogLevel::DEBUG)
-            : m_logger(logger), m_file(file), m_line(line), m_elapse(elapse), m_threadId(thread_id), m_fiberId(fiber_id), m_time(time), m_level(level) {}
+        LogEvent(Shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse, uint32_t thread_id,
+                 uint32_t fiber_id, uint64_t time, LogLevel level, std::string thread_name)
+            : m_logger(logger), m_file(file), m_line(line), m_elapse(elapse), m_threadId(thread_id),
+              m_fiberId(fiber_id), m_time(time), m_level(level), m_threadName(thread_name) {}
 
         /**
          * @brief 获取文件路径。
@@ -152,6 +154,12 @@ namespace lim_webserver
          * @return uint32_t 线程ID。
          */
         uint32_t getThreadId() const { return m_threadId; }
+        /**
+         * @brief 获取该日志事件所在的线程名。
+         *
+         * @return std::string 线程名。
+         */
+        const std::string &getThreadName() const { return m_threadName; }
         /**
          * @brief 获取执行该日志事件的协程的ID。
          *
@@ -199,6 +207,7 @@ namespace lim_webserver
         uint64_t m_time;              // 时间戳
         std::stringstream m_ss;       // 内容流
         Shared_ptr<Logger> m_logger;  // 日志器
+        std::string m_threadName;     // 线程名
     };
 
     /**

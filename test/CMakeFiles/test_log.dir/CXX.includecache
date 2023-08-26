@@ -18,6 +18,14 @@ include/common.h
 memory
 -
 
+include/fiber.h
+ucontext.h
+-
+common.h
+include/common.h
+thread.h
+include/thread.h
+
 include/log.h
 string
 -
@@ -87,4 +95,6 @@ vector
 -
 common.h
 include/common.h
+fiber.h
+include/fiber.h
 

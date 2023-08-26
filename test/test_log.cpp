@@ -14,7 +14,9 @@ void test_loggor()
         logger, __FILE__, __LINE__, 0,
         GetThreadId(),
         GetFiberId(),
-        time(0));
+        time(0),
+        LogLevel::DEBUG,
+        Thread::GetThisThreadName());
     logger->log(LogLevel::DEBUG, event);
 
     LIM_LOG_LEVEL(logger, LogLevel::DEBUG) << " test log: support operator<<";

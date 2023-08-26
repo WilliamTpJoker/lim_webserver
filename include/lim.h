@@ -3,7 +3,9 @@
 
 #include "common.h"
 #include "config.h"
+#include "fiber.h"
 #include "log.h"
+#include "macro.h"
 #include "mutex.h"
 #include "noncopyable.h"
 #include "singleton.h"

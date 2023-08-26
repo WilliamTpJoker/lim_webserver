@@ -10,9 +10,7 @@ void test_backtrace()
 
 void test_assert()
 {
-    LIM_ASSERT(false);
-
-    // LIM_ASSERT2(false, "abc");
+    LIM_ASSERT(false,"abc","cde");
 }
 
 int main(int argc, char **argv)
