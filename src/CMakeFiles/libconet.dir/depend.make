@@ -20,6 +20,7 @@ src/CMakeFiles/libconet.dir/fiber.cpp.o: include/log.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/macro.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/mutex.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/noncopyable.h
+src/CMakeFiles/libconet.dir/fiber.cpp.o: include/scheduler.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/singleton.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/thread.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/util.h
@@ -48,6 +49,18 @@ src/CMakeFiles/libconet.dir/main.cpp.o: include/util.h
 src/CMakeFiles/libconet.dir/mutex.cpp.o: src/mutex.cpp
 src/CMakeFiles/libconet.dir/mutex.cpp.o: include/mutex.h
 src/CMakeFiles/libconet.dir/mutex.cpp.o: include/noncopyable.h
+
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: src/scheduler.cpp
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/common.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/fiber.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/log.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/macro.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/mutex.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/noncopyable.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/scheduler.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/singleton.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/thread.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/util.h
 
 src/CMakeFiles/libconet.dir/thread.cpp.o: src/thread.cpp
 src/CMakeFiles/libconet.dir/thread.cpp.o: include/common.h

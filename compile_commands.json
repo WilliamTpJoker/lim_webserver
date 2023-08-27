@@ -26,6 +26,11 @@
 },
 {
   "directory": "/home/book/Webserver/src",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/scheduler.cpp.o -c /home/book/Webserver/src/scheduler.cpp",
+  "file": "/home/book/Webserver/src/scheduler.cpp"
+},
+{
+  "directory": "/home/book/Webserver/src",
   "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/thread.cpp.o -c /home/book/Webserver/src/thread.cpp",
   "file": "/home/book/Webserver/src/thread.cpp"
 },
@@ -48,6 +53,11 @@
   "directory": "/home/book/Webserver/test",
   "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_log.dir/test_log.cpp.o -c /home/book/Webserver/test/test_log.cpp",
   "file": "/home/book/Webserver/test/test_log.cpp"
+},
+{
+  "directory": "/home/book/Webserver/test",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_scheduler.dir/test_scheduler.cpp.o -c /home/book/Webserver/test/test_scheduler.cpp",
+  "file": "/home/book/Webserver/test/test_scheduler.cpp"
 },
 {
   "directory": "/home/book/Webserver/test",

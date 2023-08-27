@@ -31,8 +31,9 @@ namespace lim_webserver
          * @brief 构造函数，用于创建Fiber对象。
          * @param callback  协程执行函数。
          * @param stacksize 协程栈大小，默认为0，表示使用系统默认大小。
+         * @param use_caller 是否使用调用者模式
          */
-        Fiber(std::function<void()> callback, size_t stacksize = 0);
+        Fiber(std::function<void()> callback, size_t stacksize = 0, bool use_caller=false);
         /**
          * @brief 析构函数，释放Fiber对象资源。
          */
@@ -51,10 +52,36 @@ namespace lim_webserver
          * @brief 将协程切换到后台。
          */
         void swapOut();
-
+        /**
+         * @brief 将当前线程切换到执行状态
+         * @pre 执行的为当前线程的主协程
+         */
+        void call();
+        /**
+         * @brief 将协程切换到后台
+         * @pre 执行的为当前线程的主协程
+         */
+        void back();
+        /**
+         * @brief 获取当前协程ID。
+         * @return 协程ID。
+         */
         uint64_t getId() { return m_id; }
+        /**
+         * @brief 获取当前协程状态。
+         * @return 协程状态。
+         */
+        FiberState getState() { return m_state; }
+        /**
+         * @brief 设置协程状态。
+         */
+        void setState(FiberState state) { m_state = state; }
 
     public:
+        /**
+         * @brief 获取当前协程ID。
+         * @return 协程ID。
+         */
         static uint64_t GetFiberId();
         /**
          * @brief 获取当前线程关联的协程对象。
@@ -67,11 +94,11 @@ namespace lim_webserver
          */
         static void SetThis(Fiber *f);
         /**
-         * @brief 切换到协程调度中的下一个可执行协程。
+         * @brief 将当前协程切换至就绪状态并让出 CPU
          */
         static void YieldToReady();
         /**
-         * @brief 切换到协程调度中的等待队列，暂时放弃CPU执行权。
+         * @brief 将当前协程切换至保持状态并让出 CPU
          */
         static void YieldToHold();
 
@@ -85,6 +112,11 @@ namespace lim_webserver
          * @brief 主要工作函数
          */
         static void MainFunc();
+
+        /**
+         * @brief 调用者模式主要工作函数
+         */
+        static void CallerMainFunc();
 
     private:
         uint64_t m_id = 0;                     // 协程ID

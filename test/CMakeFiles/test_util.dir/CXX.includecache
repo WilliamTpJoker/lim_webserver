@@ -59,6 +59,8 @@ mutex.h
 include/mutex.h
 noncopyable.h
 include/noncopyable.h
+scheduler.h
+include/scheduler.h
 singleton.h
 include/singleton.h
 thread.h
@@ -115,6 +117,18 @@ noncopyable.h
 include/noncopyable.h
 
 include/noncopyable.h
+
+include/scheduler.h
+atomic
+-
+macro.h
+include/macro.h
+fiber.h
+include/fiber.h
+mutex.h
+include/mutex.h
+thread.h
+include/thread.h
 
 include/singleton.h
 memory

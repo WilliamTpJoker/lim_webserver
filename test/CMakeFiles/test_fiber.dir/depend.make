@@ -10,6 +10,7 @@ test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/log.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/macro.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/mutex.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/noncopyable.h
+test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/scheduler.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/singleton.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/thread.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/util.h

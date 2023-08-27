@@ -159,6 +159,21 @@ test_log/fast:
 .PHONY : test_log/fast
 
 # Convenience name for target.
+test/CMakeFiles/test_scheduler.dir/rule:
+	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_scheduler.dir/rule
+.PHONY : test/CMakeFiles/test_scheduler.dir/rule
+
+# Convenience name for target.
+test_scheduler: test/CMakeFiles/test_scheduler.dir/rule
+
+.PHONY : test_scheduler
+
+# fast build rule for target.
+test_scheduler/fast:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/build
+.PHONY : test_scheduler/fast
+
+# Convenience name for target.
 test/CMakeFiles/test_thread.dir/rule:
 	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_thread.dir/rule
 .PHONY : test/CMakeFiles/test_thread.dir/rule
@@ -269,6 +284,33 @@ test_log.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_log.dir/build.make test/CMakeFiles/test_log.dir/test_log.cpp.s
 .PHONY : test_log.cpp.s
 
+test_scheduler.o: test_scheduler.cpp.o
+
+.PHONY : test_scheduler.o
+
+# target to build an object file
+test_scheduler.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.o
+.PHONY : test_scheduler.cpp.o
+
+test_scheduler.i: test_scheduler.cpp.i
+
+.PHONY : test_scheduler.i
+
+# target to preprocess a source file
+test_scheduler.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.i
+.PHONY : test_scheduler.cpp.i
+
+test_scheduler.s: test_scheduler.cpp.s
+
+.PHONY : test_scheduler.s
+
+# target to generate assembly for a file
+test_scheduler.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.s
+.PHONY : test_scheduler.cpp.s
+
 test_thread.o: test_thread.cpp.o
 
 .PHONY : test_thread.o
@@ -330,10 +372,11 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
+	@echo "... edit_cache"
 	@echo "... test_fiber"
 	@echo "... test_config"
 	@echo "... test_log"
-	@echo "... edit_cache"
+	@echo "... test_scheduler"
 	@echo "... test_thread"
 	@echo "... test_util"
 	@echo "... test_config.o"
@@ -345,6 +388,9 @@ help:
 	@echo "... test_log.o"
 	@echo "... test_log.i"
 	@echo "... test_log.s"
+	@echo "... test_scheduler.o"
+	@echo "... test_scheduler.i"
+	@echo "... test_scheduler.s"
 	@echo "... test_thread.o"
 	@echo "... test_thread.i"
 	@echo "... test_thread.s"

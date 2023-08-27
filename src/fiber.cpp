@@ -3,6 +3,7 @@
 #include "fiber.h"
 #include "config.h"
 #include "macro.h"
+#include "scheduler.h"
 
 namespace lim_webserver
 {
@@ -38,9 +39,11 @@ namespace lim_webserver
         SetThis(this);
         LIM_ASSERT(!getcontext(&m_context), "getcontext");
         ++s_fiber_count;
+
+        LIM_LOG_DEBUG(g_logger) << "Fiber::Fiber main";
     }
 
-    Fiber::Fiber(std::function<void()> callback, size_t stacksize)
+    Fiber::Fiber(std::function<void()> callback, size_t stacksize, bool use_caller)
         : m_id(++s_fiber_id), m_callback(callback)
     {
         ++s_fiber_count;
@@ -57,7 +60,16 @@ namespace lim_webserver
         m_context.uc_stack.ss_size = m_stacksize;
 
         // 设置上下文入口函数
-        makecontext(&m_context, &Fiber::MainFunc, 0);
+        if (use_caller)
+        {
+            makecontext(&m_context, &Fiber::CallerMainFunc, 0);
+        }
+        else
+        {
+            makecontext(&m_context, &Fiber::MainFunc, 0);
+        }
+
+        LIM_LOG_DEBUG(g_logger) << "Fiber::Fiber id=" << m_id;
     }
 
     Fiber::~Fiber()
@@ -103,10 +115,16 @@ namespace lim_webserver
 
     void Fiber::swapIn()
     {
+        // 将当前协程设置为本次执行的协程
         SetThis(this);
+
+        // 断言当前协程不处于执行状态
         LIM_ASSERT(m_state != FiberState::EXEC);
+        // 将当前协程状态设置为执行状态
         m_state = FiberState::EXEC;
-        if (swapcontext(&t_threadFiber->m_context, &m_context))
+
+        // 使用 swapcontext 切换到新协程的上下文
+        if (swapcontext(&Scheduler::GetMainFiber()->m_context, &m_context))
         {
             LIM_ASSERT(false, "swapcontext");
         }
@@ -114,8 +132,30 @@ namespace lim_webserver
 
     void Fiber::swapOut()
     {
-        SetThis(t_threadFiber.get());
+        // 将当前协程设置为主协程
+        SetThis(Scheduler::GetMainFiber());
 
+        // 使用 swapcontext 切换回主协程的上下文
+        if (swapcontext(&m_context, &Scheduler::GetMainFiber()->m_context))
+        {
+            LIM_ASSERT(false, "swapcontext");
+        }
+    }
+
+    void Fiber::call()
+    {
+        // 将当前协程设置为本次执行的协程
+        SetThis(this);
+        m_state = FiberState::EXEC;
+        if (swapcontext(&t_threadFiber->m_context, &m_context))
+        {
+            LIM_ASSERT(false, "swapcontext");
+        }
+    }
+
+    void Fiber::back()
+    {
+        SetThis(t_threadFiber.get());
         if (swapcontext(&m_context, &t_threadFiber->m_context))
         {
             LIM_ASSERT(false, "swapcontext");
@@ -133,13 +173,16 @@ namespace lim_webserver
 
     Shared_ptr<Fiber> Fiber::GetThis()
     {
+        // 如果当前协程不存在，则创建一个主协程并设置为当前协程
         if (!t_fiber)
         {
             Shared_ptr<Fiber> main_fiber(new Fiber);
+            // 断言协程创建成功
             LIM_ASSERT(t_fiber == main_fiber.get());
+            // 将主协程设置为当前协程
             t_threadFiber = main_fiber;
         }
-
+        // 返回当前协程的 shared_ptr 对象
         return t_fiber->shared_from_this();
     }
 
@@ -151,15 +194,21 @@ namespace lim_webserver
     void Fiber::YieldToReady()
     {
         Shared_ptr<Fiber> cur = GetThis();
+        // 断言当前协程状态为执行状态
         LIM_ASSERT(cur->m_state == FiberState::EXEC);
+        // 将当前协程状态切换至就绪状态
         cur->m_state = FiberState::READY;
+        // 执行协程切换操作以让出 CPU 执行权
         cur->swapOut();
     }
     void Fiber::YieldToHold()
     {
         Shared_ptr<Fiber> cur = GetThis();
+        // 断言当前协程状态为执行状态
         LIM_ASSERT(cur->m_state == FiberState::EXEC);
+        // 将当前协程状态切换至保持状态
         cur->m_state = FiberState::HOLD;
+        // 执行协程切换操作以让出 CPU 执行权
         cur->swapOut();
     }
 
@@ -171,9 +220,11 @@ namespace lim_webserver
     void Fiber::MainFunc()
     {
         Shared_ptr<Fiber> cur = GetThis();
+        // 断言当前协程对象不为空
         LIM_ASSERT(cur);
         try
         {
+            // 执行用户指定的回调函数
             cur->m_callback();
             cur->m_callback = nullptr;
             cur->m_state = FiberState::TERM;
@@ -194,8 +245,42 @@ namespace lim_webserver
         }
 
         auto raw_ptr = cur.get();
+        // 切换协程状态并执行协程切换操作
         cur.reset();
         raw_ptr->swapOut();
+        LIM_ASSERT(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()));
+    }
+    void Fiber::CallerMainFunc()
+    {
+        Shared_ptr<Fiber> cur = GetThis();
+        // 断言当前协程对象不为空
+        LIM_ASSERT(cur);
+        try
+        {
+            // 执行用户指定的回调函数
+            cur->m_callback();
+            cur->m_callback = nullptr;
+            cur->m_state = FiberState::TERM;
+        }
+        catch (const std::exception &e)
+        {
+            cur->m_state = FiberState::EXCEPT;
+            LIM_LOG_ERROR(g_logger) << "Fiber Except: " << e.what() << " fiber_id=" << cur->getId()
+                                    << std::endl
+                                    << BackTraceToString();
+        }
+        catch (...)
+        {
+            cur->m_state = FiberState::EXCEPT;
+            LIM_LOG_ERROR(g_logger) << "Fiber Except: fiber_id=" << cur->getId()
+                                    << std::endl
+                                    << BackTraceToString();
+        }
+
+        auto raw_ptr = cur.get();
+        // 切换协程状态并执行协程切换操作
+        cur.reset();
+        raw_ptr->back();
         LIM_ASSERT(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()));
     }
 }

@@ -166,6 +166,19 @@ test_log/fast:
 .PHONY : test_log/fast
 
 #=============================================================================
+# Target rules for targets named test_scheduler
+
+# Build rule for target.
+test_scheduler: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_scheduler
+.PHONY : test_scheduler
+
+# fast build rule for target.
+test_scheduler/fast:
+	$(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/build
+.PHONY : test_scheduler/fast
+
+#=============================================================================
 # Target rules for targets named test_thread
 
 # Build rule for target.
@@ -203,6 +216,7 @@ help:
 	@echo "... test_fiber"
 	@echo "... test_config"
 	@echo "... test_log"
+	@echo "... test_scheduler"
 	@echo "... test_thread"
 	@echo "... test_util"
 .PHONY : help
