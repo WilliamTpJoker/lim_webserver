@@ -307,7 +307,9 @@ namespace lim_webserver
     {
     public:
         using MutexType = Spinlock;
-        Logger(const std::string &name = "root");
+        Logger(){}
+        Logger(const std::string &name);
+        Logger(const std::string &name, LogLevel level, const std::string &pattern);
         // 输出日志
         void log(LogLevel level, const Shared_ptr<LogEvent> &event);
 
@@ -318,13 +320,11 @@ namespace lim_webserver
         // 清空日志输出地
         void clearAppender();
 
-        // 设置该日志的默认格式器(不会同步到已存在的日志输出地)
+        // 设置该日志的默认格式
         void setFormatter(const std::string &pattern);
-        void setFormatter(Shared_ptr<LogFormatter> formatter);
 
-        // 获取该日志的默认格式器
-        const Shared_ptr<LogFormatter> &getFormatter();
         // 获取日志的输出格式
+        const std::string &getFormatter();
         const std::string &getPattern();
 
         // 获取日志的默认级别
@@ -338,10 +338,10 @@ namespace lim_webserver
         std::string toYamlString();
 
     private:
-        std::string m_name;                             // 日志名称
-        LogLevel m_level;                               // 日志级别
+        std::string m_name = "root";                    // 日志名称
+        LogLevel m_level = LogLevel::DEBUG;             // 日志级别
         std::list<Shared_ptr<LogAppender>> m_appenders; // Appender集合
-        Shared_ptr<LogFormatter> m_formatter;           // 日志格式器
+        std::string m_pattern = LIM_DEFAULT_PATTERN;    // 日志格式
         MutexType m_mutex;                              // 锁
     };
     /**

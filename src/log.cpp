@@ -105,7 +105,6 @@ namespace lim_webserver
         }
     };
 
-
     class FiberIdFormatItem : public LogFormatter::FormatItem
     {
     public:
@@ -257,10 +256,10 @@ namespace lim_webserver
      */
 
     Logger::Logger(const std::string &name)
-        : m_name(name), m_level(LogLevel::DEBUG)
-    {
-        m_formatter = MakeShared<LogFormatter>(LIM_DEFAULT_PATTERN);
-    }
+        : m_name(name) {}
+
+    Logger::Logger(const std::string &name, LogLevel level, const std::string &pattern)
+        : m_name(name), m_level(level), m_pattern(pattern) {}
 
     std::string Logger::toYamlString()
     {
@@ -271,9 +270,9 @@ namespace lim_webserver
         {
             node["level"] = LogLevelHandler::ToString(m_level);
         }
-        if (m_formatter)
+        if (m_pattern != "")
         {
-            node["formatter"] = m_formatter->getPattern();
+            node["formatter"] = getPattern();
         }
 
         for (auto &i : m_appenders)
@@ -312,8 +311,8 @@ namespace lim_webserver
         MutexType::Lock lock(m_mutex);
         if (!appender->getFormatter())
         {
-            MutexType::Lock ll(appender->m_mutex);
-            appender->m_formatter = m_formatter;
+            MutexType::Lock appender_lock(appender->m_mutex);
+            appender->m_formatter = MakeShared<LogFormatter>(m_pattern);
         }
         m_appenders.emplace_back(appender);
     }
@@ -340,33 +339,19 @@ namespace lim_webserver
     void Logger::setFormatter(const std::string &pattern)
     {
         MutexType::Lock lock(m_mutex);
-        m_formatter = MakeShared<LogFormatter>(pattern);
-        if (m_formatter->isError())
-        {
-            std::cout << "log.name=" << m_name << " formatter=" << pattern << " is invalid" << std::endl;
-        }
+        m_pattern = pattern;
     }
 
-    void Logger::setFormatter(Shared_ptr<LogFormatter> formatter)
+    const std::string &Logger::getFormatter()
     {
         MutexType::Lock lock(m_mutex);
-        m_formatter = formatter;
-        if (m_formatter->isError())
-        {
-            std::cout << "log.name=" << m_name << " formatter=" << formatter->getPattern() << " is invalid" << std::endl;
-        }
-    }
-
-    const Shared_ptr<LogFormatter> &Logger::getFormatter()
-    {
-        MutexType::Lock lock(m_mutex);
-        return m_formatter;
+        return m_pattern;
     }
 
     const std::string &Logger::getPattern()
     {
         MutexType::Lock lock(m_mutex);
-        return m_formatter->getPattern();
+        return m_pattern;
     }
 
     /**
