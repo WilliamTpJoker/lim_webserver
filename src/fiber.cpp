@@ -4,13 +4,40 @@
 #include "config.h"
 #include "macro.h"
 #include "scheduler.h"
+#include "mutex.h"
 
 namespace lim_webserver
 {
     static Shared_ptr<Logger> g_logger = LIM_LOG_NAME("system");
 
+    class FiberCount
+    {
+    public:
+        using MutexType = Spinlock;
+        static uint64_t getCount()
+        {
+            MutexType::Lock lock(mutex);
+            return s_fiber_count.load(std::memory_order_relaxed);
+        }
+
+        static void incrementCount()
+        {
+            MutexType::Lock lock(mutex);
+            s_fiber_count.fetch_add(1, std::memory_order_relaxed);
+        }
+
+        static void decrementCount()
+        {
+            MutexType::Lock lock(mutex);
+            s_fiber_count.fetch_sub(1, std::memory_order_relaxed);
+        }
+
+    private:
+        static inline std::atomic<uint64_t> s_fiber_count = {0};
+        static inline MutexType mutex;
+    };
+
     static std::atomic<uint64_t> s_fiber_id{0};
-    static std::atomic<uint64_t> s_fiber_count{0};
 
     static thread_local Fiber *t_fiber = nullptr;
     static thread_local Shared_ptr<Fiber> t_threadFiber = nullptr;
@@ -38,7 +65,7 @@ namespace lim_webserver
         m_state = FiberState::EXEC;
         SetThis(this);
         LIM_ASSERT(!getcontext(&m_context), "getcontext");
-        ++s_fiber_count;
+        FiberCount::incrementCount();
 
         LIM_LOG_DEBUG(g_logger) << "Fiber::Fiber main";
     }
@@ -46,7 +73,7 @@ namespace lim_webserver
     Fiber::Fiber(std::function<void()> callback, size_t stacksize, bool use_caller)
         : m_id(++s_fiber_id), m_callback(callback)
     {
-        ++s_fiber_count;
+        FiberCount::incrementCount();
         // 设置协程栈大小，若指定为空，则调用主协程获取大内存空间
         m_stacksize = stacksize ? stacksize : s_fiber_stack_size->getValue();
 
@@ -74,7 +101,7 @@ namespace lim_webserver
 
     Fiber::~Fiber()
     {
-        --s_fiber_count;
+        FiberCount::decrementCount();
         if (m_stack)
         // 有栈则为运行协程，确认不处于运行状态并释放内存
         {
@@ -93,7 +120,7 @@ namespace lim_webserver
                 SetThis(nullptr);
             }
         }
-        LIM_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id << " total=" << s_fiber_count;
+        LIM_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id << " total_remain=" << FiberCount::getCount();
     }
 
     void Fiber::reset(std::function<void()> callback)
@@ -214,7 +241,7 @@ namespace lim_webserver
 
     uint64_t Fiber::TotalFibers()
     {
-        return s_fiber_count;
+        return FiberCount::getCount();
     }
 
     void Fiber::MainFunc()

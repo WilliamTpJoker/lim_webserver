@@ -130,27 +130,15 @@ namespace lim_webserver
             bool tickle_me = false;
             {
                 MutexType::Lock lock(m_mutex);
-                auto it = m_task_list.begin();
-                while (it != m_task_list.end())
+                if (!m_task_queue.empty())
                 {
-                    if (it->thread != -1 && it->thread != GetThreadId())
-                    {
-                        ++it;
-                        tickle_me = true;
-                        continue;
-                    }
+                    auto it = m_task_queue.begin();
                     LIM_ASSERT(it->fiber || it->callback);
-                    if (it->fiber && it->fiber->getState() == FiberState::EXEC)
-                    {
-                        ++it;
-                        continue;
-                    }
+
                     ft = *it;
                     tickle_me = true;
-                    m_task_list.erase(it);
+                    m_task_queue.erase(it);
                     ++m_activeThreadCount;
-
-                    break;
                 }
             }
             if (tickle_me)
@@ -199,7 +187,7 @@ namespace lim_webserver
     bool Scheduler::onStop()
     {
         MutexType::Lock lock(m_mutex);
-        return m_autoStop && m_stopping && m_task_list.empty() && m_activeThreadCount == 0;
+        return m_autoStop && m_stopping && m_task_queue.empty() && m_activeThreadCount == 0;
     }
 
     void Scheduler::onIdle()

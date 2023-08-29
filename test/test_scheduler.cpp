@@ -26,7 +26,7 @@ void test(int threads, bool use_caller, std::string name)
 
 int main(int argc, char *argv[])
 {
-    // test(3, true, "test");
-    test(3, false, "test");
+    test(3, true, "test");
+    // test(3, false, "test");
     return 0;
 }

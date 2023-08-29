@@ -105,11 +105,11 @@ namespace lim_webserver
         template <class FiberOrCb>
         bool localSchedule(FiberOrCb fc, int thread)
         {
-            bool need_tickle = m_task_list.empty();
+            bool need_tickle = m_task_queue.empty();
             FiberAndThread ft(fc, thread);
             if (ft.fiber || ft.callback)
             {
-                m_task_list.emplace_back(ft);
+                m_task_queue.emplace_back(ft);
             }
             return need_tickle;
         }
@@ -169,7 +169,7 @@ namespace lim_webserver
     private:
         MutexType m_mutex;                             // 互斥锁
         std::vector<Shared_ptr<Thread>> m_thread_list; // 线程池
-        std::list<FiberAndThread> m_task_list;         // 任务列表
+        std::list<FiberAndThread> m_task_queue;         // 任务列表
         std::string m_name;                            // 调度器名称
         Shared_ptr<Fiber> m_rootFiber;                 // 主协程
     };
