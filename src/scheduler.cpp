@@ -65,9 +65,9 @@ namespace lim_webserver
     void Scheduler::stop()
     {
         m_autoStop = true;
+        // 实例化调度器时的参数 use_caller 为 true, 并且指定线程数量为 1 时,说明只有当前一条主线程在执行，简单等待执行结束即可
         if (m_rootFiber && m_threadCount == 0 && (m_rootFiber->getState() == FiberState::TERM || m_rootFiber->getState() == FiberState::INIT))
         {
-            LIM_LOG_INFO(g_logger) << this << " stopped";
             m_stopping = true;
 
             if (onStop())
@@ -106,10 +106,15 @@ namespace lim_webserver
         {
             i->join();
         }
+        LIM_LOG_INFO(g_logger) << this << " stopped";
     }
 
     void Scheduler::tickle()
     {
+        if(!hasIdleThreads())
+        {
+            return;
+        }
         LIM_LOG_DEBUG(g_logger) << "on tickle";
     }
 

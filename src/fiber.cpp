@@ -10,35 +10,7 @@ namespace lim_webserver
 {
     static Shared_ptr<Logger> g_logger = LIM_LOG_NAME("system");
 
-    class FiberCount
-    {
-    public:
-        using MutexType = Mutex;
-        static uint64_t getCount()
-        {
-            MutexType::Lock lock(mutex);
-            return s_fiber_count.load(std::memory_order_relaxed);
-        }
-
-        static uint64_t incrementCount()
-        {
-            MutexType::Lock lock(mutex);
-            s_fiber_count.fetch_add(1, std::memory_order_relaxed);
-            return s_fiber_count.load(std::memory_order_relaxed);
-        }
-
-        static uint64_t decrementCount()
-        {
-            MutexType::Lock lock(mutex);
-            s_fiber_count.fetch_sub(1, std::memory_order_relaxed);
-            return s_fiber_count.load(std::memory_order_relaxed);
-        }
-
-    private:
-        static inline std::atomic<uint64_t> s_fiber_count = {0};
-        static inline MutexType mutex;
-    };
-
+    static std::atomic<uint64_t> s_fiber_count{0};
     static std::atomic<uint64_t> s_fiber_id{0};
 
     static thread_local Fiber *t_fiber = nullptr;
@@ -62,12 +34,33 @@ namespace lim_webserver
 
     using StackAllocator = MallocStackAllocator;
 
+    std::string FiberStateHandler::ToString(FiberState state)
+    {
+        static const std::map<FiberState, std::string> stateMap = {
+            {FiberState::INIT, "INIT"},
+            {FiberState::HOLD, "HOLD"},
+            {FiberState::EXEC, "EXEC"},
+            {FiberState::TERM, "TERM"},
+            {FiberState::READY, "READY"},
+            {FiberState::EXCEPT, "EXCEPT"}};
+
+        auto it = stateMap.find(state);
+        if (it != stateMap.end())
+        {
+            return it->second;
+        }
+        else
+        {
+            return "UNKNOWN";
+        }
+    }
+
     Fiber::Fiber()
     {
         m_state = FiberState::EXEC;
         SetThis(this);
         LIM_ASSERT(!getcontext(&m_context), "getcontext");
-        FiberCount::incrementCount();
+        ++s_fiber_count;
 
         LIM_LOG_DEBUG(g_logger) << "Fiber::Fiber main";
     }
@@ -75,7 +68,7 @@ namespace lim_webserver
     Fiber::Fiber(std::function<void()> callback, size_t stacksize, bool use_caller)
         : m_id(++s_fiber_id), m_callback(callback)
     {
-        FiberCount::incrementCount();
+        ++s_fiber_count;
         // 设置协程栈大小，若指定为空，则调用主协程获取大内存空间
         m_stacksize = stacksize ? stacksize : s_fiber_stack_size->getValue();
 
@@ -121,7 +114,7 @@ namespace lim_webserver
                 SetThis(nullptr);
             }
         }
-        LIM_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id << " total_remain=" << FiberCount::decrementCount();;
+        LIM_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id << " total_remain=" << --s_fiber_count;
     }
 
     void Fiber::reset(std::function<void()> callback)
@@ -242,7 +235,7 @@ namespace lim_webserver
 
     uint64_t Fiber::TotalFibers()
     {
-        return FiberCount::getCount();
+        return s_fiber_count;
     }
 
     void Fiber::MainFunc()
@@ -311,4 +304,5 @@ namespace lim_webserver
         raw_ptr->back();
         LIM_ASSERT(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()));
     }
+
 }

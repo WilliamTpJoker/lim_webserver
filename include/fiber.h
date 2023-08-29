@@ -18,6 +18,12 @@ namespace lim_webserver
         EXCEPT // 异常状态，协程执行中产生异常
     };
 
+    class FiberStateHandler
+    {
+    public:
+        static std::string ToString(FiberState state);
+    };
+
     class Fiber : public std::enable_shared_from_this<Fiber>
     {
     private:
@@ -33,7 +39,7 @@ namespace lim_webserver
          * @param stacksize 协程栈大小，默认为0，表示使用系统默认大小。
          * @param use_caller  是否使用 Scheduler 实例化所在的线程（Scheduler 所在线程也工作）
          */
-        Fiber(std::function<void()> callback, size_t stacksize = 0, bool use_caller=false);
+        Fiber(std::function<void()> callback, size_t stacksize = 0, bool use_caller = false);
         /**
          * @brief 析构函数，释放Fiber对象资源。
          */
