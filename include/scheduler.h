@@ -18,7 +18,7 @@ namespace lim_webserver
         /**
          * @brief 构造函数，创建调度器对象
          * @param threads 线程数量
-         * @param use_caller 是否使用调用者模式(将 Scheduler 实例化所在的线程作为 master fiber)
+         * @param use_caller 是否使用 Scheduler 实例化所在的线程（Scheduler 所在线程也工作）
          * @param name 调度器名称
          */
         Scheduler(size_t threads = 1, bool use_caller = true, const std::string &name = "UNKNOWN");

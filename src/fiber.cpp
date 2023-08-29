@@ -13,23 +13,25 @@ namespace lim_webserver
     class FiberCount
     {
     public:
-        using MutexType = Spinlock;
+        using MutexType = Mutex;
         static uint64_t getCount()
         {
             MutexType::Lock lock(mutex);
             return s_fiber_count.load(std::memory_order_relaxed);
         }
 
-        static void incrementCount()
+        static uint64_t incrementCount()
         {
             MutexType::Lock lock(mutex);
             s_fiber_count.fetch_add(1, std::memory_order_relaxed);
+            return s_fiber_count.load(std::memory_order_relaxed);
         }
 
-        static void decrementCount()
+        static uint64_t decrementCount()
         {
             MutexType::Lock lock(mutex);
             s_fiber_count.fetch_sub(1, std::memory_order_relaxed);
+            return s_fiber_count.load(std::memory_order_relaxed);
         }
 
     private:
@@ -101,7 +103,6 @@ namespace lim_webserver
 
     Fiber::~Fiber()
     {
-        FiberCount::decrementCount();
         if (m_stack)
         // 有栈则为运行协程，确认不处于运行状态并释放内存
         {
@@ -120,7 +121,7 @@ namespace lim_webserver
                 SetThis(nullptr);
             }
         }
-        LIM_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id << " total_remain=" << FiberCount::getCount();
+        LIM_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id << " total_remain=" << FiberCount::decrementCount();;
     }
 
     void Fiber::reset(std::function<void()> callback)
@@ -159,7 +160,7 @@ namespace lim_webserver
 
     void Fiber::swapOut()
     {
-        // 将当前协程设置为主协程
+        // 切换到主协程
         SetThis(Scheduler::GetMainFiber());
 
         // 使用 swapcontext 切换回主协程的上下文
@@ -171,7 +172,7 @@ namespace lim_webserver
 
     void Fiber::call()
     {
-        // 将当前协程设置为本次执行的协程
+        // 切换到本次执行的协程
         SetThis(this);
         m_state = FiberState::EXEC;
         if (swapcontext(&t_threadFiber->m_context, &m_context))

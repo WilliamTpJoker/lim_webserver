@@ -31,7 +31,7 @@ namespace lim_webserver
          * @brief 构造函数，用于创建Fiber对象。
          * @param callback  协程执行函数。
          * @param stacksize 协程栈大小，默认为0，表示使用系统默认大小。
-         * @param use_caller 是否使用调用者模式
+         * @param use_caller  是否使用 Scheduler 实例化所在的线程（Scheduler 所在线程也工作）
          */
         Fiber(std::function<void()> callback, size_t stacksize = 0, bool use_caller=false);
         /**
@@ -49,7 +49,7 @@ namespace lim_webserver
          */
         void swapIn();
         /**
-         * @brief 将协程切换到后台。
+         * @brief 将协程切换到调度器线程的主协程
          */
         void swapOut();
         /**
@@ -58,7 +58,7 @@ namespace lim_webserver
          */
         void call();
         /**
-         * @brief 将协程切换到后台
+         * @brief 将协程切换到对应线程的主协程
          * @pre 执行的为当前线程的主协程
          */
         void back();
