@@ -6,6 +6,13 @@
 #include "common.h"
 #include "thread.h"
 
+#define FiberState_INIT lim_webserver::FiberState::INIT
+#define FiberState_HOLD lim_webserver::FiberState::HOLD
+#define FiberState_EXEC lim_webserver::FiberState::EXEC
+#define FiberState_TERM lim_webserver::FiberState::TERM
+#define FiberState_READY lim_webserver::FiberState::READY
+#define FiberState_EXCEPT lim_webserver::FiberState::EXCEPT
+
 namespace lim_webserver
 {
     enum class FiberState

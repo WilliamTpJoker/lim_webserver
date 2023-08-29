@@ -334,8 +334,10 @@ namespace lim_webserver
         {
             pthread_cond_destroy(&cond);
         }
-
-        void wait(T &mutex, std::function<bool()> condition)
+        /**
+         * @brief 当条件不成立时，则会将该线程置于等待状态
+        */
+        void wait(T &mutex, std::function<bool()> condition=[]{return false;})
         {
             ++waitersCount;
             while (!condition())

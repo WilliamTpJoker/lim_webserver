@@ -64,12 +64,16 @@ namespace lim_webserver
 
     void Scheduler::stop()
     {
-        m_autoStop = true;
+        LIM_LOG_INFO(g_logger) << this << " stopping";
+        {
+            MutexType::Lock lock(m_mutex);
+            m_autoStop = true;
+            m_stopping = true;
+        }
+
         // 实例化调度器时的参数 use_caller 为 true, 并且指定线程数量为 1 时,说明只有当前一条主线程在执行，简单等待执行结束即可
         if (m_rootFiber && m_threadCount == 0 && (m_rootFiber->getState() == FiberState::TERM || m_rootFiber->getState() == FiberState::INIT))
         {
-            m_stopping = true;
-
             if (onStop())
             {
                 return;
@@ -83,25 +87,22 @@ namespace lim_webserver
         {
             LIM_ASSERT(GetThis() != this);
         }
-        m_stopping = true;
-        for (size_t i = 0; i < m_threadCount; ++i)
-        {
-            tickle();
-        }
+
+        m_condition.notify_all();
+        // 调用者线程析构
         if (m_rootFiber)
         {
-            tickle();
             if (!onStop())
             {
                 m_rootFiber->call();
             }
         }
+        // 非调用者线程析构
         std::vector<Shared_ptr<Thread>> thread_list;
         {
             MutexType::Lock lock(m_mutex);
             thread_list.swap(m_thread_list);
         }
-
         for (auto &i : thread_list)
         {
             i->join();
@@ -111,10 +112,6 @@ namespace lim_webserver
 
     void Scheduler::tickle()
     {
-        if(!hasIdleThreads())
-        {
-            return;
-        }
         LIM_LOG_DEBUG(g_logger) << "on tickle";
     }
 
@@ -126,29 +123,24 @@ namespace lim_webserver
         {
             t_fiber = Fiber::GetThis().get();
         }
-        Shared_ptr<Fiber> idle_fiber = MakeShared<Fiber>([this]()
-                                                         { this->onIdle(); });
         FiberAndThread ft;
         while (true)
         {
             ft.reset();
-            bool tickle_me = false;
             {
                 MutexType::Lock lock(m_mutex);
-                if (!m_task_queue.empty())
+                m_condition.wait(m_mutex, [this]
+                                 { return !m_task_queue.empty() || m_stopping; });
+                if (m_stopping && m_task_queue.empty())
                 {
-                    auto it = m_task_queue.begin();
-                    LIM_ASSERT(it->fiber || it->callback);
-
-                    ft = *it;
-                    tickle_me = true;
-                    m_task_queue.erase(it);
-                    ++m_activeThreadCount;
+                    break;
                 }
-            }
-            if (tickle_me)
-            {
-                tickle();
+                auto it = m_task_queue.begin();
+                LIM_ASSERT(it->fiber || it->callback);
+
+                ft = *it;
+                m_task_queue.erase(it);
+                ++m_activeThreadCount;
             }
             // 如果是 callback 任务，为其创建 fiber
             if (ft.callback)
@@ -171,21 +163,6 @@ namespace lim_webserver
                 }
                 ft.reset();
             }
-            else
-            {
-                if (idle_fiber->getState() == FiberState::TERM)
-                {
-                    LIM_LOG_INFO(g_logger) << "idle fiber term";
-                    break;
-                }
-                ++m_idleThreadCount;
-                idle_fiber->swapIn();
-                --m_idleThreadCount;
-                if (idle_fiber->getState() != FiberState::TERM && idle_fiber->getState() != FiberState::EXCEPT)
-                {
-                    idle_fiber->setState(FiberState::HOLD);
-                }
-            }
         }
     }
 
@@ -193,15 +170,6 @@ namespace lim_webserver
     {
         MutexType::Lock lock(m_mutex);
         return m_autoStop && m_stopping && m_task_queue.empty() && m_activeThreadCount == 0;
-    }
-
-    void Scheduler::onIdle()
-    {
-        LIM_LOG_INFO(g_logger) << "idle";
-        while (!onStop())
-        {
-            Fiber::YieldToHold();
-        }
     }
 
     Scheduler *Scheduler::GetThis()

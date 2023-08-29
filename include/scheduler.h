@@ -57,7 +57,7 @@ namespace lim_webserver
             }
             if (need_tickle)
             {
-                tickle();
+                m_condition.notify_one();
             }
         }
 
@@ -81,7 +81,7 @@ namespace lim_webserver
             }
             if (need_tickle)
             {
-                tickle();
+                m_condition.notify_one();
             }
         }
 
@@ -92,9 +92,6 @@ namespace lim_webserver
         virtual void tickle();
         void run();
         virtual bool onStop();
-        virtual void onIdle();
-
-        bool hasIdleThreads() {return m_idleThreadCount>0;}
 
     private:
         /**
@@ -163,7 +160,6 @@ namespace lim_webserver
         std::vector<int> m_threadIds;                  // 存储已创建的工作线程的线程ID
         size_t m_threadCount = 0;                      // 工作线程数量
         std::atomic<size_t> m_activeThreadCount = {0}; // 原子计数器，表示当前活动中的工作线程数量
-        std::atomic<size_t> m_idleThreadCount = {0};   // 原子计数器，表示当前空闲中的工作线程数量
         bool m_stopping = true;                        // 标志变量，表示调度器是否处于停止状态
         bool m_autoStop = false;                       // 标志变量，表示是否在所有协程执行完毕后自动停止调度器
         int m_rootThread = 0;                          // 根协程所在的线程ID
@@ -174,6 +170,7 @@ namespace lim_webserver
         std::list<FiberAndThread> m_task_queue;        // 任务列表
         std::string m_name;                            // 调度器名称
         Shared_ptr<Fiber> m_rootFiber;                 // 主协程
+        ConditionVariable<MutexType> m_condition;       // 条件变量
     };
 }
 

@@ -73,6 +73,12 @@
  */
 #define LIM_LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
 
+#define LogLevel_DEBUG lim_webserver::LogLevel::DEBUG
+#define LogLevel_INFO lim_webserver::LogLevel::INFO
+#define LogLevel_WARN lim_webserver::LogLevel::WARN
+#define LogLevel_ERROR lim_webserver::LogLevel::ERROR
+#define LogLevel_FATAL lim_webserver::LogLevel::FATAL
+
 namespace lim_webserver
 {
     class Logger;
@@ -307,7 +313,7 @@ namespace lim_webserver
     {
     public:
         using MutexType = Spinlock;
-        Logger(){}
+        Logger() {}
         Logger(const std::string &name);
         Logger(const std::string &name, LogLevel level, const std::string &pattern);
         // 输出日志
