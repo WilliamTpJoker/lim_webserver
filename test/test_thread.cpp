@@ -61,9 +61,39 @@ void test_log_thread()
     LIM_LOG_INFO(g_logger) << "count=" << count;
 }
 
+Mutex mtx;
+ConditionVariable<Mutex> cv;
+int ready=0;
+
+void func4()
+{
+    {
+        lim_webserver::Mutex::Lock lock(mtx);
+        cv.wait(mtx, []
+                { std::cout<<ready++<<std::endl;return ready>2; });
+    }
+    std::cout<< "in func4"<<std::endl;
+}
+
+void test_cond()
+{
+    std::vector<Shared_ptr<Thread>> thread_vec;
+    for (int i = 0; i < 2; ++i)
+    {
+        Shared_ptr<Thread> thr = MakeShared<Thread>(&func4, "name_" + std::to_string(2 * i));
+        thread_vec.emplace_back(thr);
+    }
+    cv.notify_all();
+    for (int i = 0; i < thread_vec.size(); ++i)
+    {
+        thread_vec[i]->join();
+    }
+}
+
 int main(int argc, char **argv)
 {
-    Config::LoadFromYaml("./config/test.yaml");
-    test_log_thread();
+    // Config::LoadFromYaml("./config/test.yaml");
+    // test_log_thread();
+    test_cond();
     return 0;
 }

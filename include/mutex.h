@@ -215,6 +215,8 @@ namespace lim_webserver
          */
         void unlock() { pthread_mutex_unlock(&m_mutex); }
 
+        pthread_mutex_t* getMutex(){return &m_mutex;}
+
     private:
         pthread_mutex_t m_mutex; // 互斥锁
     };
@@ -318,6 +320,52 @@ namespace lim_webserver
     private:
         pthread_spinlock_t m_mutex; // 自旋锁
     };
+
+    template <class T=Mutex>
+    class ConditionVariable
+    {
+    public:
+        ConditionVariable()
+        {
+            pthread_cond_init(&cond, nullptr);
+        }
+
+        ~ConditionVariable()
+        {
+            pthread_cond_destroy(&cond);
+        }
+
+        void wait(T &mutex, std::function<bool()> condition)
+        {
+            ++waitersCount;
+            while (!condition())
+            {
+                pthread_cond_wait(&cond, mutex.getMutex());
+            }
+            --waitersCount;
+        }
+
+        void notify_one()
+        {
+            if (waitersCount > 0)
+            {
+                pthread_cond_signal(&cond);
+            }
+        }
+
+        void notify_all()
+        {
+            if (waitersCount > 0)
+            {
+                pthread_cond_broadcast(&cond);
+            }
+        }
+
+    private:
+        pthread_cond_t cond;
+        int waitersCount = 0;
+    };
+
 }
 
 #endif

@@ -1,12 +1,11 @@
 #include "lim.h"
 
 lim_webserver::Shared_ptr<lim_webserver::Logger> g_logger = LIM_LOG_ROOT();
-static int s_count = 5;
+static int s_count = 500;
 
 void run_in_fiber()
 {
     LIM_LOG_INFO(g_logger) << "test in fiber, s_count=" << s_count;
-    sleep(1);
     if (--s_count >= 0)
     {
         lim_webserver::Scheduler::GetThis()->schedule(&run_in_fiber);
@@ -28,6 +27,6 @@ void test(int threads, bool use_caller, std::string name)
 int main(int argc, char *argv[])
 {
     // test(3, true, "test");
-    test(2, false, "test");
+    test(4, true, "test");
     return 0;
 }
