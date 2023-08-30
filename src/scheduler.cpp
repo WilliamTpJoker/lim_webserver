@@ -88,10 +88,14 @@ namespace lim_webserver
             LIM_ASSERT(GetThis() != this);
         }
 
-        m_condition.notify_all();
+        for (size_t i = 0; i < m_threadCount; ++i)
+        {
+            tickle();
+        }
         // 调用者线程析构
         if (m_rootFiber)
         {
+            tickle();
             if (!onStop())
             {
                 m_rootFiber->call();
@@ -112,7 +116,20 @@ namespace lim_webserver
 
     void Scheduler::tickle()
     {
+        if (m_idleThreadCount == 0)
+        {
+            return;
+        }
         LIM_LOG_DEBUG(g_logger) << "on tickle";
+    }
+
+    void Scheduler::onIdle()
+    {
+        LIM_LOG_DEBUG(g_logger) << "on idle";
+        while (!onStop())
+        {
+            Fiber::YieldToHold();
+        }
     }
 
     void Scheduler::run()
@@ -123,24 +140,27 @@ namespace lim_webserver
         {
             t_fiber = Fiber::GetThis().get();
         }
+        Shared_ptr<Fiber> idle_fiber = MakeShared<Fiber>([this]()
+                                                         { this->onIdle(); });
         FiberAndThread ft;
         while (true)
         {
             ft.reset();
+            bool tickle_me = false;
             {
                 MutexType::Lock lock(m_mutex);
-                m_condition.wait(m_mutex, [this]
-                                 { return !m_task_queue.empty() || m_stopping; });
-                if (m_stopping && m_task_queue.empty())
+                if (!m_task_queue.empty())
                 {
-                    break;
-                }
-                auto it = m_task_queue.begin();
-                LIM_ASSERT(it->fiber || it->callback);
 
-                ft = *it;
-                m_task_queue.erase(it);
-                ++m_activeThreadCount;
+                    auto it = m_task_queue.begin();
+
+                    LIM_ASSERT(it->fiber || it->callback);
+
+                    ft = *it;
+                    tickle_me = true;
+                    m_task_queue.erase(it);
+                    ++m_activeThreadCount;
+                }
             }
             // 如果是 callback 任务，为其创建 fiber
             if (ft.callback)
@@ -162,6 +182,21 @@ namespace lim_webserver
                     ft.fiber->setState(FiberState::HOLD);
                 }
                 ft.reset();
+            }
+            else
+            {
+                if (idle_fiber->getState() == FiberState::TERM)
+                {
+                    LIM_LOG_INFO(g_logger) << "idle fiber term";
+                    break;
+                }
+                ++m_idleThreadCount;
+                idle_fiber->swapIn();
+                --m_idleThreadCount;
+                if (idle_fiber->getState() != FiberState::TERM && idle_fiber->getState() != FiberState::EXCEPT)
+                {
+                    idle_fiber->setState(FiberState::HOLD);
+                }
             }
         }
     }
