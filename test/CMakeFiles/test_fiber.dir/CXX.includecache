@@ -119,6 +119,8 @@ include/noncopyable.h
 include/scheduler.h
 atomic
 -
+queue
+-
 macro.h
 include/macro.h
 fiber.h

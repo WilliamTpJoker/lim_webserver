@@ -151,16 +151,16 @@ namespace lim_webserver
                 MutexType::Lock lock(m_mutex);
                 if (!m_task_queue.empty())
                 {
-
-                    auto it = m_task_queue.begin();
-
-                    LIM_ASSERT(it->fiber || it->callback);
-
-                    ft = *it;
+                    ft = m_task_queue.front();
+                    m_task_queue.pop();
+                    LIM_ASSERT(ft.fiber || ft.callback);
                     tickle_me = true;
-                    m_task_queue.erase(it);
                     ++m_activeThreadCount;
                 }
+            }
+            if (tickle_me)
+            {
+                tickle();
             }
             // 如果是 callback 任务，为其创建 fiber
             if (ft.callback)

@@ -2,6 +2,7 @@
 #define __LIM_SCHEDULER_H__
 
 #include <atomic>
+#include <queue>
 
 #include "macro.h"
 #include "fiber.h"
@@ -109,7 +110,7 @@ namespace lim_webserver
             FiberAndThread ft(fc, thread);
             if (ft.fiber || ft.callback)
             {
-                m_task_queue.emplace_back(ft);
+                m_task_queue.push(ft);
             }
             return need_tickle;
         }
@@ -169,7 +170,7 @@ namespace lim_webserver
     private:
         MutexType m_mutex;                             // 互斥锁
         std::vector<Shared_ptr<Thread>> m_thread_list; // 线程池
-        std::list<FiberAndThread> m_task_queue;        // 任务列表
+        std::queue<FiberAndThread> m_task_queue;        // 任务列表
         std::string m_name;                            // 调度器名称
         Shared_ptr<Fiber> m_rootFiber;                 // 主协程
     };
