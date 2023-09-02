@@ -94,7 +94,7 @@ namespace lim_webserver
         virtual void onIdle();
         void run();
         virtual bool onStop();
-
+        bool hasIdleThreads() { return m_idleThreadCount > 0;}
     private:
         /**
          * @brief 本地调度
@@ -130,14 +130,14 @@ namespace lim_webserver
     private:
         struct FiberAndThread
         {
-            Shared_ptr<Fiber> fiber;        // 协程
+            Fiber::ptr fiber;        // 协程
             std::function<void()> callback; // 回调
             int thread;                     // 线程编号
 
-            FiberAndThread(Shared_ptr<Fiber> fbr, int trd)
+            FiberAndThread(Fiber::ptr fbr, int trd)
                 : fiber(fbr), thread(trd) {}
             // 传入指针则使用swap切换。
-            FiberAndThread(Shared_ptr<Fiber> *fbr, int trd)
+            FiberAndThread(Fiber::ptr *fbr, int trd)
                 : thread(trd) { fiber.swap(*fbr); }
 
             FiberAndThread(std::function<void()> cb, int trd)
@@ -169,10 +169,10 @@ namespace lim_webserver
 
     private:
         MutexType m_mutex;                             // 互斥锁
-        std::vector<Shared_ptr<Thread>> m_thread_list; // 线程池
+        std::vector<Thread::ptr> m_thread_list; // 线程池
         std::queue<FiberAndThread> m_task_queue;        // 任务列表
         std::string m_name;                            // 调度器名称
-        Shared_ptr<Fiber> m_rootFiber;                 // 主协程
+        Fiber::ptr m_rootFiber;                 // 主协程
     };
 }
 

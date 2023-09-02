@@ -5,7 +5,7 @@ namespace lim_webserver
 {
     static thread_local Thread *t_thread = nullptr;
     static thread_local std::string t_thread_name = "UNKNOWN";
-    static Shared_ptr<Logger> thread_logger = LIM_LOG_NAME("system");
+    static Logger::ptr thread_logger = LIM_LOG_NAME("system");
 
     Thread::Thread(std::function<void()> callback, const std::string &name)
         : m_name(name), m_callback(callback)

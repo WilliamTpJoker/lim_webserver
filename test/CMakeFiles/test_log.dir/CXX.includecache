@@ -14,15 +14,9 @@ log.h
 util.h
 /home/book/Webserver/test/util.h
 
-include/common.h
-memory
--
-
 include/fiber.h
 ucontext.h
 -
-common.h
-include/common.h
 thread.h
 include/thread.h
 
@@ -93,8 +87,6 @@ memory
 -
 vector
 -
-common.h
-include/common.h
 fiber.h
 include/fiber.h
 

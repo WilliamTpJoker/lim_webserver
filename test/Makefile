@@ -114,6 +114,21 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+test/CMakeFiles/test_util.dir/rule:
+	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_util.dir/rule
+.PHONY : test/CMakeFiles/test_util.dir/rule
+
+# Convenience name for target.
+test_util: test/CMakeFiles/test_util.dir/rule
+
+.PHONY : test_util
+
+# fast build rule for target.
+test_util/fast:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/build
+.PHONY : test_util/fast
+
+# Convenience name for target.
 test/CMakeFiles/test_fiber.dir/rule:
 	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_fiber.dir/rule
 .PHONY : test/CMakeFiles/test_fiber.dir/rule
@@ -144,6 +159,36 @@ test_config/fast:
 .PHONY : test_config/fast
 
 # Convenience name for target.
+test/CMakeFiles/test_io.dir/rule:
+	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_io.dir/rule
+.PHONY : test/CMakeFiles/test_io.dir/rule
+
+# Convenience name for target.
+test_io: test/CMakeFiles/test_io.dir/rule
+
+.PHONY : test_io
+
+# fast build rule for target.
+test_io/fast:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_io.dir/build.make test/CMakeFiles/test_io.dir/build
+.PHONY : test_io/fast
+
+# Convenience name for target.
+test/CMakeFiles/test_thread.dir/rule:
+	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_thread.dir/rule
+.PHONY : test/CMakeFiles/test_thread.dir/rule
+
+# Convenience name for target.
+test_thread: test/CMakeFiles/test_thread.dir/rule
+
+.PHONY : test_thread
+
+# fast build rule for target.
+test_thread/fast:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_thread.dir/build.make test/CMakeFiles/test_thread.dir/build
+.PHONY : test_thread/fast
+
+# Convenience name for target.
 test/CMakeFiles/test_log.dir/rule:
 	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_log.dir/rule
 .PHONY : test/CMakeFiles/test_log.dir/rule
@@ -172,36 +217,6 @@ test_scheduler: test/CMakeFiles/test_scheduler.dir/rule
 test_scheduler/fast:
 	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/build
 .PHONY : test_scheduler/fast
-
-# Convenience name for target.
-test/CMakeFiles/test_thread.dir/rule:
-	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_thread.dir/rule
-.PHONY : test/CMakeFiles/test_thread.dir/rule
-
-# Convenience name for target.
-test_thread: test/CMakeFiles/test_thread.dir/rule
-
-.PHONY : test_thread
-
-# fast build rule for target.
-test_thread/fast:
-	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_thread.dir/build.make test/CMakeFiles/test_thread.dir/build
-.PHONY : test_thread/fast
-
-# Convenience name for target.
-test/CMakeFiles/test_util.dir/rule:
-	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_util.dir/rule
-.PHONY : test/CMakeFiles/test_util.dir/rule
-
-# Convenience name for target.
-test_util: test/CMakeFiles/test_util.dir/rule
-
-.PHONY : test_util
-
-# fast build rule for target.
-test_util/fast:
-	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_util.dir/build.make test/CMakeFiles/test_util.dir/build
-.PHONY : test_util/fast
 
 test_config.o: test_config.cpp.o
 
@@ -256,6 +271,33 @@ test_fiber.s: test_fiber.cpp.s
 test_fiber.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_fiber.dir/build.make test/CMakeFiles/test_fiber.dir/test_fiber.cpp.s
 .PHONY : test_fiber.cpp.s
+
+test_io.o: test_io.cpp.o
+
+.PHONY : test_io.o
+
+# target to build an object file
+test_io.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_io.dir/build.make test/CMakeFiles/test_io.dir/test_io.cpp.o
+.PHONY : test_io.cpp.o
+
+test_io.i: test_io.cpp.i
+
+.PHONY : test_io.i
+
+# target to preprocess a source file
+test_io.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_io.dir/build.make test/CMakeFiles/test_io.dir/test_io.cpp.i
+.PHONY : test_io.cpp.i
+
+test_io.s: test_io.cpp.s
+
+.PHONY : test_io.s
+
+# target to generate assembly for a file
+test_io.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_io.dir/build.make test/CMakeFiles/test_io.dir/test_io.cpp.s
+.PHONY : test_io.cpp.s
 
 test_log.o: test_log.cpp.o
 
@@ -372,19 +414,23 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... edit_cache"
+	@echo "... test_util"
 	@echo "... test_fiber"
 	@echo "... test_config"
+	@echo "... edit_cache"
+	@echo "... test_io"
+	@echo "... test_thread"
 	@echo "... test_log"
 	@echo "... test_scheduler"
-	@echo "... test_thread"
-	@echo "... test_util"
 	@echo "... test_config.o"
 	@echo "... test_config.i"
 	@echo "... test_config.s"
 	@echo "... test_fiber.o"
 	@echo "... test_fiber.i"
 	@echo "... test_fiber.s"
+	@echo "... test_io.o"
+	@echo "... test_io.i"
+	@echo "... test_io.s"
 	@echo "... test_log.o"
 	@echo "... test_log.i"
 	@echo "... test_log.s"

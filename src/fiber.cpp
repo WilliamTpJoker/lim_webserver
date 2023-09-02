@@ -8,15 +8,15 @@
 
 namespace lim_webserver
 {
-    static Shared_ptr<Logger> g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LIM_LOG_NAME("system");
 
     static std::atomic<uint64_t> s_fiber_count{0};
     static std::atomic<uint64_t> s_fiber_id{0};
 
     static thread_local Fiber *t_fiber = nullptr;
-    static thread_local Shared_ptr<Fiber> t_threadFiber = nullptr;
+    static thread_local Fiber::ptr t_threadFiber = nullptr;
 
-    static Shared_ptr<ConfigVar<uint32_t>> s_fiber_stack_size = Config::Lookup<uint32_t>("fiber.stack_size", 128 * 1024, "fiber stack size");
+    static ConfigVar<uint32_t>::ptr s_fiber_stack_size = Config::Lookup<uint32_t>("fiber.stack_size", 128 * 1024, "fiber stack size");
 
     class MallocStackAllocator
     {
@@ -192,12 +192,12 @@ namespace lim_webserver
         return 0;
     }
 
-    Shared_ptr<Fiber> Fiber::GetThis()
+    Fiber::ptr Fiber::GetThis()
     {
         // 如果当前协程不存在，则创建一个主协程并设置为当前协程
         if (!t_fiber)
         {
-            Shared_ptr<Fiber> main_fiber(new Fiber);
+            ptr main_fiber(new Fiber);
             // 断言协程创建成功
             LIM_ASSERT(t_fiber == main_fiber.get());
             // 将主协程设置为当前协程
@@ -214,7 +214,7 @@ namespace lim_webserver
 
     void Fiber::YieldToReady()
     {
-        Shared_ptr<Fiber> cur = GetThis();
+        ptr cur = GetThis();
         // 断言当前协程状态为执行状态
         LIM_ASSERT(cur->m_state == FiberState::EXEC);
         // 将当前协程状态切换至就绪状态
@@ -224,7 +224,7 @@ namespace lim_webserver
     }
     void Fiber::YieldToHold()
     {
-        Shared_ptr<Fiber> cur = GetThis();
+        ptr cur = GetThis();
         // 断言当前协程状态为执行状态
         LIM_ASSERT(cur->m_state == FiberState::EXEC);
         // 将当前协程状态切换至保持状态
@@ -240,7 +240,7 @@ namespace lim_webserver
 
     void Fiber::MainFunc()
     {
-        Shared_ptr<Fiber> cur = GetThis();
+        ptr cur = GetThis();
         // 断言当前协程对象不为空
         LIM_ASSERT(cur);
         try
@@ -273,7 +273,7 @@ namespace lim_webserver
     }
     void Fiber::CallerMainFunc()
     {
-        Shared_ptr<Fiber> cur = GetThis();
+        ptr cur = GetThis();
         // 断言当前协程对象不为空
         LIM_ASSERT(cur);
         try

@@ -5,17 +5,17 @@
 
 namespace lim_webserver
 {
+
     class IoManager : public Scheduler
     {
     public:
         using RWMutexType = RWMutex;
-        using MutexType = Mutex;
-
-        enum class IoEvent
+        
+        enum IoEvent
         {
             NONE = 0x0,
             READ = 0x1,
-            WRITE = 0x2,
+            WRITE = 0x4
         };
 
     public:
@@ -34,29 +34,37 @@ namespace lim_webserver
     private:
         struct FdContext
         {
+            using MutexType = Mutex;
             struct EventContext
             {
                 Scheduler *scheduler = nullptr; // 目标调度器
-                Shared_ptr<Fiber> fiber;        // 事件协程
+                Fiber::ptr fiber;        // 事件协程
                 std::function<void()> callback; // 事件回调函数
             };
-            EventContext read;               // 读事件
-            EventContext write;              // 写事件
-            int fd;                          // 事件关联句柄
-            IoEvent m_event = IoEvent::NONE; // 已经注册的事件
+            EventContext &getContext(IoEvent event);
+            void resetContext(IoEvent event);
+
+            void triggerEvent(IoEvent event);
+            EventContext read;              // 读事件
+            EventContext write;             // 写事件
+            int fd = 0;                     // 事件关联句柄
+            IoEvent events = IoEvent::NONE; // 已经注册的事件
             MutexType mutex;
         };
 
     protected:
         virtual void tickle() override;
         virtual bool onStop() override;
+        virtual void onIdle() override;
+
+        void contextResize(size_t size);
 
     private:
-        int m_epfd = 0;
-        int m_ticlefds[2];
-        std::atomic<size_t> m_pendingEventCount = {0};
-        std::vector<FdContext*> m_fdContext_list;
-        MutexType m_mutex;
+        int m_epollFd = 0;                             // epoll 文件句柄
+        int m_ticlefds[2];                             // pipe 文件句柄
+        std::atomic<size_t> m_pendingEventCount = {0}; // 当前等待执行的事件数量
+        std::vector<FdContext *> m_fdContext_list;     // socket事件上下文的容器
+        RWMutexType m_mutex;
     };
 }
 

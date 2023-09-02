@@ -1,7 +1,7 @@
 #include "lim.h"
 #include "macro.h"
 
-lim_webserver::Shared_ptr<lim_webserver::Logger> g_logger = LIM_LOG_ROOT();
+lim_webserver::Logger::ptr g_logger = LIM_LOG_ROOT();
 
 void test_backtrace()
 {

@@ -4,13 +4,13 @@
 
 using namespace lim_webserver;
 
-void test_loggor()
+void test_logger()
 {
-    auto logger = MakeShared<Logger>();
+    auto logger = Logger::create();
     logger->setFormatter(LIM_DEFAULT_PATTERN);
-    logger->addAppender(MakeShared<FileLogAppender>("log/log.txt"));
+    logger->addAppender(FileLogAppender::create("log/log.txt"));
 
-    auto event = MakeShared<LogEvent>(
+    auto event = LogEvent::create(
         logger, __FILE__, __LINE__, 0,
         GetThreadId(),
         GetFiberId(),
@@ -25,14 +25,14 @@ void test_loggor()
 
 void test_new_logger()
 {
-    Shared_ptr<Logger> l = LoggerMgr::GetInstance()->getLogger("XX");
+    Logger::ptr l = LoggerMgr::GetInstance()->getLogger("XX");
     LIM_LOG_DEBUG(l) << " XXX";
     LIM_LOG_INFO(LIM_LOG_NAME("XX")) << " this msg from XX logger";
 }
 
 int main(int argc, char *argv[])
 {
-    // test_loggor();
+    // test_logger();
     test_new_logger();
 
     return 0;

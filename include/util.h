@@ -10,7 +10,6 @@
 #include <memory>
 #include <vector>
 
-#include "common.h"
 #include "fiber.h"
 
 namespace lim_webserver

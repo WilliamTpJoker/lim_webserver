@@ -5,7 +5,7 @@
 
 using namespace lim_webserver;
 
-static Shared_ptr<Logger> g_logger = LIM_LOG_NAME("system");
+static Logger::ptr g_logger = LIM_LOG_NAME("system");
 RWMutex s_rwmutex;
 Mutex s_mutex;
 
@@ -44,11 +44,11 @@ void func3()
 void test_log_thread()
 {
     LIM_LOG_INFO(g_logger) << "thread test begin";
-    std::vector<Shared_ptr<Thread>> thread_vec;
+    std::vector<Thread::ptr> thread_vec;
     for (int i = 0; i < 1; ++i)
     {
-        Shared_ptr<Thread> thr = MakeShared<Thread>(&func2, "name_" + std::to_string(2 * i));
-        Shared_ptr<Thread> thr2 = MakeShared<Thread>(&func3, "name_" + std::to_string(2 * i + 1));
+        Thread::ptr thr = Thread::create(&func2, "name_" + std::to_string(2 * i));
+        Thread::ptr thr2 = Thread::create(&func3, "name_" + std::to_string(2 * i + 1));
         thread_vec.emplace_back(thr);
         thread_vec.emplace_back(thr2);
     }
@@ -77,10 +77,10 @@ void func4()
 
 void test_cond()
 {
-    std::vector<Shared_ptr<Thread>> thread_vec;
+    std::vector<Thread::ptr> thread_vec;
     for (int i = 0; i < 2; ++i)
     {
-        Shared_ptr<Thread> thr = MakeShared<Thread>(&func4, "name_" + std::to_string(2 * i));
+        Thread::ptr thr = Thread::create(&func4, "name_" + std::to_string(2 * i));
         thread_vec.emplace_back(thr);
     }
     cv.notify_all();

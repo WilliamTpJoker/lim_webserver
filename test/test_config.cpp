@@ -4,9 +4,9 @@
 
 using namespace lim_webserver;
 
-typename std::shared_ptr<ConfigVar<int>> g_int_value_config = Config::Lookup("system.port", (int)8080, "system port");
+typename ConfigVar<int>::ptr g_int_value_config = Config::Lookup("system.port", (int)8080, "system port");
 
-typename std::shared_ptr<ConfigVar<std::vector<int>>> g_int_vec_value_config = Config::Lookup("system.inc_vec", std::vector<int>{1, 2}, "system port");
+typename ConfigVar<std::vector<int>>::ptr g_int_vec_value_config = Config::Lookup("system.inc_vec", std::vector<int>{1, 2}, "system port");
 
 void test_yaml()
 {
@@ -49,7 +49,7 @@ void test_change_callback()
 
 void test_log()
 {
-    static Shared_ptr<Logger> sys_logger = LIM_LOG_NAME("system");
+    static Logger::ptr sys_logger = LIM_LOG_NAME("system");
     LIM_LOG_INFO(sys_logger) << "hello system";
 
     std::cout << LoggerMgr::GetInstance()->toYamlString() << std::endl;
@@ -69,7 +69,7 @@ void test_log()
 void test_visit()
 {
     Config::LoadFromYaml("./config/log.yaml");
-    auto f = [](Shared_ptr<ConfigVarBase> var)
+    auto f = [](ConfigVarBase::ptr var)
     {
         LIM_LOG_INFO(LIM_LOG_ROOT()) << "name=" << var->getName()
                                      << " description=" << var->getDescription()

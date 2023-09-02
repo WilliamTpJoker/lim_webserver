@@ -1,0 +1,12 @@
+# ninja log v5
+23	1855	1693466834143365790	src/CMakeFiles/libconet.dir/mutex.cpp.o	69118bde71d91b96
+9	2408	1693466834695405693	src/CMakeFiles/libconet.dir/main.cpp.o	8ea573ba7f125810
+5	4784	1693466837071577348	src/CMakeFiles/libconet.dir/io_manager.cpp.o	766fe7c6de936335
+2408	6824	1693466839111724579	src/CMakeFiles/libconet.dir/thread.cpp.o	a55937b9ab9257d0
+1856	8133	1693466840415818619	src/CMakeFiles/libconet.dir/scheduler.cpp.o	d48c56bbfbcc50ac
+4792	9340	1693466841627905976	src/CMakeFiles/libconet.dir/util.cpp.o	4612fc4b5da860f8
+9342	14927	1693466847204307265	test/CMakeFiles/test_log.dir/test_log.cpp.o	5ed83ebd0669ab34
+0	17192	1693466849472470199	src/CMakeFiles/libconet.dir/config.cpp.o	5f62fceb23970d53
+6834	17891	1693466850180521032	test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o	8b06350d032afec8
+7	20346	1693466852624696373	src/CMakeFiles/libconet.dir/log.cpp.o	6090119d5eaa463f
+8134	20894	1693466853176735951	test/CMakeFiles/test_config.dir/test_config.cpp.o	88620a82a79bc74

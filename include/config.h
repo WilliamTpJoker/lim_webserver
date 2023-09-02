@@ -17,6 +17,9 @@ namespace lim_webserver
     class ConfigVarBase
     {
     public:
+        using ptr = std::shared_ptr<ConfigVarBase>;
+
+    public:
         ConfigVarBase(const std::string &name, const std::string &description = "")
             : m_name(name), m_description(description) {}
         virtual ~ConfigVarBase() {}
@@ -34,7 +37,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * boost::lexical_cast 的包装，
+     *
+     * @note boost::lexical_cast 的包装，
      * 因为 boost::lexical_cast 是使用 std::stringstream 实现的类型转换，
      * 所以仅支持实现了 ostream::operator<< 与 istream::operator>> 的类型,
      * 可以说默认情况下仅支持 std::string 与各类 Number 类型的双向转换。
@@ -52,7 +56,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::string 到 std::vector<T> 的转换，
+     *
+     * @note LexicalCast 的偏特化，针对 std::string 到 std::vector<T> 的转换，
      * 接受可被 YAML::Load() 解析的字符串
      */
     template <typename T>
@@ -80,7 +85,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::vector<T> 到 std::string 的转换，
+     *
+     * @note LexicalCast 的偏特化，针对 std::vector<T> 到 std::string 的转换，
      */
     template <typename T>
     class LexicalCast<std::vector<T>, std::string>
@@ -104,7 +110,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::string 到 std::list<T> 的转换，
+     *
+     * @note LexicalCast 的偏特化，针对 std::string 到 std::list<T> 的转换，
      */
     template <typename T>
     class LexicalCast<std::string, std::list<T>>
@@ -129,7 +136,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::list<T> 到 std::string 的转换，
+     *
+     * @note LexicalCast 的偏特化，针对 std::list<T> 到 std::string 的转换，
      */
     template <typename T>
     class LexicalCast<std::list<T>, std::string>
@@ -150,7 +158,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::string 到 std::unordered_map<std::string, T> 的转换，
+     *
+     * @note LexicalCast 的偏特化，针对 std::string 到 std::unordered_map<std::string, T> 的转换，
      */
     template <typename T>
     class LexicalCast<std::string, std::unordered_map<std::string, T>>
@@ -178,7 +187,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::unordered_map<std::string, T> 到 std::string 的转换，
+     *
+     * @note LexicalCast 的偏特化，针对 std::unordered_map<std::string, T> 到 std::string 的转换，
      */
     template <typename T>
     class LexicalCast<std::unordered_map<std::string, T>, std::string>
@@ -199,7 +209,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::string 到 std::set<T> 的转换，
+     *
+     * @note LexicalCast 的偏特化，针对 std::string 到 std::set<T> 的转换，
      */
     template <typename T>
     class LexicalCast<std::string, std::set<T>>
@@ -225,7 +236,8 @@ namespace lim_webserver
 
     /**
      * @brief YAML格式字符串到其他类型的转换仿函数
-     * LexicalCast 的偏特化，针对 std::set<T> 到 std::string 的转换，
+     *
+     * @note LexicalCast 的偏特化，针对 std::set<T> 到 std::string 的转换，
      */
     template <typename T>
     class LexicalCast<std::set<T>, std::string>
@@ -246,7 +258,7 @@ namespace lim_webserver
 
     /**
      * @brief 通用型配置项的模板类
-     * 模板参数:
+     * @note 模板参数:
      *      T               配置项的值的类型
      *      ToStringFN      {functor<std::string(T&)>} 将配置项的值转换为 std::string
      *      FromStringFN    {functor<T(const std::string&)>} 将 std::string 转换为配置项的值
@@ -255,9 +267,15 @@ namespace lim_webserver
     class ConfigVar : public ConfigVarBase
     {
     public:
+        using ptr = std::shared_ptr<ConfigVar>;
         using RWMutexType = RWMutex;
         using onChangeCallBack = std::function<void(const T &old_val, const T &new_val)>;
+        static ptr create(const std::string &name, const T &default_val, const std::string &description = "")
+        {
+            return std::make_shared<ConfigVar>(name, default_val, description);
+        }
 
+    public:
         ConfigVar(const std::string &name, const T &default_val, const std::string &description = "")
             : ConfigVarBase(name, description), m_val(default_val) {}
 
@@ -346,11 +364,11 @@ namespace lim_webserver
     class Config
     {
     public:
-        using ConfigVarMap = std::unordered_map<std::string, Shared_ptr<ConfigVarBase>>;
+        using ConfigVarMap = std::unordered_map<std::string, ConfigVarBase::ptr>;
         using RWMutexType = RWMutex;
 
         template <class T>
-        static typename lim_webserver::Shared_ptr<ConfigVar<T>> Lookup(const std::string &name, const T &default_value, const std::string &description = "")
+        static typename ConfigVar<T>::ptr Lookup(const std::string &name, const T &default_value, const std::string &description = "")
         {
             auto tmp = Lookup<T>(name);
             if (tmp)
@@ -362,7 +380,7 @@ namespace lim_webserver
             std::regex pattern("^[\\w.].*|");
             if (std::regex_match(name, pattern))
             {
-                typename lim_webserver::Shared_ptr<ConfigVar<T>> v = lim_webserver::MakeShared<ConfigVar<T>>(name, default_value, description);
+                typename ConfigVar<T>::ptr v = ConfigVar<T>::create(name, default_value, description);
                 AddConfigVar<T>(name, v);
                 return v;
             }
@@ -374,7 +392,7 @@ namespace lim_webserver
         }
 
         template <class T>
-        static typename lim_webserver::Shared_ptr<ConfigVar<T>> Lookup(const std::string &name)
+        static typename ConfigVar<T>::ptr Lookup(const std::string &name)
         {
             RWMutexType::ReadLock lock(GetMutex());
             auto it = GetConfigs().find(name);
@@ -388,12 +406,12 @@ namespace lim_webserver
         static void LoadFromYaml(const YAML::Node &yaml_file);
         static void LoadFromYaml(const std::string &file);
 
-        static Shared_ptr<ConfigVarBase> LookupBase(const std::string &name);
-        static void Visit(std::function<void(Shared_ptr<ConfigVarBase>)> callback);
+        static ConfigVarBase::ptr LookupBase(const std::string &name);
+        static void Visit(std::function<void(ConfigVarBase::ptr)> callback);
 
     private:
         template <class T>
-        static void AddConfigVar(const std::string &name, typename lim_webserver::Shared_ptr<ConfigVar<T>> &v)
+        static void AddConfigVar(const std::string &name, typename ConfigVar<T>::ptr &v)
         {
             RWMutexType::WriteLock lock(GetMutex());
             GetConfigs()[name] = v;

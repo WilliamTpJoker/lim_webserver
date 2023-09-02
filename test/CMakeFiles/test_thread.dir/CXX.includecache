@@ -16,10 +16,6 @@ unistd.h
 config.h
 /home/book/Webserver/test/config.h
 
-include/common.h
-memory
--
-
 include/config.h
 functional
 -
@@ -43,8 +39,6 @@ include/thread.h
 include/fiber.h
 ucontext.h
 -
-common.h
-include/common.h
 thread.h
 include/thread.h
 
@@ -115,8 +109,6 @@ memory
 -
 vector
 -
-common.h
-include/common.h
 fiber.h
 include/fiber.h
 

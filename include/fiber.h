@@ -3,7 +3,6 @@
 
 #include <ucontext.h>
 
-#include "common.h"
 #include "thread.h"
 
 #define FiberState_INIT lim_webserver::FiberState::INIT
@@ -15,14 +14,22 @@
 
 namespace lim_webserver
 {
+    /**
+     * INIT:   初始状态，协程对象已创建但未开始执行
+     * READY:  就绪状态，协程已准备好被调度执行
+     * EXEC:   执行状态，协程正在执行中
+     * HOLD:   暂停状态，协程执行被暂时挂起
+     * EXCEPT:  异常状态，协程执行中产生异常
+     * TERM:   终止状态，协程已执行完成并结束
+     */
     enum class FiberState
     {
-        INIT,  // 初始状态，协程对象已创建但未开始执行
-        HOLD,  // 暂停状态，协程执行被暂时挂起
-        EXEC,  // 执行状态，协程正在执行中
-        TERM,  // 终止状态，协程已执行完成并结束
-        READY, // 就绪状态，协程已准备好被调度执行
-        EXCEPT // 异常状态，协程执行中产生异常
+        INIT,   // 初始状态，协程对象已创建但未开始执行
+        READY,  // 就绪状态，协程已准备好被调度执行
+        EXEC,   // 执行状态，协程正在执行中
+        HOLD,   // 暂停状态，协程执行被暂时挂起
+        EXCEPT, // 异常状态，协程执行中产生异常
+        TERM    // 终止状态，协程已执行完成并结束
     };
 
     class FiberStateHandler
@@ -33,6 +40,19 @@ namespace lim_webserver
 
     class Fiber : public std::enable_shared_from_this<Fiber>
     {
+    public:
+        using ptr = std::shared_ptr<Fiber>;
+        /**
+         * @brief 创建Fiber对象智能指针。
+         * @param callback  协程执行函数。
+         * @param stacksize 协程栈大小，默认为0，表示使用系统默认大小。
+         * @param use_caller  是否使用 Scheduler 实例化所在的线程（Scheduler 所在线程也工作）
+         */
+        static ptr create(std::function<void()> callback, size_t stacksize = 0, bool use_caller = false)
+        {
+            return std::make_shared<Fiber>(callback, stacksize, use_caller);
+        }
+
     private:
         /**
          * @brief 私有构造函数，用于创建主Fiber对象。
@@ -86,6 +106,11 @@ namespace lim_webserver
          */
         FiberState getState() { return m_state; }
         /**
+         * @brief 获取当前协程状态字符串。
+         * @return 协程状态字符串。
+         */
+        std::string getStateString() { return FiberStateHandler::ToString(m_state); }
+        /**
          * @brief 设置协程状态。
          */
         void setState(FiberState state) { m_state = state; }
@@ -100,7 +125,7 @@ namespace lim_webserver
          * @brief 获取当前线程关联的协程对象。
          * @return 协程对象的共享指针。
          */
-        static Shared_ptr<Fiber> GetThis();
+        static ptr GetThis();
         /**
          * @brief 设置当前线程关联的协程对象。
          * @param f 协程对象指针

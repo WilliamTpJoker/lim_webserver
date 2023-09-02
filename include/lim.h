@@ -1,9 +1,9 @@
 #ifndef __LIM_LIM_H__
 #define __LIM_LIM_H__
 
-#include "common.h"
 #include "config.h"
 #include "fiber.h"
+#include "io_manager.h"
 #include "log.h"
 #include "macro.h"
 #include "mutex.h"

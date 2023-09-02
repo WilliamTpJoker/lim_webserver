@@ -49,7 +49,7 @@ namespace lim_webserver
     {
     public:
         MessageFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << event->getContent();
         }
@@ -59,9 +59,9 @@ namespace lim_webserver
     {
     public:
         LevelFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
-            os << LogLevelHandler::ToString(event->getLevel());
+            os << event->getLevelString();
         }
     };
 
@@ -69,7 +69,7 @@ namespace lim_webserver
     {
     public:
         ElapseFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << event->getElapse();
         }
@@ -79,7 +79,7 @@ namespace lim_webserver
     {
     public:
         NameFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << event->getLogger()->getName();
         }
@@ -89,7 +89,7 @@ namespace lim_webserver
     {
     public:
         ThreadIdFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << event->getThreadId();
         }
@@ -99,7 +99,7 @@ namespace lim_webserver
     {
     public:
         ThreadNameFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << event->getThreadName();
         }
@@ -109,7 +109,7 @@ namespace lim_webserver
     {
     public:
         FiberIdFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << event->getFiberId();
         }
@@ -120,7 +120,7 @@ namespace lim_webserver
     public:
         DateTimeFormatItem(const std::string &format = "%Y-%m-%d %H:%M:%S")
             : m_format(format) {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             struct tm time_struct;              // 定义存储时间的结构体
             time_t time_l = event->getTime();   // 获取时间
@@ -138,7 +138,7 @@ namespace lim_webserver
     {
     public:
         FileNameFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << event->getFile();
         }
@@ -148,7 +148,7 @@ namespace lim_webserver
     {
     public:
         LineFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << event->getLine();
         }
@@ -158,7 +158,7 @@ namespace lim_webserver
     {
     public:
         NewLineFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << std::endl;
         }
@@ -169,7 +169,7 @@ namespace lim_webserver
     public:
         StringFormatItem(const std::string &str)
             : m_string(str) {}
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << m_string;
         }
@@ -181,7 +181,7 @@ namespace lim_webserver
     class PercentSignFormatItem : public LogFormatter::FormatItem
     {
     public:
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << '%';
         }
@@ -190,7 +190,7 @@ namespace lim_webserver
     class TabFormatItem : public LogFormatter::FormatItem
     {
     public:
-        void format(std::ostream &os, Shared_ptr<LogEvent> event) override
+        void format(std::ostream &os, LogEvent::ptr event) override
         {
             os << '\t';
         }
@@ -211,10 +211,10 @@ namespace lim_webserver
      * %r 输出自启动到现在的时间
      * %c 输出日志信息所属的类目
      * */
-    thread_local static const std::unordered_map<char, Shared_ptr<LogFormatter::FormatItem>> format_item_map{
+    thread_local static const std::unordered_map<char, std::shared_ptr<LogFormatter::FormatItem>> format_item_map{
 #define FN(CH, ITEM_NAME) \
     {                     \
-        CH, MakeShared<ITEM_NAME>()}
+        CH, std::make_shared<ITEM_NAME>()}
         FN('p', LevelFormatItem),
         FN('f', FileNameFormatItem),
         FN('l', LineFormatItem),
@@ -234,18 +234,18 @@ namespace lim_webserver
     void LogAppender::setFormatter(const std::string &pattern)
     {
         MutexType::Lock lock(m_mutex);
-        m_formatter = MakeShared<LogFormatter>(pattern);
+        m_formatter = LogFormatter::create(pattern);
         m_custom_pattern = true;
     }
 
-    void LogAppender::setFormatter(Shared_ptr<LogFormatter> formatter)
+    void LogAppender::setFormatter(LogFormatter::ptr formatter)
     {
         MutexType::Lock lock(m_mutex);
         m_formatter = formatter;
         m_custom_pattern = true;
     }
 
-    const Shared_ptr<LogFormatter> &LogAppender::getFormatter()
+    const LogFormatter::ptr &LogAppender::getFormatter()
     {
         MutexType::Lock lock(m_mutex);
         return m_formatter;
@@ -284,7 +284,7 @@ namespace lim_webserver
         return ss.str();
     }
 
-    void Logger::log(LogLevel level, const Shared_ptr<LogEvent> &event)
+    void Logger::log(LogLevel level, const LogEvent::ptr &event)
     {
         if (level >= m_level)
         {
@@ -306,18 +306,18 @@ namespace lim_webserver
     /**
      * @brief 创建appender时将自身的指针传入，当不指定formatter则默认使用logger的formatter
      */
-    void Logger::addAppender(Shared_ptr<LogAppender> appender)
+    void Logger::addAppender(LogAppender::ptr appender)
     {
         MutexType::Lock lock(m_mutex);
         if (!appender->getFormatter())
         {
             MutexType::Lock appender_lock(appender->m_mutex);
-            appender->m_formatter = MakeShared<LogFormatter>(m_pattern);
+            appender->m_formatter = LogFormatter::create(m_pattern);
         }
         m_appenders.emplace_back(appender);
     }
 
-    void Logger::delAppender(Shared_ptr<LogAppender> appender)
+    void Logger::delAppender(LogAppender::ptr appender)
     {
         MutexType::Lock lock(m_mutex);
         for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it)
@@ -400,7 +400,7 @@ namespace lim_webserver
         reopen();
     }
 
-    void FileLogAppender::log(LogLevel level, Shared_ptr<LogEvent> event)
+    void FileLogAppender::log(LogLevel level, LogEvent::ptr event)
     {
         if (level >= m_level)
         {
@@ -434,7 +434,7 @@ namespace lim_webserver
         return file.good();
     }
 
-    void StdoutLogAppender::log(LogLevel level, Shared_ptr<LogEvent> event)
+    void StdoutLogAppender::log(LogLevel level, LogEvent::ptr event)
     {
         if (level >= m_level)
         {
@@ -452,7 +452,7 @@ namespace lim_webserver
         init();
     }
 
-    std::string LogFormatter::format(Shared_ptr<LogEvent> event)
+    std::string LogFormatter::format(LogEvent::ptr event)
     {
         std::stringstream ss;
         for (auto &i : m_items)
@@ -490,7 +490,7 @@ namespace lim_webserver
                 }
                 i = str_end;
                 m_items.push_back(
-                    MakeShared<StringFormatItem>(
+                    std::make_shared<StringFormatItem>(
                         m_pattern.substr(str_begin, str_end - str_begin)));
                 break;
 
@@ -500,7 +500,7 @@ namespace lim_webserver
                 if (itor == format_item_map.end())
                 {
                     m_error = true;
-                    m_items.push_back(MakeShared<StringFormatItem>("<error format>"));
+                    m_items.push_back(std::make_shared<StringFormatItem>("<error format>"));
                 }
                 else
                 {
@@ -514,12 +514,12 @@ namespace lim_webserver
 
     LoggerManager::LoggerManager()
     {
-        m_root = MakeShared<Logger>();
-        m_root->addAppender(MakeShared<StdoutLogAppender>());
+        m_root = Logger::create();
+        m_root->addAppender(StdoutLogAppender::create());
         m_logger_map[m_root->getName()] = m_root;
     }
 
-    Shared_ptr<Logger> LoggerManager::getLogger(const std::string &name)
+    Logger::ptr LoggerManager::getLogger(const std::string &name)
     {
         MutexType::Lock lock(m_mutex);
         auto it = m_logger_map.find(name);
@@ -529,7 +529,7 @@ namespace lim_webserver
         }
         else
         {
-            Shared_ptr<Logger> logger = MakeShared<Logger>(name);
+            Logger::ptr logger = Logger::create(name);
             m_logger_map[name] = logger;
             return logger;
         }
@@ -707,7 +707,7 @@ namespace lim_webserver
     };
 
     // 读取配置
-    Shared_ptr<ConfigVar<std::set<LogDefine>>> g_log_defines = Config::Lookup("logs", std::set<LogDefine>(), "logs config");
+    ConfigVar<std::set<LogDefine>>::ptr g_log_defines = Config::Lookup("logs", std::set<LogDefine>(), "logs config");
 
     struct LogIniter
     {
@@ -718,7 +718,7 @@ namespace lim_webserver
                 for (auto &i : new_val)
                 {
 
-                    Shared_ptr<Logger> logger;
+                    Logger::ptr logger;
                     auto it = old_val.find(i);
                     if (it == old_val.end())
                     {
@@ -745,19 +745,19 @@ namespace lim_webserver
                     logger->clearAppender();
                     for (auto &a : i.appenders)
                     {
-                        Shared_ptr<LogAppender> ap;
+                        LogAppender::ptr ap;
                         if (a.type == 1)
                         {
-                            ap = MakeShared<FileLogAppender>(a.file);
+                            ap = FileLogAppender::create(a.file);
                         }
                         else if (a.type == 0)
                         {
-                            ap = MakeShared<StdoutLogAppender>();
+                            ap = StdoutLogAppender::create();
                         }
                         ap->setLevel(a.level);
                         if (!a.formatter.empty())
                         {
-                            Shared_ptr<LogFormatter> formatter = MakeShared<LogFormatter>(a.formatter);
+                            LogFormatter::ptr formatter = LogFormatter::create(a.formatter);
                             if (formatter->isError())
                             {
                                 std::cout << "log.name=" << i.name << " appender type=" << a.type << " formatter=" << a.formatter << " is invalid" << std::endl;

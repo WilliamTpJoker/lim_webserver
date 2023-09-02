@@ -9,6 +9,19 @@ namespace lim_webserver
     class Thread : Noncopyable
     {
     public:
+        using ptr = std::shared_ptr<Thread>;
+        /**
+         * 创建线程对象智能指针，并指定线程函数和名称。
+         *
+         * @param callback 线程要执行的函数
+         * @param name     线程的名称，默认为"UNKNOWN"
+         */
+        static ptr create(std::function<void()> callback, const std::string &name = "UNKNOWN")
+        {
+            return std::make_shared<Thread>(callback, name);
+        }
+
+    public:
         /**
          * 构造函数，创建线程对象，并指定线程函数和名称。
          *

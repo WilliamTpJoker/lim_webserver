@@ -47,7 +47,7 @@ namespace lim_webserver
                 continue;
             }
 
-            Shared_ptr<ConfigVarBase> var = LookupBase(key);
+            ConfigVarBase::ptr var = LookupBase(key);
             if (var)
             {
                 // 判定为标量则转化
@@ -72,14 +72,14 @@ namespace lim_webserver
         Config::LoadFromYaml(r);
     }
 
-    Shared_ptr<ConfigVarBase> Config::LookupBase(const std::string &name)
+    ConfigVarBase::ptr Config::LookupBase(const std::string &name)
     {
         RWMutexType::ReadLock lock(GetMutex());
         auto it = GetConfigs().find(name);
         return it == GetConfigs().end() ? nullptr : it->second;
     }
 
-    void Config::Visit(std::function<void(Shared_ptr<ConfigVarBase>)> callback)
+    void Config::Visit(std::function<void(ConfigVarBase::ptr)> callback)
     {
         RWMutexType::ReadLock lock(GetMutex());
         ConfigVarMap &m = GetConfigs();

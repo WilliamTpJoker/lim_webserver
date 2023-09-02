@@ -1,10 +1,11 @@
+#include <execinfo.h>
+
 #include "util.h"
 #include "log.h"
-#include <execinfo.h>
 
 namespace lim_webserver
 {
-    Shared_ptr<Logger> g_logger = LIM_LOG_NAME("system");
+    Logger::ptr g_logger = LIM_LOG_NAME("system");
 
     pid_t GetThreadId()
     {
@@ -13,20 +14,18 @@ namespace lim_webserver
 
     uint32_t GetFiberId()
     {
-        // return 0;
         return Fiber::GetFiberId();
     }
 
-    
-    void BackTrace(std::vector<std::string> &bt, int maxFrames , int skip)
+    void BackTrace(std::vector<std::string> &bt, int maxFrames, int skip)
     {
         // 使用 malloc 分配一段内存来存储调用栈信息
-        void **array = (void **)malloc((sizeof(void *) * maxFrames ));
+        void **array = (void **)malloc((sizeof(void *) * maxFrames));
         // 获取调用栈信息，存储在 array 中，size 表示获取的栈帧数目
-        size_t numFrames  = ::backtrace(array, maxFrames );
+        size_t numFrames = ::backtrace(array, maxFrames);
 
         // 使用 backtrace_symbols 将地址转换为对应的函数名、源文件和行号
-        char **strings = backtrace_symbols(array, numFrames );
+        char **strings = backtrace_symbols(array, numFrames);
         if (strings == NULL)
         {
             LIM_LOG_ERROR(g_logger) << "backtrace_symbols error";
@@ -34,7 +33,7 @@ namespace lim_webserver
         }
 
         // 从 skip 处开始将转换后的调用栈信息存储到传入的 bt 向量中
-        for (size_t i = skip; i < numFrames ; ++i)
+        for (size_t i = skip; i < numFrames; ++i)
         {
             bt.emplace_back(strings[i]);
         }

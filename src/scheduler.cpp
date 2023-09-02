@@ -2,7 +2,7 @@
 
 namespace lim_webserver
 {
-    static Shared_ptr<Logger> g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LIM_LOG_NAME("system");
 
     static thread_local Scheduler *t_scheduler = nullptr;
     static thread_local Fiber *t_fiber = nullptr;
@@ -17,9 +17,9 @@ namespace lim_webserver
             --threads;
             LIM_ASSERT(GetThis() == nullptr);
             t_scheduler = this;
-            m_rootFiber = MakeShared<Fiber>([this]()
-                                            { this->run(); },
-                                            0, true);
+            m_rootFiber = Fiber::create([this]()
+                                        { this->run(); },
+                                        0, true);
             Thread::SetName(m_name);
 
             t_fiber = m_rootFiber.get();
@@ -55,9 +55,9 @@ namespace lim_webserver
         m_thread_list.resize(m_threadCount);
         for (size_t i = 0; i < m_threadCount; ++i)
         {
-            m_thread_list[i] = MakeShared<Thread>([this]()
-                                                  { this->run(); },
-                                                  m_name + "_" + std::to_string(i));
+            m_thread_list[i] = Thread::create([this]()
+                                              { this->run(); },
+                                              m_name + "_" + std::to_string(i));
             m_threadIds.emplace_back(m_thread_list[i]->getId());
         }
     }
@@ -102,7 +102,7 @@ namespace lim_webserver
             }
         }
         // 非调用者线程析构
-        std::vector<Shared_ptr<Thread>> thread_list;
+        std::vector<Thread::ptr> thread_list;
         {
             MutexType::Lock lock(m_mutex);
             thread_list.swap(m_thread_list);
@@ -116,7 +116,7 @@ namespace lim_webserver
 
     void Scheduler::tickle()
     {
-        if (m_idleThreadCount == 0)
+        if (!hasIdleThreads())
         {
             return;
         }
@@ -140,8 +140,10 @@ namespace lim_webserver
         {
             t_fiber = Fiber::GetThis().get();
         }
-        Shared_ptr<Fiber> idle_fiber = MakeShared<Fiber>([this]()
-                                                         { this->onIdle(); });
+        Fiber::ptr idle_fiber = Fiber::create([this]()
+                                              { this->onIdle(); });
+        Fiber::ptr cb_fiber;
+
         FiberAndThread ft;
         while (true)
         {
@@ -162,12 +164,7 @@ namespace lim_webserver
             {
                 tickle();
             }
-            // 如果是 callback 任务，为其创建 fiber
-            if (ft.callback)
-            {
-                ft.fiber = MakeShared<Fiber>(ft.callback);
-                ft.callback = nullptr;
-            }
+            // 如果是 callback 任务，为则在专门的callback_fiber运行
             if (ft.fiber && (ft.fiber->getState() != FiberState::TERM && ft.fiber->getState() != FiberState::EXCEPT))
             {
                 ft.fiber->swapIn();
@@ -182,6 +179,37 @@ namespace lim_webserver
                     ft.fiber->setState(FiberState::HOLD);
                 }
                 ft.reset();
+            }
+            else if (ft.callback)
+            {
+                if (cb_fiber)
+                {
+                    cb_fiber->reset(ft.callback);
+                }
+                else
+                {
+                    cb_fiber = Fiber::create(ft.callback);
+                }
+                ft.reset();
+                cb_fiber->swapIn();
+                --m_activeThreadCount;
+                if (cb_fiber->getState() == FiberState::READY)
+                {
+                    // 如果状态为READY，表明该回调协程通过YeildToReady返回scheduler，将其重新规划入队列，回调协程则指定为新的协程
+                    schedule(cb_fiber);
+                    cb_fiber.reset();
+                }
+                else if (cb_fiber->getState() == FiberState::EXCEPT || cb_fiber->getState() == FiberState::TERM)
+                {
+                    // 如果状态为结束或者异常，表明该回调已经结束，保留该协程的指针，释放该协程的资源
+                    cb_fiber->reset(nullptr);
+                }
+                else
+                {
+                    // 如果状态为其他，则表明该回调运行中断，设置状态为挂起
+                    cb_fiber->setState(FiberState::HOLD);
+                    cb_fiber.reset();
+                }
             }
             else
             {

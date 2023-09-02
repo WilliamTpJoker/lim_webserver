@@ -1,6 +1,6 @@
 #include "lim.h"
 
-lim_webserver::Shared_ptr<lim_webserver::Logger> g_logger = LIM_LOG_ROOT();
+lim_webserver::Logger::ptr g_logger = LIM_LOG_ROOT();
 
 void run_in_fiber()
 {
@@ -16,12 +16,12 @@ void test_fiber()
     {
         lim_webserver::Fiber::GetThis();
         LIM_LOG_INFO(g_logger) << "main begin";
-        lim_webserver::Shared_ptr<lim_webserver::Fiber> fiber = lim_webserver::MakeShared<lim_webserver::Fiber>(run_in_fiber);
-        fiber->swapIn();
-        LIM_LOG_INFO(g_logger) << "main after swapIn";
-        fiber->swapIn();
+        lim_webserver::Fiber::ptr fiber = lim_webserver::Fiber::create(run_in_fiber,0,true);
+        fiber->call();
+        LIM_LOG_INFO(g_logger) << "main after call";
+        fiber->call();
         LIM_LOG_INFO(g_logger) << "main after end";
-        fiber->swapIn();
+        fiber->call();
     }
     LIM_LOG_INFO(g_logger) << "main after end2";
 }
@@ -29,9 +29,9 @@ void test_fiber()
 void test_thread()
 {
     std::vector<std::shared_ptr<lim_webserver::Thread>> thread_vec;
-    for(int i=0;i<2;++i)
+    for(int i=0;i<1;++i)
     {
-        thread_vec.emplace_back(std::make_shared<lim_webserver::Thread>(&test_fiber,"name_"+std::to_string(i)));
+        thread_vec.emplace_back(lim_webserver::Thread::create(&test_fiber,"name_"+std::to_string(i)));
     }
     for(auto i:thread_vec)
     {
