@@ -303,9 +303,7 @@ namespace lim_webserver
             }
         }
     }
-    /**
-     * @brief 创建appender时将自身的指针传入，当不指定formatter则默认使用logger的formatter
-     */
+
     void Logger::addAppender(LogAppender::ptr appender)
     {
         MutexType::Lock lock(m_mutex);
@@ -354,9 +352,6 @@ namespace lim_webserver
         return m_pattern;
     }
 
-    /**
-     * @brief LogAppender 子类的成员函数实现
-     */
     std::string StdoutLogAppender::toYamlString()
     {
         MutexType::Lock lock(m_mutex);
@@ -443,9 +438,6 @@ namespace lim_webserver
         }
     }
 
-    /**
-     * @brief LogFormatter实现
-     */
     LogFormatter::LogFormatter(const std::string &pattern)
         : m_pattern(pattern)
     {

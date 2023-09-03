@@ -173,9 +173,9 @@ namespace lim_webserver
         /**
          * @brief 获取日志事件所在的行号。
          *
-         * @return int32_t 行号。
+         * @return uint32_t 行号。
          */
-        int32_t getLine() const { return m_line; }
+        uint32_t getLine() const { return m_line; }
         /**
          * @brief 获取程序从启动到当前时刻的时长，以毫秒为单位。
          *
@@ -240,7 +240,7 @@ namespace lim_webserver
     private:
         const char *m_file = nullptr;     // 文件名
         LogLevel m_level;                 // 级别
-        int32_t m_line = 0;               // 行号
+        uint32_t m_line = 0;              // 行号
         uint32_t m_elapse = 0;            // 程序启动开始到现在的毫秒数
         uint32_t m_threadId = 0;          // 线程id
         uint32_t m_fiberId = 0;           // 协程id
@@ -258,13 +258,17 @@ namespace lim_webserver
     public:
         LogEventWrap(LogEvent::ptr e)
             : m_event(e) {}
-        // 析构时输出日志
+        /**
+         * @brief 析构时输出日志
+         */
         ~LogEventWrap();
-
-        // 获得日志事件
+        /**
+         * @brief 获得日志事件
+         */
         LogEvent::ptr getEvent() const { return m_event; }
-
-        // 获得日志内容流，以便左移操作补充内容
+        /**
+         * @brief 获得日志内容流，以便左移操作补充内容
+         */
         std::stringstream &getSS() { return m_event->getSS(); }
 
     private:
@@ -286,24 +290,37 @@ namespace lim_webserver
     public:
         LogFormatter(const std::string &pattern);
 
-        // 构造字符流
+        /**
+         * @brief 构造字符流
+         */
         std::string format(LogEvent::ptr event);
-        // 获得格式
+        /**
+         * @brief 获得格式
+         */
         const std::string &getPattern() const { return m_pattern; }
-        // 判断格式是否异常 true：异常
+        /**
+         * @brief 判断格式是否异常
+         * @return true：异常 false: 正常
+         */
         bool isError() { return m_error; }
 
-        // 格式器初始化
+        /**
+         * @brief 格式器初始化
+         */
         void init();
 
     public:
-        // 格式体虚父类
+        /**
+         * @brief 格式体虚父类
+         */
         class FormatItem
         {
         public:
             virtual ~FormatItem() {}
 
-            // 构造字符流
+            /**
+             * @brief 构造字符流
+             */
             virtual void format(std::ostream &os, LogEvent::ptr event) = 0;
         };
 
@@ -327,27 +344,39 @@ namespace lim_webserver
     public:
         virtual ~LogAppender(){};
 
-        // 输出日志，必须重构
+        /**
+         * @brief 输出日志，必须重构
+         */
         virtual void log(LogLevel Level, LogEvent::ptr event) = 0;
-        // 输出为Yaml字符串格式，必须重构
+        /**
+         * @brief 输出为Yaml字符串格式，必须重构
+         */
         virtual std::string toYamlString() = 0;
 
-        // 设置格式器
+        /**
+         * @brief 设置格式器
+         */
         void setFormatter(const std::string &pattern);
         void setFormatter(LogFormatter::ptr formatter);
-        // 获得格式器
+        /**
+         * @brief 获得格式器
+         */
         const LogFormatter::ptr &getFormatter();
 
-        // 设置输出地级别
+        /**
+         * @brief 设置输出地级别
+         */
         void setLevel(LogLevel level) { m_level = level; }
-        // 获得日志器级别
+        /**
+         * @brief 获得输出地级别
+         */
         LogLevel getLevel() const { return m_level; }
 
     protected:
         LogLevel m_level;              // 级别
         LogFormatter::ptr m_formatter; // 格式器
         bool m_custom_pattern = false; // 自定义格式
-        MutexType m_mutex;             // 锁
+        MutexType m_mutex;
     };
 
     /**
@@ -375,31 +404,51 @@ namespace lim_webserver
         Logger() {}
         Logger(const std::string &name);
         Logger(const std::string &name, LogLevel level, const std::string &pattern);
-        // 输出日志
+        /**
+         * @brief 输出日志
+         */
         void log(LogLevel level, const LogEvent::ptr &event);
 
-        // 添加日志输出地
+        /**
+         * @brief 添加日志输出地
+         */
         void addAppender(LogAppender::ptr appender);
-        // 删除日志输出地
+        /**
+         * @brief 删除日志输出地
+         */
         void delAppender(LogAppender::ptr appender);
-        // 清空日志输出地
+        /**
+         * @brief 清空日志输出地
+         */
         void clearAppender();
 
-        // 设置该日志的默认格式
+        /**
+         * @brief 设置日志的默认格式
+         */
         void setFormatter(const std::string &pattern);
 
-        // 获取日志的输出格式
+        /**
+         * @brief 获取日志的输出格式
+         */
         const std::string &getFormatter();
         const std::string &getPattern();
 
-        // 获取日志的默认级别
+        /**
+         * @brief 获取日志的默认级别
+         */
         LogLevel getLevel() const { return m_level; }
-        // 设置日志的默认级别
+        /**
+         * @brief 设置日志的默认级别
+         */
         void setLevel(LogLevel val) { m_level = val; }
-        // 获取日志的名称
+        /**
+         * @brief 获取日志的名称
+         */
         const std::string &getName() const { return m_name; }
 
-        // 打印成Yaml格式字符串
+        /**
+         * @brief 打印成Yaml格式字符串
+         */
         std::string toYamlString();
 
     private:
@@ -407,7 +456,7 @@ namespace lim_webserver
         LogLevel m_level = LogLevel::DEBUG;          // 日志级别
         std::list<LogAppender::ptr> m_appenders;     // Appender集合
         std::string m_pattern = LIM_DEFAULT_PATTERN; // 日志格式
-        MutexType m_mutex;                           // 锁
+        MutexType m_mutex;
     };
     /**
      * @brief 输出到控制台Appender
@@ -422,13 +471,15 @@ namespace lim_webserver
         }
 
     public:
-        // 输出日志到控制台中
+        /**
+         * @brief 输出日志到控制台中
+         */
         void log(LogLevel Level, LogEvent::ptr event) override;
 
-        // 打印成Yaml格式字符串
+        /**
+         * @brief 打印成Yaml格式字符串
+         */
         std::string toYamlString();
-
-    private:
     };
     /**
      * @brief 输出到文件的Appender
@@ -445,15 +496,23 @@ namespace lim_webserver
     public:
         FileLogAppender(const std::string &filename);
 
-        // 输出日志到文件中
+        /**
+         * @brief 输出日志到文件中
+         */
         void log(LogLevel Level, LogEvent::ptr event) override;
 
-        // 重新打开文件，打开成功返回true
+        /**
+         * @brief 重新打开文件，打开成功返回true
+         */
         bool reopen();
-        // 检测文件是否存在
+        /**
+         * @brief 检测文件是否存在
+         */
         bool fileExist();
 
-        // 打印成Yaml格式字符串
+        /**
+         * @brief 打印成Yaml格式字符串
+         */
         std::string toYamlString();
 
     private:
@@ -469,19 +528,25 @@ namespace lim_webserver
     public:
         LoggerManager();
 
-        // 传入日志器名称来获取日志器,如果不存在,返回全局日志器
+        /**
+         * @brief 使用指定名称日志器，若不存在，则创建默认格式的该名日志器
+         */
         Logger::ptr getLogger(const std::string &name);
 
-        // 使用全局日志器
+        /**
+         * @brief 使用全局日志器
+         */
         Logger::ptr getRoot() const { return m_root; }
 
-        // 打印成Yaml格式字符串
+        /**
+         * @brief 打印成Yaml格式字符串
+         */
         std::string toYamlString();
 
     private:
-        MutexType m_mutex;                                         // 锁
         std::unordered_map<std::string, Logger::ptr> m_logger_map; // 日志器容器
         Logger::ptr m_root;                                        // 全局日志器
+        MutexType m_mutex;
     };
     using LoggerMgr = Singleton<LoggerManager>;
 }
