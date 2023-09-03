@@ -6,10 +6,10 @@ namespace lim_webserver
     void Config::analysisYaml(const std::string &prefix, const YAML::Node &node, std::list<std::pair<std::string, const YAML::Node>> &output)
     {
         std::regex pattern("^[\\w.].*|");
-        recursive_analysis(pattern, prefix, node, output);
+        recursiveAnalysis(pattern, prefix, node, output);
     }
 
-    void Config::recursive_analysis(const std::regex &pattern,
+    void Config::recursiveAnalysis(const std::regex &pattern,
                                     const std::string &prefix,
                                     const YAML::Node &node,
                                     std::list<std::pair<std::string, const YAML::Node>> &output)
@@ -29,7 +29,7 @@ namespace lim_webserver
         {
             for (auto it = node.begin(); it != node.end(); ++it)
             {
-                recursive_analysis(pattern, prefix.empty() ? it->first.Scalar() : prefix + "." + it->first.Scalar(), it->second, output);
+                recursiveAnalysis(pattern, prefix.empty() ? it->first.Scalar() : prefix + "." + it->first.Scalar(), it->second, output);
             }
         }
     }
