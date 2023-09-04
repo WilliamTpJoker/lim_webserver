@@ -54,10 +54,6 @@ src/CMakeFiles/libconet.dir/main.cpp.o: include/singleton.h
 src/CMakeFiles/libconet.dir/main.cpp.o: include/thread.h
 src/CMakeFiles/libconet.dir/main.cpp.o: include/util.h
 
-src/CMakeFiles/libconet.dir/mutex.cpp.o: src/mutex.cpp
-src/CMakeFiles/libconet.dir/mutex.cpp.o: include/mutex.h
-src/CMakeFiles/libconet.dir/mutex.cpp.o: include/noncopyable.h
-
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: src/scheduler.cpp
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/fiber.h
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/log.h

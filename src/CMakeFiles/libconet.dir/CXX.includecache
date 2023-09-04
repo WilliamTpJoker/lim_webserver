@@ -54,10 +54,6 @@ log.h
 util.h
 /home/book/Webserver/src/util.h
 
-/home/book/Webserver/src/mutex.cpp
-mutex.h
-/home/book/Webserver/src/mutex.h
-
 /home/book/Webserver/src/scheduler.cpp
 scheduler.h
 /home/book/Webserver/src/scheduler.h

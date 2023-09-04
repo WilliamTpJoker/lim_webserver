@@ -26,11 +26,6 @@
 },
 {
   "directory": "/home/book/Webserver/src",
-  "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/mutex.cpp.o -c /home/book/Webserver/src/mutex.cpp",
-  "file": "/home/book/Webserver/src/mutex.cpp"
-},
-{
-  "directory": "/home/book/Webserver/src",
   "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/scheduler.cpp.o -c /home/book/Webserver/src/scheduler.cpp",
   "file": "/home/book/Webserver/src/scheduler.cpp"
 },

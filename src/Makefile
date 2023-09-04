@@ -263,33 +263,6 @@ main.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/main.cpp.s
 .PHONY : main.cpp.s
 
-mutex.o: mutex.cpp.o
-
-.PHONY : mutex.o
-
-# target to build an object file
-mutex.cpp.o:
-	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/mutex.cpp.o
-.PHONY : mutex.cpp.o
-
-mutex.i: mutex.cpp.i
-
-.PHONY : mutex.i
-
-# target to preprocess a source file
-mutex.cpp.i:
-	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/mutex.cpp.i
-.PHONY : mutex.cpp.i
-
-mutex.s: mutex.cpp.s
-
-.PHONY : mutex.s
-
-# target to generate assembly for a file
-mutex.cpp.s:
-	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/mutex.cpp.s
-.PHONY : mutex.cpp.s
-
 scheduler.o: scheduler.cpp.o
 
 .PHONY : scheduler.o
@@ -395,9 +368,6 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
-	@echo "... mutex.o"
-	@echo "... mutex.i"
-	@echo "... mutex.s"
 	@echo "... scheduler.o"
 	@echo "... scheduler.i"
 	@echo "... scheduler.s"

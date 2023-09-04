@@ -21,21 +21,42 @@ namespace lim_webserver
          *
          * @param count 信号量初始计数
          */
-        Semaphore(uint32_t count = 0);
+        Semaphore(uint32_t count = 0)
+        {
+            if (sem_init(&m_semaphore, 0, count))
+            {
+                throw std::logic_error("sem_init error");
+            }
+        }
         /**
          * @brief 析构函数
          */
-        ~Semaphore();
+        ~Semaphore()
+        {
+            sem_destroy(&m_semaphore);
+        }
 
         /**
          * @brief 等待信号量
          */
-        void wait();
+        void wait()
+        {
+            if (sem_wait(&m_semaphore))
+            {
+                throw std::logic_error("sem_wait error");
+            }
+        }
 
         /**
          * @brief 释放信号量
          */
-        void notify();
+        void notify()
+        {
+            if (sem_post(&m_semaphore))
+            {
+                throw std::logic_error("sem_post error");
+            }
+        }
 
     private:
         sem_t m_semaphore; // 信号量实例
@@ -215,7 +236,7 @@ namespace lim_webserver
          */
         void unlock() { pthread_mutex_unlock(&m_mutex); }
 
-        pthread_mutex_t* getMutex(){return &m_mutex;}
+        pthread_mutex_t *getMutex() { return &m_mutex; }
 
     private:
         pthread_mutex_t m_mutex; // 互斥锁
@@ -321,7 +342,7 @@ namespace lim_webserver
         pthread_spinlock_t m_mutex; // 自旋锁
     };
 
-    template <class T=Mutex>
+    template <class T = Mutex>
     class ConditionVariable
     {
     public:
@@ -336,8 +357,10 @@ namespace lim_webserver
         }
         /**
          * @brief 当条件不成立时，则会将该线程置于等待状态
-        */
-        void wait(T &mutex, std::function<bool()> condition=[]{return false;})
+         */
+        void wait(
+            T &mutex, std::function<bool()> condition = []
+                      { return false; })
         {
             ++waitersCount;
             while (!condition())

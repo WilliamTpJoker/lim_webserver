@@ -4,7 +4,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/libconet.dir/io_manager.cpp.o"
   "CMakeFiles/libconet.dir/log.cpp.o"
   "CMakeFiles/libconet.dir/main.cpp.o"
-  "CMakeFiles/libconet.dir/mutex.cpp.o"
   "CMakeFiles/libconet.dir/scheduler.cpp.o"
   "CMakeFiles/libconet.dir/thread.cpp.o"
   "CMakeFiles/libconet.dir/util.cpp.o"
