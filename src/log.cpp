@@ -570,6 +570,11 @@ namespace lim_webserver
             return name < oth.name;
         }
 
+        bool operator!=(const LogDefine &oth) const
+        {
+            return !(*this == oth);
+        }
+
         bool isValid() const
         {
             return !name.empty();
@@ -709,25 +714,12 @@ namespace lim_webserver
             {
                 for (auto &i : new_val)
                 {
-
                     Logger::ptr logger;
                     auto it = old_val.find(i);
-                    if (it == old_val.end())
+                    if (it == old_val.end() || (i != *it))
                     {
-                        // 新增
+                        // 新增或修改
                         logger = LIM_LOG_NAME(i.name);
-                    }
-                    else
-                    {
-                        if (!(i == *it))
-                        {
-                            // 修改
-                            logger = LIM_LOG_NAME(i.name);
-                        }
-                        else
-                        {
-                            continue;
-                        }
                     }
                     logger->setLevel(i.level);
                     if (!i.formatter.empty())
