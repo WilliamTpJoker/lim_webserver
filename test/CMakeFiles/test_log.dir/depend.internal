@@ -3,7 +3,6 @@
 
 test/CMakeFiles/test_log.dir/test_log.cpp.o
  /home/book/Webserver/test/test_log.cpp
- include/fiber.h
  include/log.h
  include/mutex.h
  include/noncopyable.h

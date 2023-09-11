@@ -4,7 +4,6 @@
 test/CMakeFiles/test_config.dir/test_config.cpp.o
  /home/book/Webserver/test/test_config.cpp
  include/config.h
- include/fiber.h
  include/log.h
  include/mutex.h
  include/noncopyable.h

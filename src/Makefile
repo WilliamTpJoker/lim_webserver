@@ -317,6 +317,33 @@ thread.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/thread.cpp.s
 .PHONY : thread.cpp.s
 
+timer.o: timer.cpp.o
+
+.PHONY : timer.o
+
+# target to build an object file
+timer.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/timer.cpp.o
+.PHONY : timer.cpp.o
+
+timer.i: timer.cpp.i
+
+.PHONY : timer.i
+
+# target to preprocess a source file
+timer.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/timer.cpp.i
+.PHONY : timer.cpp.i
+
+timer.s: timer.cpp.s
+
+.PHONY : timer.s
+
+# target to generate assembly for a file
+timer.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/timer.cpp.s
+.PHONY : timer.cpp.s
+
 util.o: util.cpp.o
 
 .PHONY : util.o
@@ -374,6 +401,9 @@ help:
 	@echo "... thread.o"
 	@echo "... thread.i"
 	@echo "... thread.s"
+	@echo "... timer.o"
+	@echo "... timer.i"
+	@echo "... timer.s"
 	@echo "... util.o"
 	@echo "... util.i"
 	@echo "... util.s"

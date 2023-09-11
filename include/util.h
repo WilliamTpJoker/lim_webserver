@@ -9,8 +9,7 @@
 #include <stdint.h>
 #include <memory>
 #include <vector>
-
-#include "fiber.h"
+#include <sys/time.h>
 
 namespace lim_webserver
 {
@@ -20,6 +19,12 @@ namespace lim_webserver
 
     /** 获取协程的ID */
     uint32_t GetFiberId();
+
+    /** 获取当前毫秒时间 */
+    uint64_t GetCurrentMS();
+
+    /** 获取当前微秒时间 */
+    uint64_t GetCurrentUS();
 
     /**
      * @brief 收集函数调用栈信息。

@@ -13,5 +13,6 @@ test/CMakeFiles/test_util.dir/test_util.cpp.o: include/noncopyable.h
 test/CMakeFiles/test_util.dir/test_util.cpp.o: include/scheduler.h
 test/CMakeFiles/test_util.dir/test_util.cpp.o: include/singleton.h
 test/CMakeFiles/test_util.dir/test_util.cpp.o: include/thread.h
+test/CMakeFiles/test_util.dir/test_util.cpp.o: include/timer.h
 test/CMakeFiles/test_util.dir/test_util.cpp.o: include/util.h
 

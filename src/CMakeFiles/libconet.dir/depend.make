@@ -3,7 +3,6 @@
 
 src/CMakeFiles/libconet.dir/config.cpp.o: src/config.cpp
 src/CMakeFiles/libconet.dir/config.cpp.o: include/config.h
-src/CMakeFiles/libconet.dir/config.cpp.o: include/fiber.h
 src/CMakeFiles/libconet.dir/config.cpp.o: include/log.h
 src/CMakeFiles/libconet.dir/config.cpp.o: include/mutex.h
 src/CMakeFiles/libconet.dir/config.cpp.o: include/noncopyable.h
@@ -33,11 +32,11 @@ src/CMakeFiles/libconet.dir/io_manager.cpp.o: include/noncopyable.h
 src/CMakeFiles/libconet.dir/io_manager.cpp.o: include/scheduler.h
 src/CMakeFiles/libconet.dir/io_manager.cpp.o: include/singleton.h
 src/CMakeFiles/libconet.dir/io_manager.cpp.o: include/thread.h
+src/CMakeFiles/libconet.dir/io_manager.cpp.o: include/timer.h
 src/CMakeFiles/libconet.dir/io_manager.cpp.o: include/util.h
 
 src/CMakeFiles/libconet.dir/log.cpp.o: src/log.cpp
 src/CMakeFiles/libconet.dir/log.cpp.o: include/config.h
-src/CMakeFiles/libconet.dir/log.cpp.o: include/fiber.h
 src/CMakeFiles/libconet.dir/log.cpp.o: include/log.h
 src/CMakeFiles/libconet.dir/log.cpp.o: include/mutex.h
 src/CMakeFiles/libconet.dir/log.cpp.o: include/noncopyable.h
@@ -46,7 +45,6 @@ src/CMakeFiles/libconet.dir/log.cpp.o: include/thread.h
 src/CMakeFiles/libconet.dir/log.cpp.o: include/util.h
 
 src/CMakeFiles/libconet.dir/main.cpp.o: src/main.cpp
-src/CMakeFiles/libconet.dir/main.cpp.o: include/fiber.h
 src/CMakeFiles/libconet.dir/main.cpp.o: include/log.h
 src/CMakeFiles/libconet.dir/main.cpp.o: include/mutex.h
 src/CMakeFiles/libconet.dir/main.cpp.o: include/noncopyable.h
@@ -66,13 +64,19 @@ src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/thread.h
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/util.h
 
 src/CMakeFiles/libconet.dir/thread.cpp.o: src/thread.cpp
-src/CMakeFiles/libconet.dir/thread.cpp.o: include/fiber.h
 src/CMakeFiles/libconet.dir/thread.cpp.o: include/log.h
 src/CMakeFiles/libconet.dir/thread.cpp.o: include/mutex.h
 src/CMakeFiles/libconet.dir/thread.cpp.o: include/noncopyable.h
 src/CMakeFiles/libconet.dir/thread.cpp.o: include/singleton.h
 src/CMakeFiles/libconet.dir/thread.cpp.o: include/thread.h
 src/CMakeFiles/libconet.dir/thread.cpp.o: include/util.h
+
+src/CMakeFiles/libconet.dir/timer.cpp.o: src/timer.cpp
+src/CMakeFiles/libconet.dir/timer.cpp.o: include/mutex.h
+src/CMakeFiles/libconet.dir/timer.cpp.o: include/noncopyable.h
+src/CMakeFiles/libconet.dir/timer.cpp.o: include/thread.h
+src/CMakeFiles/libconet.dir/timer.cpp.o: include/timer.h
+src/CMakeFiles/libconet.dir/timer.cpp.o: include/util.h
 
 src/CMakeFiles/libconet.dir/util.cpp.o: src/util.cpp
 src/CMakeFiles/libconet.dir/util.cpp.o: include/fiber.h

@@ -11,6 +11,7 @@
 #include "scheduler.h"
 #include "singleton.h"
 #include "thread.h"
+#include "time.h"
 #include "util.h"
 
 #endif

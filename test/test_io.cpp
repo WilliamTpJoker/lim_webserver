@@ -49,8 +49,18 @@ void test()
     iom.schedule(&test_fiber);
 }
 
+void test_timer()
+{
+    lim_webserver::IoManager iom(2);
+    iom.addTimer(500,[](){
+        LIM_LOG_INFO(g_logger)<<"hello timer";
+    },true);
+    // iom.schedule(&test_fiber);
+}
+
 int main(int argc, char *argv[])
 {
-    test();
+    // test();
+    test_timer();
     return 0;
 }

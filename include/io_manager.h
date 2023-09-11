@@ -2,11 +2,12 @@
 #define __LIM_IO_H__
 
 #include "scheduler.h"
+#include "timer.h"
 
 namespace lim_webserver
 {
 
-    class IoManager : public Scheduler
+    class IoManager : public Scheduler, public TimerManager
     {
     public:
         using RWMutexType = RWMutex;
@@ -53,9 +54,12 @@ namespace lim_webserver
         };
 
     protected:
-        virtual void tickle() override;
-        virtual bool onStop() override;
-        virtual void onIdle() override;
+        void tickle() override;
+        bool onStop() override;
+        bool onStop(uint64_t& timeout);
+        void onIdle() override;
+
+        void onTimerInsertedAtFront() override;
 
         void contextResize(size_t size);
 

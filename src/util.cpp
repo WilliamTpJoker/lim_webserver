@@ -1,6 +1,7 @@
 #include <execinfo.h>
 
 #include "util.h"
+#include "fiber.h"
 #include "log.h"
 
 namespace lim_webserver
@@ -15,6 +16,20 @@ namespace lim_webserver
     uint32_t GetFiberId()
     {
         return Fiber::GetFiberId();
+    }
+
+    uint64_t GetCurrentMS()
+    {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        return tv.tv_sec * 1000ul + tv.tv_usec / 1000;
+    }
+
+    uint64_t GetCurrentUS()
+    {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        return tv.tv_sec * 1000 * 1000ul + tv.tv_usec;
     }
 
     void BackTrace(std::vector<std::string> &bt, int maxFrames, int skip)

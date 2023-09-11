@@ -16,6 +16,7 @@ namespace lim_webserver
     public:
         using MutexType = Mutex;
 
+    public:
         /**
          * @brief 构造函数，创建调度器对象
          * @param threads 线程数量
@@ -26,7 +27,7 @@ namespace lim_webserver
         /**
          * @brief 析构函数，销毁调度器对象
          */
-        virtual ~Scheduler();
+        ~Scheduler();
         /**
          * @brief 获取调度器名称
          * @return 调度器名称
@@ -94,7 +95,8 @@ namespace lim_webserver
         virtual void onIdle();
         void run();
         virtual bool onStop();
-        bool hasIdleThreads() { return m_idleThreadCount > 0;}
+        bool hasIdleThreads() { return m_idleThreadCount > 0; }
+
     private:
         /**
          * @brief 本地调度
@@ -130,7 +132,7 @@ namespace lim_webserver
     private:
         struct FiberAndThread
         {
-            Fiber::ptr fiber;        // 协程
+            Fiber::ptr fiber;               // 协程
             std::function<void()> callback; // 回调
             int thread;                     // 线程编号
 
@@ -168,11 +170,11 @@ namespace lim_webserver
         int m_rootThread = 0;                          // 根协程所在的线程ID
 
     private:
-        MutexType m_mutex;                             // 互斥锁
-        std::vector<Thread::ptr> m_thread_list; // 线程池
-        std::queue<FiberAndThread> m_task_queue;        // 任务列表
-        std::string m_name;                            // 调度器名称
-        Fiber::ptr m_rootFiber;                 // 主协程
+        MutexType m_mutex;                       // 互斥锁
+        std::vector<Thread::ptr> m_thread_list;  // 线程池
+        std::queue<FiberAndThread> m_task_queue; // 任务列表
+        std::string m_name;                      // 调度器名称
+        Fiber::ptr m_rootFiber;                  // 主协程
     };
 }
 

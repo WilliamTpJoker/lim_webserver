@@ -307,10 +307,16 @@ namespace lim_webserver
         LIM_ASSERT(rt == 1);
     }
 
-
     bool IoManager::onStop()
     {
-        return Scheduler::onStop() && m_pendingEventCount == 0;
+        uint64_t timeout = 0;
+        return onStop(timeout);
+    }
+
+    bool IoManager::onStop(uint64_t &timeout)
+    {
+        timeout = getNextTimer();
+        return timeout == ~0ull && m_pendingEventCount == 0 && Scheduler::onStop();
     }
 
     void IoManager::onIdle()
@@ -320,27 +326,56 @@ namespace lim_webserver
         std::shared_ptr<epoll_event> shared_events(events, [](epoll_event *ptr)
                                                    { delete[] ptr; });
 
-        while (!onStop())
+        while (true)
         {
-            int rt = 0;
-            while (true)
+            uint64_t next_timeout = 0;
+            if (onStop(next_timeout))
             {
-                static const int MAX_TIMEOUT = 5000;
-                rt = epoll_wait(m_epollFd, events, MAX_EVENTS, MAX_TIMEOUT);
-                LIM_LOG_DEBUG(g_logger) << "epoll_wait rt=" << rt;
-                if (rt >= 0 || errno != EINTR)
+                LIM_LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
+                break;
+            }
+
+            int rt = 0;
+            do
+            {
+                static const int MAX_TIMEOUT = 1000;
+                if (next_timeout != ~0ull)
+                {
+                    next_timeout = (int)next_timeout > MAX_TIMEOUT ? MAX_TIMEOUT : next_timeout;
+                }
+                else
+                {
+                    next_timeout = MAX_TIMEOUT;
+                }
+                // LIM_LOG_DEBUG(g_logger) << "next_timeout=" << next_timeout;
+                rt = epoll_wait(m_epollFd, events, MAX_EVENTS, (int)next_timeout);
+                // LIM_LOG_DEBUG(g_logger) << "epoll_wait rt=" << rt;
+                if (rt < 0 && errno == EINTR)
+                {
+                }
+                else
                 {
                     break;
                 }
+            } while (true);
+
+            // 处理定时器
+            std::vector<std::function<void()>> callback_list;
+            listExpiredCallback(callback_list);
+            if (!callback_list.empty())
+            {
+                schedule(callback_list.begin(), callback_list.end());
+                callback_list.clear();
             }
 
+            // 处理io消息
             for (int i = 0; i < rt; ++i)
             {
                 epoll_event &event = events[i];
                 if (event.data.fd == m_ticlefds[0])
                 {
                     uint8_t dummy[256];
-                    while (read(m_ticlefds[0], dummy,  sizeof(dummy)) >0)
+                    while (read(m_ticlefds[0], dummy, sizeof(dummy)) > 0)
                     {
                     };
                     continue;
@@ -394,6 +429,11 @@ namespace lim_webserver
 
             raw_ptr->swapOut();
         }
+    }
+
+    void IoManager::onTimerInsertedAtFront()
+    {
+        tickle();
     }
 
     void IoManager::contextResize(size_t size)

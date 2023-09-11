@@ -6,6 +6,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/libconet.dir/main.cpp.o"
   "CMakeFiles/libconet.dir/scheduler.cpp.o"
   "CMakeFiles/libconet.dir/thread.cpp.o"
+  "CMakeFiles/libconet.dir/timer.cpp.o"
   "CMakeFiles/libconet.dir/util.cpp.o"
   "../lib/liblibconet.pdb"
   "../lib/liblibconet.a"
