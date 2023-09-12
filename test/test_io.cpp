@@ -49,11 +49,18 @@ void test()
     iom.schedule(&test_fiber);
 }
 
+lim_webserver::Timer::ptr s_timer;
 void test_timer()
 {
     lim_webserver::IoManager iom(2);
-    iom.addTimer(500,[](){
-        LIM_LOG_INFO(g_logger)<<"hello timer";
+    s_timer =iom.addTimer(500,[](){
+        static int i=0;
+        LIM_LOG_INFO(g_logger)<<"hello timer, i="<<i;
+        if(++i==3)
+        {
+            s_timer->reset(2000);
+            // s_timer->cancel();
+        }
     },true);
     // iom.schedule(&test_fiber);
 }

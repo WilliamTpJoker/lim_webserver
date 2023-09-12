@@ -35,7 +35,7 @@ namespace lim_webserver
          * @param ms 定时器执行间隔时间(毫秒)
          * @param from_now 是否从当前时间开始计算
          */
-        bool reset(uint64_t ms, bool from_now);
+        bool reset(uint64_t ms, bool from_now=false);
 
     private:
         Timer(uint64_t time, std::function<void()> callback, bool recurring, TimerManager *manager);
