@@ -4,6 +4,7 @@
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: test/test_fiber.cpp
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/config.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/fiber.h
+test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/hook.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/io_manager.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/lim.h
 test/CMakeFiles/test_fiber.dir/test_fiber.cpp.o: include/log.h

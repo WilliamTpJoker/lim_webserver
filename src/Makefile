@@ -182,6 +182,33 @@ fiber.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/fiber.cpp.s
 .PHONY : fiber.cpp.s
 
+hook.o: hook.cpp.o
+
+.PHONY : hook.o
+
+# target to build an object file
+hook.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/hook.cpp.o
+.PHONY : hook.cpp.o
+
+hook.i: hook.cpp.i
+
+.PHONY : hook.i
+
+# target to preprocess a source file
+hook.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/hook.cpp.i
+.PHONY : hook.cpp.i
+
+hook.s: hook.cpp.s
+
+.PHONY : hook.s
+
+# target to generate assembly for a file
+hook.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/hook.cpp.s
+.PHONY : hook.cpp.s
+
 io_manager.o: io_manager.cpp.o
 
 .PHONY : io_manager.o
@@ -386,6 +413,9 @@ help:
 	@echo "... fiber.o"
 	@echo "... fiber.i"
 	@echo "... fiber.s"
+	@echo "... hook.o"
+	@echo "... hook.i"
+	@echo "... hook.s"
 	@echo "... io_manager.o"
 	@echo "... io_manager.i"
 	@echo "... io_manager.s"

@@ -4,6 +4,7 @@
 test/CMakeFiles/test_io.dir/test_io.cpp.o: test/test_io.cpp
 test/CMakeFiles/test_io.dir/test_io.cpp.o: include/config.h
 test/CMakeFiles/test_io.dir/test_io.cpp.o: include/fiber.h
+test/CMakeFiles/test_io.dir/test_io.cpp.o: include/hook.h
 test/CMakeFiles/test_io.dir/test_io.cpp.o: include/io_manager.h
 test/CMakeFiles/test_io.dir/test_io.cpp.o: include/lim.h
 test/CMakeFiles/test_io.dir/test_io.cpp.o: include/log.h

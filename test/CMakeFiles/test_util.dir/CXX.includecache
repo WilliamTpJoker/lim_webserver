@@ -38,6 +38,10 @@ ucontext.h
 thread.h
 include/thread.h
 
+include/hook.h
+unistd.h
+-
+
 include/io_manager.h
 scheduler.h
 include/scheduler.h
@@ -49,6 +53,8 @@ config.h
 include/config.h
 fiber.h
 include/fiber.h
+hook.h
+include/hook.h
 io_manager.h
 include/io_manager.h
 log.h

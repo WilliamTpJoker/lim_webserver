@@ -11,6 +11,11 @@
 },
 {
   "directory": "/home/book/Webserver/src",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/hook.cpp.o -c /home/book/Webserver/src/hook.cpp",
+  "file": "/home/book/Webserver/src/hook.cpp"
+},
+{
+  "directory": "/home/book/Webserver/src",
   "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/io_manager.cpp.o -c /home/book/Webserver/src/io_manager.cpp",
   "file": "/home/book/Webserver/src/io_manager.cpp"
 },
@@ -51,6 +56,11 @@
 },
 {
   "directory": "/home/book/Webserver/test",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_thread.dir/test_thread.cpp.o -c /home/book/Webserver/test/test_thread.cpp",
+  "file": "/home/book/Webserver/test/test_thread.cpp"
+},
+{
+  "directory": "/home/book/Webserver/test",
   "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_fiber.dir/test_fiber.cpp.o -c /home/book/Webserver/test/test_fiber.cpp",
   "file": "/home/book/Webserver/test/test_fiber.cpp"
 },
@@ -61,13 +71,13 @@
 },
 {
   "directory": "/home/book/Webserver/test",
-  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_io.dir/test_io.cpp.o -c /home/book/Webserver/test/test_io.cpp",
-  "file": "/home/book/Webserver/test/test_io.cpp"
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_hook.dir/test_hook.cpp.o -c /home/book/Webserver/test/test_hook.cpp",
+  "file": "/home/book/Webserver/test/test_hook.cpp"
 },
 {
   "directory": "/home/book/Webserver/test",
-  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_thread.dir/test_thread.cpp.o -c /home/book/Webserver/test/test_thread.cpp",
-  "file": "/home/book/Webserver/test/test_thread.cpp"
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include -I/home/book/Webserver/test/../src    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/test_io.dir/test_io.cpp.o -c /home/book/Webserver/test/test_io.cpp",
+  "file": "/home/book/Webserver/test/test_io.cpp"
 },
 {
   "directory": "/home/book/Webserver/test",

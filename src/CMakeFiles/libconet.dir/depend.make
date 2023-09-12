@@ -22,6 +22,20 @@ src/CMakeFiles/libconet.dir/fiber.cpp.o: include/singleton.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/thread.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/util.h
 
+src/CMakeFiles/libconet.dir/hook.cpp.o: src/hook.cpp
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/fiber.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/hook.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/io_manager.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/log.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/macro.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/mutex.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/noncopyable.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/scheduler.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/singleton.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/thread.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/timer.h
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/util.h
+
 src/CMakeFiles/libconet.dir/io_manager.cpp.o: src/io_manager.cpp
 src/CMakeFiles/libconet.dir/io_manager.cpp.o: include/fiber.h
 src/CMakeFiles/libconet.dir/io_manager.cpp.o: include/io_manager.h
@@ -54,6 +68,7 @@ src/CMakeFiles/libconet.dir/main.cpp.o: include/util.h
 
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: src/scheduler.cpp
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/fiber.h
+src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/hook.h
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/log.h
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/macro.h
 src/CMakeFiles/libconet.dir/scheduler.cpp.o: include/mutex.h

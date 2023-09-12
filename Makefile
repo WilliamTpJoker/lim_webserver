@@ -140,6 +140,19 @@ test_util/fast:
 .PHONY : test_util/fast
 
 #=============================================================================
+# Target rules for targets named test_thread
+
+# Build rule for target.
+test_thread: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_thread
+.PHONY : test_thread
+
+# fast build rule for target.
+test_thread/fast:
+	$(MAKE) -f test/CMakeFiles/test_thread.dir/build.make test/CMakeFiles/test_thread.dir/build
+.PHONY : test_thread/fast
+
+#=============================================================================
 # Target rules for targets named test_fiber
 
 # Build rule for target.
@@ -166,6 +179,19 @@ test_config/fast:
 .PHONY : test_config/fast
 
 #=============================================================================
+# Target rules for targets named test_hook
+
+# Build rule for target.
+test_hook: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_hook
+.PHONY : test_hook
+
+# fast build rule for target.
+test_hook/fast:
+	$(MAKE) -f test/CMakeFiles/test_hook.dir/build.make test/CMakeFiles/test_hook.dir/build
+.PHONY : test_hook/fast
+
+#=============================================================================
 # Target rules for targets named test_io
 
 # Build rule for target.
@@ -177,19 +203,6 @@ test_io: cmake_check_build_system
 test_io/fast:
 	$(MAKE) -f test/CMakeFiles/test_io.dir/build.make test/CMakeFiles/test_io.dir/build
 .PHONY : test_io/fast
-
-#=============================================================================
-# Target rules for targets named test_thread
-
-# Build rule for target.
-test_thread: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 test_thread
-.PHONY : test_thread
-
-# fast build rule for target.
-test_thread/fast:
-	$(MAKE) -f test/CMakeFiles/test_thread.dir/build.make test/CMakeFiles/test_thread.dir/build
-.PHONY : test_thread/fast
 
 #=============================================================================
 # Target rules for targets named test_log
@@ -227,10 +240,11 @@ help:
 	@echo "... edit_cache"
 	@echo "... libconet"
 	@echo "... test_util"
+	@echo "... test_thread"
 	@echo "... test_fiber"
 	@echo "... test_config"
+	@echo "... test_hook"
 	@echo "... test_io"
-	@echo "... test_thread"
 	@echo "... test_log"
 	@echo "... test_scheduler"
 .PHONY : help

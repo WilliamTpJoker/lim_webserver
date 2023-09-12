@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "hook.h"
 
 namespace lim_webserver
 {
@@ -135,6 +136,7 @@ namespace lim_webserver
     void Scheduler::run()
     {
         LIM_LOG_DEBUG(g_logger) << m_name << " run";
+        set_hook_enable(true);
         t_scheduler = this;
         if (GetThreadId() != m_rootThread)
         {

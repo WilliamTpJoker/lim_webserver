@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "fiber.h"
+#include "hook.h"
 #include "io_manager.h"
 #include "log.h"
 #include "macro.h"
