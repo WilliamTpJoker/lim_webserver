@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/libconet.dir/config.cpp.o"
+  "CMakeFiles/libconet.dir/fd_manager.cpp.o"
   "CMakeFiles/libconet.dir/fiber.cpp.o"
   "CMakeFiles/libconet.dir/hook.cpp.o"
   "CMakeFiles/libconet.dir/io_manager.cpp.o"

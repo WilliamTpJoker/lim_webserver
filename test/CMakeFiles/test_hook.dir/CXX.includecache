@@ -19,7 +19,21 @@ thread.h
 include/thread.h
 
 include/hook.h
+fcntl.h
+-
 unistd.h
+-
+time.h
+-
+stdint.h
+-
+sys/uio.h
+-
+sys/ioctl.h
+-
+sys/types.h
+-
+sys/socket.h
 -
 
 include/io_manager.h

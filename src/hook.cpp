@@ -4,14 +4,35 @@
 #include "fiber.h"
 #include "thread.h"
 #include "io_manager.h"
+#include "fd_manager.h"
+#include "log.h"
 
 namespace lim_webserver
 {
     static thread_local bool t_hook_enable = false;
-
+    static Logger::ptr g_logger = LIM_LOG_NAME("system");
 #define HOOK_FUN(F) \
     F(sleep)        \
-    F(usleep)
+    F(usleep)       \
+    F(nanosleep)    \
+    F(socket)       \
+    F(connect)      \
+    F(accept)       \
+    F(read)         \
+    F(readv)        \
+    F(recv)         \
+    F(recvfrom)     \
+    F(recvmsg)      \
+    F(write)        \
+    F(writev)       \
+    F(send)         \
+    F(sendto)       \
+    F(sendmsg)      \
+    F(close)        \
+    F(fcntl)        \
+    F(ioctl)        \
+    F(getsockopt)   \
+    F(setsockopt)
 
     void hook_init()
     {
@@ -20,19 +41,28 @@ namespace lim_webserver
         {
             return;
         }
+        /**
+         * 最终宏拓展为
+         * sleep_f = (sleep_fun)dlsym(((void *) -1l), "sleep");
+         *
+         * 其中 dlsym 函数用于在动态链接库中查找函数的地址，
+         * ((void *) -1l) 表示在当前进程的地址空间中查找函数，
+         * "sleep" 是要查找的函数的名称。
+         */
 #define LOAD_HOOK_FUN(name) name##_f = (name##_fun)dlsym(RTLD_NEXT, #name);
         HOOK_FUN(LOAD_HOOK_FUN);
 #undef LOAD_HOOK_FUN
+        is_inited = true;
     }
 
-    struct  _HookIniter
+    struct _HookIniter
     {
         _HookIniter()
         {
             hook_init();
         }
     };
-    
+
     static _HookIniter s_hookIniter;
 
     bool is_hook_enable()
@@ -45,39 +75,260 @@ namespace lim_webserver
         t_hook_enable = flag;
     }
 
+    struct timer_info
+    {
+        int cancelled = 0;
+    };
+
+    template <typename OriginFun, typename... Args>
+    static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t event, int timeout_so, Args &&...args)
+    {
+        // 如果全局变量 t_hook_enable 为否，不启用钩子，则直接调用系统原生函数
+        if (!t_hook_enable)
+        {
+            return fun(fd, std::forward<Args>(args)...);
+        }
+
+        // 获取文件描述符的上下文信息，如果无法获取上下文信息，则说明文件句柄不存在，直接调用原生函数
+        FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
+        if (!ctx)
+        {
+            return fun(fd, std::forward<Args>(args)...);
+        }
+
+        // 文件描述符若关闭，则设置错误码并返回 -1
+        if (ctx->isClosed())
+        {
+            errno = EBADF; // 文件描述符无效或不可用。
+            return -1;
+        }
+
+        // 文件描述符若不为套接字或用户设置了非阻塞模式，直接调用原生函数
+        if (!ctx->isSocket() || ctx->getUserNonblock())
+        {
+            return fun(fd, std::forward<Args>(args)...);
+        }
+
+        // 后续则为自定义的socket操作函数
+
+        // 获取超时时间
+        uint64_t to = ctx->getTimeout(timeout_so);
+        // 创建一个用于管理定时器的信息结构
+        std::shared_ptr<timer_info> tinfo(new timer_info);
+        std::weak_ptr<timer_info> winfo(tinfo);
+        ssize_t n;
+        IoManager *iom;
+        Timer::ptr timer;
+        // 进入无限循环，用于重试IO 操作
+        while (true)
+        {
+            // 调用传入的原生函数执行操作
+            n = fun(fd, std::forward<Args>(args)...);
+            // n==-1表示函数调用失败；
+            // 若错误码为 EINTR 即系统调用被中断的情况，继续调用原生函数。
+            while (n == -1 && errno == EINTR)
+            {
+                n = fun(fd, std::forward<Args>(args)...);
+            }
+
+            // 若函数调用成功或者错误码不为 EAGAIN 即资源暂时不可用，表示操作成功或出错，直接返回结果。
+            if (n != -1 || errno != EAGAIN)
+            {
+                return n;
+            }
+
+            // 后续则为函数调用成功但资源不可用,则表明需要进行异步操作
+
+            iom = IoManager::GetThis();
+
+            // 若设置了超时时间，则创建一个条件定时器来处理超时事件
+            if (to != (uint64_t)-1)
+            {
+                // 超时则触发回调，若条件弱指针的对象析构了或条件为取消，则说明事件结束，直接退出；否则就设定事件类型为取消并取消事件
+                timer = iom->addConditionTimer(
+                    to, [winfo, fd, iom, event]()
+                    {
+                        auto t = winfo.lock();
+                        if (!t || t->cancelled) {
+                            return;
+                        }
+                        t->cancelled = ETIMEDOUT;
+                        iom->cancelEvent(fd, (IoManager::IoEvent)event); },
+                    winfo);
+            }
+
+            // 添加该协程事件，即后续内容
+            int rt = iom->addEvent(fd, (IoManager::IoEvent)event);
+
+            // 处理添加事件失败的情况，设置错误码并返回 -1
+            if (rt)
+            {
+                LIM_LOG_ERROR(g_logger) << hook_fun_name << " addEvent(" << fd << ", " << event << ")";
+                if (timer)
+                {
+                    timer->cancel();
+                }
+                return -1;
+            }
+            // 添加成功了则让出协程执行权，等待读到事件的唤醒或者定时器的唤醒
+            else
+            {
+                Fiber::YieldToHold();
+                if (timer)
+                {
+                    timer->cancel();
+                }
+                // 如果定时器信息为超时，则表明事件超时，设置错误码为超时并返回 -1
+                if (tinfo->cancelled)
+                {
+                    errno = tinfo->cancelled;
+                    return -1;
+                }
+            }
+        }
+    }
+
     extern "C"
     {
 #define DEF_FUN_NAME(name) name##_fun name##_f = nullptr;
-        // 定义系统 api 的函数指针的变量
         HOOK_FUN(DEF_FUN_NAME);
 #undef DEF_FUN_NAME
 
         unsigned int sleep(unsigned int seconds)
         {
-            if(!t_hook_enable)
+            if (!t_hook_enable)
             {
                 return sleep_f(seconds);
             }
-            
+
             Fiber::ptr fiber = Fiber::GetThis();
-            IoManager* iom = IoManager::GetThis();
-            iom->addTimer(seconds*1000,[iom, fiber](){ iom->schedule(fiber, -1); });
+            IoManager *iom = IoManager::GetThis();
+            iom->addTimer(seconds * 1000, [iom, fiber]()
+                          { iom->schedule(fiber); });
             Fiber::YieldToHold();
             return 0;
         }
 
         int usleep(useconds_t usec)
         {
-            if(!t_hook_enable)
+            if (!t_hook_enable)
             {
                 return usleep_f(usec);
             }
 
             Fiber::ptr fiber = Fiber::GetThis();
-            IoManager* iom = IoManager::GetThis();
-            iom->addTimer(usec/1000,[iom, fiber](){ iom->schedule(fiber, -1); });
+            IoManager *iom = IoManager::GetThis();
+            iom->addTimer(usec / 1000, [iom, fiber]()
+                          { iom->schedule(fiber); });
             Fiber::YieldToHold();
-            return 0; 
+            return 0;
+        }
+
+        int nanosleep(const struct timespec *req, struct timespec *rem)
+        {
+            if (!t_hook_enable)
+            {
+                return nanosleep_f(req, rem);
+            }
+
+            int timeout_ms = req->tv_sec * 1000 + req->tv_nsec / 1000 / 1000;
+            Fiber::ptr fiber = Fiber::GetThis();
+            IoManager *iom = IoManager::GetThis();
+            iom->addTimer(timeout_ms, [iom, fiber]()
+                          { iom->schedule(fiber); });
+            Fiber::YieldToHold();
+            return 0;
+        }
+
+        int socket(int domain, int type, int protocol)
+        {
+            int fd = socket_f(domain, type, protocol);
+            if (t_hook_enable)
+            {
+                if (fd >= 0)
+                {
+                    FdMgr::GetInstance()->get(fd, true);
+                }
+            }
+            return fd;
+        }
+
+        int accept(int s, struct sockaddr *addr, socklen_t *addrlen)
+        {
+            int fd = do_io(s, accept_f, "accept", IoManager::READ, SO_RCVTIMEO, addr, addrlen);
+            if (fd >= 0)
+            {
+                FdMgr::GetInstance()->get(fd, true);
+            }
+            return fd;
+        }
+
+        ssize_t readv(int fd, const struct iovec *iov, int iovcnt)
+        {
+            return do_io(fd, readv_f, "readv", IoManager::READ, SO_RCVTIMEO, iov, iovcnt);
+        }
+
+        ssize_t recv(int sockfd, void *buf, size_t len, int flags)
+        {
+            return do_io(sockfd, recv_f, "recv", IoManager::READ, SO_RCVTIMEO, buf, len, flags);
+        }
+
+        ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
+        {
+            return do_io(sockfd, recvfrom_f, "recvfrom", IoManager::READ, SO_RCVTIMEO, buf, len, flags, src_addr, addrlen);
+        }
+
+        ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags)
+        {
+            return do_io(sockfd, recvmsg_f, "recvmsg", IoManager::READ, SO_RCVTIMEO, msg, flags);
+        }
+
+        ssize_t write(int fd, const void *buf, size_t count)
+        {
+            return do_io(fd, write_f, "write", IoManager::WRITE, SO_SNDTIMEO, buf, count);
+        }
+
+        ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
+        {
+            return do_io(fd, writev_f, "writev", IoManager::WRITE, SO_SNDTIMEO, iov, iovcnt);
+        }
+
+        ssize_t send(int s, const void *msg, size_t len, int flags)
+        {
+            return do_io(s, send_f, "send", IoManager::WRITE, SO_SNDTIMEO, msg, len, flags);
+        }
+
+        ssize_t sendto(int s, const void *msg, size_t len, int flags, const struct sockaddr *to, socklen_t tolen)
+        {
+            return do_io(s, sendto_f, "sendto", IoManager::WRITE, SO_SNDTIMEO, msg, len, flags, to, tolen);
+        }
+
+        ssize_t sendmsg(int s, const struct msghdr *msg, int flags)
+        {
+            return do_io(s, sendmsg_f, "sendmsg", IoManager::WRITE, SO_SNDTIMEO, msg, flags);
+        }
+
+        int close(int fd)
+        {
+            if (t_hook_enable)
+            {
+                FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
+                if (ctx)
+                {
+                    auto iom = IoManager::GetThis();
+                    if (iom)
+                    {
+                        iom->cancelAll(fd);
+                    }
+                    FdMgr::GetInstance()->del(fd);
+                }
+            }
+            return close_f(fd);
+        }
+
+        int fcntl(int fd, int cmd, ... /* arg */)
+        {
+
         }
     }
 }

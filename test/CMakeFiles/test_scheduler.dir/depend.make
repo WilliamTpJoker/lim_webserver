@@ -3,6 +3,7 @@
 
 test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.o: test/test_scheduler.cpp
 test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.o: include/config.h
+test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.o: include/fd_manager.h
 test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.o: include/fiber.h
 test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.o: include/hook.h
 test/CMakeFiles/test_scheduler.dir/test_scheduler.cpp.o: include/io_manager.h

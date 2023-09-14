@@ -155,6 +155,33 @@ config.cpp.s:
 	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/config.cpp.s
 .PHONY : config.cpp.s
 
+fd_manager.o: fd_manager.cpp.o
+
+.PHONY : fd_manager.o
+
+# target to build an object file
+fd_manager.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/fd_manager.cpp.o
+.PHONY : fd_manager.cpp.o
+
+fd_manager.i: fd_manager.cpp.i
+
+.PHONY : fd_manager.i
+
+# target to preprocess a source file
+fd_manager.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/fd_manager.cpp.i
+.PHONY : fd_manager.cpp.i
+
+fd_manager.s: fd_manager.cpp.s
+
+.PHONY : fd_manager.s
+
+# target to generate assembly for a file
+fd_manager.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/fd_manager.cpp.s
+.PHONY : fd_manager.cpp.s
+
 fiber.o: fiber.cpp.o
 
 .PHONY : fiber.o
@@ -410,6 +437,9 @@ help:
 	@echo "... config.o"
 	@echo "... config.i"
 	@echo "... config.s"
+	@echo "... fd_manager.o"
+	@echo "... fd_manager.i"
+	@echo "... fd_manager.s"
 	@echo "... fiber.o"
 	@echo "... fiber.i"
 	@echo "... fiber.s"

@@ -6,6 +6,11 @@
 },
 {
   "directory": "/home/book/Webserver/src",
+  "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/fd_manager.cpp.o -c /home/book/Webserver/src/fd_manager.cpp",
+  "file": "/home/book/Webserver/src/fd_manager.cpp"
+},
+{
+  "directory": "/home/book/Webserver/src",
   "command": "/usr/bin/c++   -I/home/book/Webserver/include    -O0 -g -ggdb -Wno-unused-variable -std=gnu++1z -o CMakeFiles/libconet.dir/fiber.cpp.o -c /home/book/Webserver/src/fiber.cpp",
   "file": "/home/book/Webserver/src/fiber.cpp"
 },

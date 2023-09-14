@@ -2,6 +2,7 @@
 #define __LIM_LIM_H__
 
 #include "config.h"
+#include "fd_manager.h"
 #include "fiber.h"
 #include "hook.h"
 #include "io_manager.h"
