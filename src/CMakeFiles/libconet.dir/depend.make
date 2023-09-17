@@ -38,6 +38,7 @@ src/CMakeFiles/libconet.dir/fiber.cpp.o: include/thread.h
 src/CMakeFiles/libconet.dir/fiber.cpp.o: include/util.h
 
 src/CMakeFiles/libconet.dir/hook.cpp.o: src/hook.cpp
+src/CMakeFiles/libconet.dir/hook.cpp.o: include/config.h
 src/CMakeFiles/libconet.dir/hook.cpp.o: include/fd_manager.h
 src/CMakeFiles/libconet.dir/hook.cpp.o: include/fiber.h
 src/CMakeFiles/libconet.dir/hook.cpp.o: include/hook.h

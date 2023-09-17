@@ -51,6 +51,10 @@ fd_manager.h
 /home/book/Webserver/src/fd_manager.h
 log.h
 /home/book/Webserver/src/log.h
+macro.h
+/home/book/Webserver/src/macro.h
+config.h
+/home/book/Webserver/src/config.h
 
 /home/book/Webserver/src/io_manager.cpp
 io_manager.h
@@ -162,6 +166,8 @@ sys/ioctl.h
 sys/types.h
 -
 sys/socket.h
+-
+stdarg.h
 -
 
 include/io_manager.h

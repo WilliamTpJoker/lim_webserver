@@ -6,11 +6,15 @@
 #include "io_manager.h"
 #include "fd_manager.h"
 #include "log.h"
+#include "macro.h"
+#include "config.h"
 
 namespace lim_webserver
 {
     static thread_local bool t_hook_enable = false;
     static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    static ConfigVar<int>::ptr g_tcp_connect_timeout = Config::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
+
 #define HOOK_FUN(F) \
     F(sleep)        \
     F(usleep)       \
@@ -54,12 +58,20 @@ namespace lim_webserver
 #undef LOAD_HOOK_FUN
         is_inited = true;
     }
-
+    static uint64_t s_connect_timeout = -1;
     struct _HookIniter
     {
         _HookIniter()
         {
             hook_init();
+            s_connect_timeout = g_tcp_connect_timeout->getValue();
+
+            g_tcp_connect_timeout->addListener(
+                [](const int &old_value, const int &new_value)
+                {
+                    LIM_LOG_INFO(g_logger) << "tcp connect timeout changed from " << old_value << " to " << new_value;
+                    s_connect_timeout = new_value;
+                });
         }
     };
 
@@ -203,7 +215,8 @@ namespace lim_webserver
 
             Fiber::ptr fiber = Fiber::GetThis();
             IoManager *iom = IoManager::GetThis();
-            iom->addTimer(seconds * 1000, [iom, fiber]()
+            iom->addTimer(seconds * 1000,
+                          [iom, fiber]()
                           { iom->schedule(fiber); });
             Fiber::YieldToHold();
             return 0;
@@ -218,7 +231,8 @@ namespace lim_webserver
 
             Fiber::ptr fiber = Fiber::GetThis();
             IoManager *iom = IoManager::GetThis();
-            iom->addTimer(usec / 1000, [iom, fiber]()
+            iom->addTimer(usec / 1000,
+                          [iom, fiber]()
                           { iom->schedule(fiber); });
             Fiber::YieldToHold();
             return 0;
@@ -251,6 +265,112 @@ namespace lim_webserver
                 }
             }
             return fd;
+        }
+
+        int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+        {
+            if (!t_hook_enable)
+            {
+                return connect_f(sockfd, addr, addrlen);
+            }
+
+            // 获取与文件描述符关联的 FdCtx 对象，用于跟踪文件描述符的状态
+            FdCtx::ptr ctx = FdMgr::GetInstance()->get(sockfd);
+            // 如果找不到关联的 FdCtx 对象或者文件描述符已关闭，设置 errno 为 EBADF（无效的文件描述符）并返回 -1
+            if (!ctx || ctx->isClosed())
+            {
+                errno = EBADF;
+                return -1;
+            }
+
+            // 如果文件描述符不是套接字，直接调用原始的 connect 函数并返回其结果
+            if (!ctx->isSocket())
+            {
+                return connect_f(sockfd, addr, addrlen);
+            }
+
+            // 如果用户设置了非阻塞模式，直接调用原始的 connect 函数并返回其结果
+            if (ctx->getUserNonblock())
+            {
+                return connect_f(sockfd, addr, addrlen);
+            }
+
+            // 调用原始的 connect 函数，尝试建立连接
+            int n = connect_f(sockfd, addr, addrlen);
+
+            // 如果连接成功，返回 0
+            if (n == 0)
+            {
+                return 0;
+            }
+            // 如果连接没有立即成功且 errno 不是 EINPROGRESS，返回 n（通常为 -1）
+            else if (n != -1 || errno != EINPROGRESS)
+            {
+                return n;
+            }
+
+            IoManager *iom = IoManager::GetThis();
+            Timer::ptr timer;
+            std::shared_ptr<timer_info> tinfo(new timer_info);
+            std::weak_ptr<timer_info> winfo(tinfo);
+
+            // 如果设置了连接超时时间 s_connect_timeout 不等于 (uint64_t)-1
+            if (s_connect_timeout != (uint64_t)-1)
+            {
+                // 创建一个定时器，当超时时取消连接
+                timer = iom->addConditionTimer(
+                    s_connect_timeout,
+                    [winfo, sockfd, iom]()
+                    {
+                        auto t = winfo.lock();
+                        if (!t || t->cancelled)
+                        {
+                            return;
+                        }
+                        t->cancelled = ETIMEDOUT;
+                        iom->cancelEvent(sockfd, IoManager::WRITE);
+                    },
+                    winfo);
+            }
+
+            int rt = iom->addEvent(sockfd, IoManager::WRITE);
+            if (rt == 0)
+            {
+                Fiber::YieldToHold();
+                if (timer)
+                {
+                    timer->cancel();
+                }
+                if (tinfo->cancelled)
+                {
+                    errno = tinfo->cancelled;
+                    return -1;
+                }
+            }
+            else
+            {
+                if (timer)
+                {
+                    timer->cancel();
+                }
+                LIM_LOG_ERROR(g_logger) << "connect addEvent(" << sockfd << ", WRITE) error";
+            }
+
+            int error = 0;
+            socklen_t len = sizeof(int);
+            if (-1 == getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len))
+            {
+                return -1;
+            }
+            if (!error)
+            {
+                return 0;
+            }
+            else
+            {
+                errno = error;
+                return -1;
+            }
         }
 
         int accept(int s, struct sockaddr *addr, socklen_t *addrlen)
@@ -328,7 +448,166 @@ namespace lim_webserver
 
         int fcntl(int fd, int cmd, ... /* arg */)
         {
+            // 声明 va_list 对象，并使用 va_start(va, cmd) 初始化。允许函数访问在 cmd 参数之后传递的可变参数。
+            va_list va;
+            va_start(va, cmd);
+            // 在每个 case 块的结尾，调用 va_end(va) 来清理可变参数列表。
+            switch (cmd)
+            {
+            // 设置文件状态标志
+            case F_SETFL:
+            {
+                int arg = va_arg(va, int);
+                va_end(va);
+                FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
+                if (!ctx || ctx->isClosed() || !ctx->isSocket())
+                {
+                    return fcntl_f(fd, cmd, arg);
+                }
+                // 更新用户非阻塞标识。
+                ctx->setUserNonblock(arg & O_NONBLOCK);
+                // 根据系统非阻塞表示更新arg
+                if (ctx->getSysNonblock())
+                {
+                    arg |= O_NONBLOCK;
+                }
+                else
+                {
+                    arg &= ~O_NONBLOCK;
+                }
+                return fcntl_f(fd, cmd, arg);
+            }
+            break;
+            // 获取文件状态标志
+            case F_GETFL:
+            {
+                va_end(va);
+                int arg = fcntl_f(fd, cmd);
+                FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
+                if (!ctx || ctx->isClosed() || !ctx->isSocket())
+                {
+                    return arg;
+                }
+                if (ctx->getUserNonblock())
+                {
+                    return arg | O_NONBLOCK;
+                }
+                else
+                {
+                    return arg & ~O_NONBLOCK;
+                }
+            }
+            break;
+            // 从可变参数列表中获取整数参数，并将其传递给 fcntl_f 函数。
+            case F_DUPFD:
+            case F_DUPFD_CLOEXEC:
+            case F_SETFD:
+            case F_SETOWN:
+            case F_SETSIG:
+            case F_SETLEASE:
+            case F_NOTIFY:
+#ifdef F_SETPIPE_SZ
+            case F_SETPIPE_SZ:
+#endif
+            {
+                int arg = va_arg(va, int);
+                va_end(va);
+                return fcntl_f(fd, cmd, arg);
+            }
+            break;
+            // 直接调用
+            case F_GETFD:
+            case F_GETOWN:
+            case F_GETSIG:
+            case F_GETLEASE:
+#ifdef F_GETPIPE_SZ
+            case F_GETPIPE_SZ:
+#endif
+            {
+                va_end(va);
+                return fcntl_f(fd, cmd);
+            }
+            break;
+            // 从可变参数列表中获取一个 struct flock* 参数，并将其传递给 fcntl_f 函数。
+            case F_SETLK:
+            case F_SETLKW:
+            case F_GETLK:
+            {
+                struct flock *arg = va_arg(va, struct flock *);
+                va_end(va);
+                return fcntl_f(fd, cmd, arg);
+            }
+            break;
+            // 从可变参数列表中获取一个 struct f_owner_exlock* 参数，并将其传递给 fcntl_f 函数。
+            case F_GETOWN_EX:
+            case F_SETOWN_EX:
+            {
+                struct f_owner_exlock *arg = va_arg(va, struct f_owner_exlock *);
+                va_end(va);
+                return fcntl_f(fd, cmd, arg);
+            }
+            break;
+            // 默认情况将直接调用 fcntl_f(fd, cmd) 来执行底层的 fcntl 操作并返回结果。
+            default:
+                va_end(va);
+                return fcntl_f(fd, cmd);
+            }
+        }
 
+        int ioctl(int d, unsigned long int request, ...)
+        {
+            va_list va;
+            va_start(va, request);
+            void *arg = va_arg(va, void *);
+            va_end(va);
+
+            // 如果请求码是 FIONBIO，表示设置或获取非阻塞模式
+            if (FIONBIO == request)
+            {
+                // 解析 void* 参数，将其转换为 int 指针，然后取其值，将其转换为布尔值
+                bool user_nonblock = !!*(int *)arg;
+                // 获取与文件描述符关联的 FdCtx 对象，用于跟踪文件描述符的状态
+                FdCtx::ptr ctx = FdMgr::GetInstance()->get(d);
+                // 如果文件描述符不存在、已关闭或者不是套接字，直接调用底层的 ioctl 函数并返回结果
+                if (!ctx || ctx->isClosed() || !ctx->isSocket())
+                {
+                    return ioctl_f(d, request, arg);
+                }
+                // 否则，更新 FdCtx 对象的用户非阻塞标志
+                ctx->setUserNonblock(user_nonblock);
+            }
+            // 最后，调用底层的 ioctl 函数并返回其结果
+            return ioctl_f(d, request, arg);
+        }
+
+        int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen)
+        {
+            return getsockopt_f(sockfd, level, optname, optval, optlen);
+        }
+
+        int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
+        {
+            if (!t_hook_enable)
+            {
+                return setsockopt_f(sockfd, level, optname, optval, optlen);
+            }
+            // 如果选项级别是 SOL_SOCKET（套接字选项级别）
+            if (level == SOL_SOCKET)
+            {
+                // 如果选项名称是 SO_RCVTIMEO（接收超时）或 SO_SNDTIMEO（发送超时）
+                if (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)
+                {
+                    FdCtx::ptr ctx = FdMgr::GetInstance()->get(sockfd);
+                    if (ctx)
+                    {
+                        // 将 optval 转换为 timeval 结构体指针
+                        const timeval *v = (const timeval *)optval;
+                        // 计算超时值（以毫秒为单位）并设置到 FdCtx 对象中
+                        ctx->setTimeout(optname, v->tv_sec * 1000 + v->tv_usec / 1000);
+                    }
+                }
+            }
+            return setsockopt_f(sockfd, level, optname, optval, optlen);
         }
     }
 }

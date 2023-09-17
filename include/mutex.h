@@ -213,7 +213,7 @@ namespace lim_webserver
     /**
      * @brief 互斥锁
      */
-    class Mutex
+    class Mutex : Noncopyable
     {
     public:
         using Lock = ScopedLock<Mutex>;
@@ -245,7 +245,7 @@ namespace lim_webserver
     /**
      * @brief 读写锁
      */
-    class RWMutex
+    class RWMutex : Noncopyable
     {
     public:
         using ReadLock = ReadScopedLock<RWMutex>;
@@ -343,7 +343,7 @@ namespace lim_webserver
     };
 
     template <class T = Mutex>
-    class ConditionVariable
+    class ConditionVariable : Noncopyable
     {
     public:
         ConditionVariable()

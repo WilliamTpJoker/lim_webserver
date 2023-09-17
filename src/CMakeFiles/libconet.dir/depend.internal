@@ -39,6 +39,7 @@ src/CMakeFiles/libconet.dir/fiber.cpp.o
  include/util.h
 src/CMakeFiles/libconet.dir/hook.cpp.o
  /home/book/Webserver/src/hook.cpp
+ include/config.h
  include/fd_manager.h
  include/fiber.h
  include/hook.h

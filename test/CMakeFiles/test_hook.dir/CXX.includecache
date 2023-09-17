@@ -11,6 +11,16 @@ hook.h
 /home/book/Webserver/test/hook.h
 io_manager.h
 /home/book/Webserver/test/io_manager.h
+sys/types.h
+-
+sys/socket.h
+-
+fcntl.h
+-
+arpa/inet.h
+-
+string.h
+-
 
 include/fiber.h
 ucontext.h
@@ -34,6 +44,8 @@ sys/ioctl.h
 sys/types.h
 -
 sys/socket.h
+-
+stdarg.h
 -
 
 include/io_manager.h
