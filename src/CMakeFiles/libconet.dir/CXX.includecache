@@ -6,6 +6,14 @@
 
 #IncludeRegexTransform: 
 
+/home/book/Webserver/src/address.cpp
+address.h
+/home/book/Webserver/src/address.h
+log.h
+/home/book/Webserver/src/log.h
+sstream
+-
+
 /home/book/Webserver/src/config.cpp
 config.h
 /home/book/Webserver/src/config.h
@@ -113,6 +121,24 @@ fiber.h
 /home/book/Webserver/src/fiber.h
 log.h
 /home/book/Webserver/src/log.h
+
+include/address.h
+memory
+-
+string
+-
+sys/types.h
+-
+sys/socket.h
+-
+arpa/inet.h
+-
+sys/un.h
+-
+netdb.h
+-
+vector
+-
 
 include/config.h
 functional

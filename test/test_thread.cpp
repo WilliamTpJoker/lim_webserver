@@ -47,8 +47,8 @@ void test_log_thread()
     std::vector<Thread::ptr> thread_vec;
     for (int i = 0; i < 1; ++i)
     {
-        Thread::ptr thr = Thread::create(&func2, "name_" + std::to_string(2 * i));
-        Thread::ptr thr2 = Thread::create(&func3, "name_" + std::to_string(2 * i + 1));
+        Thread::ptr thr = Thread::Create(&func2, "name_" + std::to_string(2 * i));
+        Thread::ptr thr2 = Thread::Create(&func3, "name_" + std::to_string(2 * i + 1));
         thread_vec.emplace_back(thr);
         thread_vec.emplace_back(thr2);
     }
@@ -80,7 +80,7 @@ void test_cond()
     std::vector<Thread::ptr> thread_vec;
     for (int i = 0; i < 2; ++i)
     {
-        Thread::ptr thr = Thread::create(&func4, "name_" + std::to_string(2 * i));
+        Thread::ptr thr = Thread::Create(&func4, "name_" + std::to_string(2 * i));
         thread_vec.emplace_back(thr);
     }
     cv.notify_all();

@@ -16,7 +16,7 @@ void test_fiber()
     {
         lim_webserver::Fiber::GetThis();
         LIM_LOG_INFO(g_logger) << "main begin";
-        lim_webserver::Fiber::ptr fiber = lim_webserver::Fiber::create(run_in_fiber,0,true);
+        lim_webserver::Fiber::ptr fiber = lim_webserver::Fiber::Create(run_in_fiber,0,true);
         fiber->call();
         LIM_LOG_INFO(g_logger) << "main after call";
         fiber->call();
@@ -31,7 +31,7 @@ void test_thread()
     std::vector<std::shared_ptr<lim_webserver::Thread>> thread_vec;
     for(int i=0;i<1;++i)
     {
-        thread_vec.emplace_back(lim_webserver::Thread::create(&test_fiber,"name_"+std::to_string(i)));
+        thread_vec.emplace_back(lim_webserver::Thread::Create(&test_fiber,"name_"+std::to_string(i)));
     }
     for(auto i:thread_vec)
     {

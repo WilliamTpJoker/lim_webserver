@@ -153,17 +153,17 @@ test_thread/fast:
 .PHONY : test_thread/fast
 
 #=============================================================================
-# Target rules for targets named test_fiber
+# Target rules for targets named test_scheduler
 
 # Build rule for target.
-test_fiber: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 test_fiber
-.PHONY : test_fiber
+test_scheduler: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_scheduler
+.PHONY : test_scheduler
 
 # fast build rule for target.
-test_fiber/fast:
-	$(MAKE) -f test/CMakeFiles/test_fiber.dir/build.make test/CMakeFiles/test_fiber.dir/build
-.PHONY : test_fiber/fast
+test_scheduler/fast:
+	$(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/build
+.PHONY : test_scheduler/fast
 
 #=============================================================================
 # Target rules for targets named test_config
@@ -179,6 +179,19 @@ test_config/fast:
 .PHONY : test_config/fast
 
 #=============================================================================
+# Target rules for targets named test_fiber
+
+# Build rule for target.
+test_fiber: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_fiber
+.PHONY : test_fiber
+
+# fast build rule for target.
+test_fiber/fast:
+	$(MAKE) -f test/CMakeFiles/test_fiber.dir/build.make test/CMakeFiles/test_fiber.dir/build
+.PHONY : test_fiber/fast
+
+#=============================================================================
 # Target rules for targets named test_hook
 
 # Build rule for target.
@@ -190,6 +203,19 @@ test_hook: cmake_check_build_system
 test_hook/fast:
 	$(MAKE) -f test/CMakeFiles/test_hook.dir/build.make test/CMakeFiles/test_hook.dir/build
 .PHONY : test_hook/fast
+
+#=============================================================================
+# Target rules for targets named test_address
+
+# Build rule for target.
+test_address: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_address
+.PHONY : test_address
+
+# fast build rule for target.
+test_address/fast:
+	$(MAKE) -f test/CMakeFiles/test_address.dir/build.make test/CMakeFiles/test_address.dir/build
+.PHONY : test_address/fast
 
 #=============================================================================
 # Target rules for targets named test_io
@@ -217,19 +243,6 @@ test_log/fast:
 	$(MAKE) -f test/CMakeFiles/test_log.dir/build.make test/CMakeFiles/test_log.dir/build
 .PHONY : test_log/fast
 
-#=============================================================================
-# Target rules for targets named test_scheduler
-
-# Build rule for target.
-test_scheduler: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 test_scheduler
-.PHONY : test_scheduler
-
-# fast build rule for target.
-test_scheduler/fast:
-	$(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/build
-.PHONY : test_scheduler/fast
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -241,12 +254,13 @@ help:
 	@echo "... libconet"
 	@echo "... test_util"
 	@echo "... test_thread"
-	@echo "... test_fiber"
+	@echo "... test_scheduler"
 	@echo "... test_config"
+	@echo "... test_fiber"
 	@echo "... test_hook"
+	@echo "... test_address"
 	@echo "... test_io"
 	@echo "... test_log"
-	@echo "... test_scheduler"
 .PHONY : help
 
 

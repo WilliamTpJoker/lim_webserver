@@ -48,7 +48,7 @@ namespace lim_webserver
          * @param stacksize 协程栈大小，默认为0，表示使用系统默认大小。
          * @param use_caller  是否使用 Scheduler 实例化所在的线程（Scheduler 所在线程也工作）
          */
-        static ptr create(std::function<void()> callback, size_t stacksize = 0, bool use_caller = false)
+        static ptr Create(std::function<void()> callback, size_t stacksize = 0, bool use_caller = false)
         {
             return std::make_shared<Fiber>(callback, stacksize, use_caller);
         }

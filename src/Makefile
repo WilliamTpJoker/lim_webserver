@@ -128,6 +128,33 @@ libconet/fast:
 	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/build
 .PHONY : libconet/fast
 
+address.o: address.cpp.o
+
+.PHONY : address.o
+
+# target to build an object file
+address.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/address.cpp.o
+.PHONY : address.cpp.o
+
+address.i: address.cpp.i
+
+.PHONY : address.i
+
+# target to preprocess a source file
+address.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/address.cpp.i
+.PHONY : address.cpp.i
+
+address.s: address.cpp.s
+
+.PHONY : address.s
+
+# target to generate assembly for a file
+address.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f src/CMakeFiles/libconet.dir/build.make src/CMakeFiles/libconet.dir/address.cpp.s
+.PHONY : address.cpp.s
+
 config.o: config.cpp.o
 
 .PHONY : config.o
@@ -434,6 +461,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... libconet"
 	@echo "... edit_cache"
+	@echo "... address.o"
+	@echo "... address.i"
+	@echo "... address.s"
 	@echo "... config.o"
 	@echo "... config.i"
 	@echo "... config.s"

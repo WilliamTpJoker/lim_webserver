@@ -13,7 +13,7 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<FdCtx>;
-        static ptr create(int fd)
+        static ptr Create(int fd)
         {
             return std::make_shared<FdCtx>(fd);
         }

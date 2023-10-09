@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/test_address.dir/test_address.cpp.o  -o ../output/test_address ../lib/liblibconet.a -lyaml-cpp -lpthread -ldl 

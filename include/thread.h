@@ -16,7 +16,7 @@ namespace lim_webserver
          * @param callback 线程要执行的函数
          * @param name     线程的名称，默认为"UNKNOWN"
          */
-        static ptr create(std::function<void()> callback, const std::string &name = "UNKNOWN")
+        static ptr Create(std::function<void()> callback, const std::string &name = "UNKNOWN")
         {
             return std::make_shared<Thread>(callback, name);
         }

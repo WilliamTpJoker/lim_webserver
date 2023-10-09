@@ -6,11 +6,11 @@ using namespace lim_webserver;
 
 void test_logger()
 {
-    auto logger = Logger::create();
+    auto logger = Logger::Create();
     logger->setFormatter(LIM_DEFAULT_PATTERN);
-    logger->addAppender(FileLogAppender::create("log/log.txt"));
+    logger->addAppender(FileLogAppender::Create("log/log.txt"));
 
-    auto event = LogEvent::create(
+    auto event = LogEvent::Create(
         logger, __FILE__, __LINE__, 0,
         GetThreadId(),
         GetFiberId(),

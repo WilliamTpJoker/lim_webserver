@@ -144,19 +144,19 @@ test_thread/fast:
 .PHONY : test_thread/fast
 
 # Convenience name for target.
-test/CMakeFiles/test_fiber.dir/rule:
-	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_fiber.dir/rule
-.PHONY : test/CMakeFiles/test_fiber.dir/rule
+test/CMakeFiles/test_scheduler.dir/rule:
+	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_scheduler.dir/rule
+.PHONY : test/CMakeFiles/test_scheduler.dir/rule
 
 # Convenience name for target.
-test_fiber: test/CMakeFiles/test_fiber.dir/rule
+test_scheduler: test/CMakeFiles/test_scheduler.dir/rule
 
-.PHONY : test_fiber
+.PHONY : test_scheduler
 
 # fast build rule for target.
-test_fiber/fast:
-	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_fiber.dir/build.make test/CMakeFiles/test_fiber.dir/build
-.PHONY : test_fiber/fast
+test_scheduler/fast:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/build
+.PHONY : test_scheduler/fast
 
 # Convenience name for target.
 test/CMakeFiles/test_config.dir/rule:
@@ -174,6 +174,21 @@ test_config/fast:
 .PHONY : test_config/fast
 
 # Convenience name for target.
+test/CMakeFiles/test_fiber.dir/rule:
+	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_fiber.dir/rule
+.PHONY : test/CMakeFiles/test_fiber.dir/rule
+
+# Convenience name for target.
+test_fiber: test/CMakeFiles/test_fiber.dir/rule
+
+.PHONY : test_fiber
+
+# fast build rule for target.
+test_fiber/fast:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_fiber.dir/build.make test/CMakeFiles/test_fiber.dir/build
+.PHONY : test_fiber/fast
+
+# Convenience name for target.
 test/CMakeFiles/test_hook.dir/rule:
 	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_hook.dir/rule
 .PHONY : test/CMakeFiles/test_hook.dir/rule
@@ -187,6 +202,21 @@ test_hook: test/CMakeFiles/test_hook.dir/rule
 test_hook/fast:
 	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_hook.dir/build.make test/CMakeFiles/test_hook.dir/build
 .PHONY : test_hook/fast
+
+# Convenience name for target.
+test/CMakeFiles/test_address.dir/rule:
+	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_address.dir/rule
+.PHONY : test/CMakeFiles/test_address.dir/rule
+
+# Convenience name for target.
+test_address: test/CMakeFiles/test_address.dir/rule
+
+.PHONY : test_address
+
+# fast build rule for target.
+test_address/fast:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_address.dir/build.make test/CMakeFiles/test_address.dir/build
+.PHONY : test_address/fast
 
 # Convenience name for target.
 test/CMakeFiles/test_io.dir/rule:
@@ -218,20 +248,32 @@ test_log/fast:
 	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_log.dir/build.make test/CMakeFiles/test_log.dir/build
 .PHONY : test_log/fast
 
-# Convenience name for target.
-test/CMakeFiles/test_scheduler.dir/rule:
-	cd /home/book/Webserver && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test_scheduler.dir/rule
-.PHONY : test/CMakeFiles/test_scheduler.dir/rule
+test_address.o: test_address.cpp.o
 
-# Convenience name for target.
-test_scheduler: test/CMakeFiles/test_scheduler.dir/rule
+.PHONY : test_address.o
 
-.PHONY : test_scheduler
+# target to build an object file
+test_address.cpp.o:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_address.dir/build.make test/CMakeFiles/test_address.dir/test_address.cpp.o
+.PHONY : test_address.cpp.o
 
-# fast build rule for target.
-test_scheduler/fast:
-	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_scheduler.dir/build.make test/CMakeFiles/test_scheduler.dir/build
-.PHONY : test_scheduler/fast
+test_address.i: test_address.cpp.i
+
+.PHONY : test_address.i
+
+# target to preprocess a source file
+test_address.cpp.i:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_address.dir/build.make test/CMakeFiles/test_address.dir/test_address.cpp.i
+.PHONY : test_address.cpp.i
+
+test_address.s: test_address.cpp.s
+
+.PHONY : test_address.s
+
+# target to generate assembly for a file
+test_address.cpp.s:
+	cd /home/book/Webserver && $(MAKE) -f test/CMakeFiles/test_address.dir/build.make test/CMakeFiles/test_address.dir/test_address.cpp.s
+.PHONY : test_address.cpp.s
 
 test_config.o: test_config.cpp.o
 
@@ -458,13 +500,17 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test_util"
 	@echo "... test_thread"
-	@echo "... test_fiber"
+	@echo "... test_scheduler"
 	@echo "... test_config"
+	@echo "... test_fiber"
 	@echo "... test_hook"
 	@echo "... edit_cache"
+	@echo "... test_address"
 	@echo "... test_io"
 	@echo "... test_log"
-	@echo "... test_scheduler"
+	@echo "... test_address.o"
+	@echo "... test_address.i"
+	@echo "... test_address.s"
 	@echo "... test_config.o"
 	@echo "... test_config.i"
 	@echo "... test_config.s"

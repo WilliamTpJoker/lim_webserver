@@ -24,7 +24,7 @@
  * @param logger 目标日志器
  * @param level  事件级别
  */
-#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::LogEvent::create(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), lim_webserver::GetFiberId(), time(0), level, lim_webserver::Thread::GetThisThreadName())).getSS()
+#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::LogEvent::Create(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), lim_webserver::GetFiberId(), time(0), level, lim_webserver::Thread::GetThisThreadName())).getSS()
 
 /**
  * @brief 使用流式方式将日志级别debug的日志事件写入到logger
@@ -139,7 +139,7 @@ namespace lim_webserver
          * @param level         日志级别，默认为DEBUG级别
          * @param thread_name   线程名
          */
-        static ptr create(std::shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse, uint32_t thread_id,
+        static ptr Create(std::shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse, uint32_t thread_id,
                           uint32_t fiber_id, uint64_t time, LogLevel level, std::string thread_name)
         {
             return std::make_shared<LogEvent>(logger, file, line, elapse, thread_id, fiber_id, time, level, thread_name);
@@ -282,7 +282,7 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<LogFormatter>;
-        static ptr create(const std::string &pattern)
+        static ptr Create(const std::string &pattern)
         {
             return std::make_shared<LogFormatter>(pattern);
         }
@@ -386,15 +386,15 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<Logger>;
-        static ptr create()
+        static ptr Create()
         {
             return std::make_shared<Logger>();
         }
-        static ptr create(const std::string &name)
+        static ptr Create(const std::string &name)
         {
             return std::make_shared<Logger>(name);
         }
-        static ptr create(const std::string &name, LogLevel level, const std::string &pattern)
+        static ptr Create(const std::string &name, LogLevel level, const std::string &pattern)
         {
             return std::make_shared<Logger>(name, level, pattern);
         }
@@ -465,7 +465,7 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<StdoutLogAppender>;
-        static ptr create()
+        static ptr Create()
         {
             return std::make_shared<StdoutLogAppender>();
         }
@@ -488,7 +488,7 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<FileLogAppender>;
-        static ptr create(const std::string &filename)
+        static ptr Create(const std::string &filename)
         {
             return std::make_shared<FileLogAppender>(filename);
         }

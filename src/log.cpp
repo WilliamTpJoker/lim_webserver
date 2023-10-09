@@ -234,7 +234,7 @@ namespace lim_webserver
     void LogAppender::setFormatter(const std::string &pattern)
     {
         MutexType::Lock lock(m_mutex);
-        m_formatter = LogFormatter::create(pattern);
+        m_formatter = LogFormatter::Create(pattern);
         m_custom_pattern = true;
     }
 
@@ -310,7 +310,7 @@ namespace lim_webserver
         if (!appender->getFormatter())
         {
             MutexType::Lock appender_lock(appender->m_mutex);
-            appender->m_formatter = LogFormatter::create(m_pattern);
+            appender->m_formatter = LogFormatter::Create(m_pattern);
         }
         m_appenders.emplace_back(appender);
     }
@@ -401,7 +401,7 @@ namespace lim_webserver
         {
             if (!fileExist())
             {
-                std::cout << "file: " << m_filename << " deleted, create new one" << std::endl;
+                std::cout << "file: " << m_filename << " deleted, Create new one" << std::endl;
                 reopen();
             }
             MutexType::Lock lock(m_mutex);
@@ -506,8 +506,8 @@ namespace lim_webserver
 
     LoggerManager::LoggerManager()
     {
-        m_root = Logger::create();
-        m_root->addAppender(StdoutLogAppender::create());
+        m_root = Logger::Create();
+        m_root->addAppender(StdoutLogAppender::Create());
         m_logger_map[m_root->getName()] = m_root;
     }
 
@@ -521,7 +521,7 @@ namespace lim_webserver
         }
         else
         {
-            Logger::ptr logger = Logger::create(name);
+            Logger::ptr logger = Logger::Create(name);
             m_logger_map[name] = logger;
             return logger;
         }
@@ -732,16 +732,16 @@ namespace lim_webserver
                         LogAppender::ptr ap;
                         if (a.type == 1)
                         {
-                            ap = FileLogAppender::create(a.file);
+                            ap = FileLogAppender::Create(a.file);
                         }
                         else if (a.type == 0)
                         {
-                            ap = StdoutLogAppender::create();
+                            ap = StdoutLogAppender::Create();
                         }
                         ap->setLevel(a.level);
                         if (!a.formatter.empty())
                         {
-                            LogFormatter::ptr formatter = LogFormatter::create(a.formatter);
+                            LogFormatter::ptr formatter = LogFormatter::Create(a.formatter);
                             if (formatter->isError())
                             {
                                 std::cout << "log.name=" << i.name << " appender type=" << a.type << " formatter=" << a.formatter << " is invalid" << std::endl;

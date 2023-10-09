@@ -18,7 +18,7 @@ namespace lim_webserver
             --threads;
             LIM_ASSERT(GetThis() == nullptr);
             t_scheduler = this;
-            m_rootFiber = Fiber::create([this]()
+            m_rootFiber = Fiber::Create([this]()
                                         { this->run(); },
                                         0, true);
             Thread::SetName(m_name);
@@ -56,7 +56,7 @@ namespace lim_webserver
         m_thread_list.resize(m_threadCount);
         for (size_t i = 0; i < m_threadCount; ++i)
         {
-            m_thread_list[i] = Thread::create([this]()
+            m_thread_list[i] = Thread::Create([this]()
                                               { this->run(); },
                                               m_name + "_" + std::to_string(i));
             m_threadIds.emplace_back(m_thread_list[i]->getId());
@@ -142,7 +142,7 @@ namespace lim_webserver
         {
             t_fiber = Fiber::GetThis().get();
         }
-        Fiber::ptr idle_fiber = Fiber::create([this]()
+        Fiber::ptr idle_fiber = Fiber::Create([this]()
                                               { this->onIdle(); });
         Fiber::ptr cb_fiber;
 
@@ -190,7 +190,7 @@ namespace lim_webserver
                 }
                 else
                 {
-                    cb_fiber = Fiber::create(ft.callback);
+                    cb_fiber = Fiber::Create(ft.callback);
                 }
                 ft.reset();
                 cb_fiber->swapIn();

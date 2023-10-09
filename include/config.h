@@ -269,7 +269,7 @@ namespace lim_webserver
         using ptr = std::shared_ptr<ConfigVar>;
         using RWMutexType = RWMutex;
         using onChangeCallBack = std::function<void(const T &old_val, const T &new_val)>;
-        static ptr create(const std::string &name, const T &default_val, const std::string &description = "")
+        static ptr Create(const std::string &name, const T &default_val, const std::string &description = "")
         {
             return std::make_shared<ConfigVar>(name, default_val, description);
         }
@@ -430,7 +430,7 @@ namespace lim_webserver
             std::regex pattern("^[\\w.].*|");
             if (std::regex_match(name, pattern))
             {
-                typename ConfigVar<T>::ptr v = ConfigVar<T>::create(name, default_value, description);
+                typename ConfigVar<T>::ptr v = ConfigVar<T>::Create(name, default_value, description);
                 AddConfigVar<T>(name, v);
                 return v;
             }

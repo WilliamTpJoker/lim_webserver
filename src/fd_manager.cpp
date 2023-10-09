@@ -111,7 +111,7 @@ namespace lim_webserver
             }
         }
         RWMutexType::WriteLock lock2(m_mutex);
-        FdCtx::ptr ctx = FdCtx::create(fd);
+        FdCtx::ptr ctx = FdCtx::Create(fd);
         if (fd >= (int)m_fd_list.size())
         {
             m_fd_list.resize(fd * 1.5);
