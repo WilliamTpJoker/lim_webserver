@@ -46,6 +46,11 @@
 },
 {
   "directory": "/home/book/Webserver/build",
+  "command": "/usr/bin/g++ -I/home/book/Webserver/include -g -O3 -g -ggdb -Wno-unused-variable -Wno-deprecated -Wno-unused-function -Werror -Wno-builtin-macro-redefined -Wno-deprecated-declarations -std=gnu++1z -o src/CMakeFiles/libconet.dir/socket.cpp.o -c /home/book/Webserver/src/socket.cpp",
+  "file": "/home/book/Webserver/src/socket.cpp"
+},
+{
+  "directory": "/home/book/Webserver/build",
   "command": "/usr/bin/g++ -I/home/book/Webserver/include -g -O3 -g -ggdb -Wno-unused-variable -Wno-deprecated -Wno-unused-function -Werror -Wno-builtin-macro-redefined -Wno-deprecated-declarations -std=gnu++1z -o src/CMakeFiles/libconet.dir/thread.cpp.o -c /home/book/Webserver/src/thread.cpp",
   "file": "/home/book/Webserver/src/thread.cpp"
 },

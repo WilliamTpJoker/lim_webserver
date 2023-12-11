@@ -297,7 +297,7 @@ namespace lim_webserver
         return new_addr;
     }
 
-    IPv4Address::IPv4Address(uint32_t address, uint32_t port)
+    IPv4Address::IPv4Address(uint32_t address, uint16_t port)
     {
         memset(&m_addr, 0, sizeof(m_addr));
         m_addr.sin_family = AF_INET;

@@ -3,6 +3,7 @@
 #include <memory>
 #include "address.h"
 #include "noncopyable.h"
+#include <netinet/tcp.h>
 
 namespace lim_webserver
 {
@@ -37,20 +38,19 @@ namespace lim_webserver
         }
 
         Socket::ptr accept();
-        bool init(int sock);
         bool bind(const Address::ptr addr);
         bool connect(const Address::ptr addr, uint64_t timeout_ms = -1);
         bool listen(int backlog = SOMAXCONN);
         bool close();
 
-        int send(const void *buffers, size_t length, int flags = 0);
+        int send(const void *buffer, size_t length, int flags = 0);
         int send(const iovec *buffers, size_t length, int flags = 0);
-        int sendTo(const void *buffers, size_t length, const Address::ptr to, int flags = 0);
+        int sendTo(const void *buffer, size_t length, const Address::ptr to, int flags = 0);
         int sendTo(const iovec *buffers, size_t length, const Address::ptr to, int flags = 0);
 
-        int recv(void *buffers, size_t length, int flags = 0);
+        int recv(void *buffer, size_t length, int flags = 0);
         int recv(iovec *buffers, size_t length, int flags = 0);
-        int recvFrom(void *buffers, size_t length, const Address::ptr from, int flags = 0);
+        int recvFrom(void *buffer, size_t length, const Address::ptr from, int flags = 0);
         int recvFrom(iovec *buffers, size_t length, const Address::ptr from, int flags = 0);
 
         Address::ptr getRemoteAddress();
@@ -75,6 +75,7 @@ namespace lim_webserver
     private:
         void initSock();
         void newSock();
+        bool init(int sock);
 
     private:
         int m_sock;

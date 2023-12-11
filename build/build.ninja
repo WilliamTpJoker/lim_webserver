@@ -140,6 +140,13 @@ build src/CMakeFiles/libconet.dir/scheduler.cpp.o: CXX_COMPILER__libconet_Debug 
   OBJECT_DIR = src/CMakeFiles/libconet.dir
   OBJECT_FILE_DIR = src/CMakeFiles/libconet.dir
 
+build src/CMakeFiles/libconet.dir/socket.cpp.o: CXX_COMPILER__libconet_Debug /home/book/Webserver/src/socket.cpp || cmake_object_order_depends_target_libconet
+  DEP_FILE = src/CMakeFiles/libconet.dir/socket.cpp.o.d
+  FLAGS = -g -O3 -g -ggdb -Wno-unused-variable -Wno-deprecated -Wno-unused-function -Werror -Wno-builtin-macro-redefined -Wno-deprecated-declarations -std=gnu++1z
+  INCLUDES = -I/home/book/Webserver/include
+  OBJECT_DIR = src/CMakeFiles/libconet.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/libconet.dir
+
 build src/CMakeFiles/libconet.dir/thread.cpp.o: CXX_COMPILER__libconet_Debug /home/book/Webserver/src/thread.cpp || cmake_object_order_depends_target_libconet
   DEP_FILE = src/CMakeFiles/libconet.dir/thread.cpp.o.d
   FLAGS = -g -O3 -g -ggdb -Wno-unused-variable -Wno-deprecated -Wno-unused-function -Werror -Wno-builtin-macro-redefined -Wno-deprecated-declarations -std=gnu++1z
@@ -169,7 +176,7 @@ build src/CMakeFiles/libconet.dir/util.cpp.o: CXX_COMPILER__libconet_Debug /home
 #############################################
 # Link the static library lib/liblibconet.a
 
-build lib/liblibconet.a: CXX_STATIC_LIBRARY_LINKER__libconet_Debug src/CMakeFiles/libconet.dir/address.cpp.o src/CMakeFiles/libconet.dir/config.cpp.o src/CMakeFiles/libconet.dir/fd_manager.cpp.o src/CMakeFiles/libconet.dir/fiber.cpp.o src/CMakeFiles/libconet.dir/hook.cpp.o src/CMakeFiles/libconet.dir/io_manager.cpp.o src/CMakeFiles/libconet.dir/log.cpp.o src/CMakeFiles/libconet.dir/main.cpp.o src/CMakeFiles/libconet.dir/scheduler.cpp.o src/CMakeFiles/libconet.dir/thread.cpp.o src/CMakeFiles/libconet.dir/timer.cpp.o src/CMakeFiles/libconet.dir/util.cpp.o
+build lib/liblibconet.a: CXX_STATIC_LIBRARY_LINKER__libconet_Debug src/CMakeFiles/libconet.dir/address.cpp.o src/CMakeFiles/libconet.dir/config.cpp.o src/CMakeFiles/libconet.dir/fd_manager.cpp.o src/CMakeFiles/libconet.dir/fiber.cpp.o src/CMakeFiles/libconet.dir/hook.cpp.o src/CMakeFiles/libconet.dir/io_manager.cpp.o src/CMakeFiles/libconet.dir/log.cpp.o src/CMakeFiles/libconet.dir/main.cpp.o src/CMakeFiles/libconet.dir/scheduler.cpp.o src/CMakeFiles/libconet.dir/socket.cpp.o src/CMakeFiles/libconet.dir/thread.cpp.o src/CMakeFiles/libconet.dir/timer.cpp.o src/CMakeFiles/libconet.dir/util.cpp.o
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = src/CMakeFiles/libconet.dir
   POST_BUILD = :

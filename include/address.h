@@ -120,7 +120,7 @@ namespace lim_webserver
         static IPv4Address::ptr Create(const char *address, uint16_t port = 0);
 
     public:
-        IPv4Address(uint32_t address = INADDR_ANY, uint32_t port = 0);
+        IPv4Address(uint32_t address = INADDR_ANY, uint16_t port = 0);
         IPv4Address(const sockaddr_in &address);
 
         const sockaddr *getAddr() const override;
