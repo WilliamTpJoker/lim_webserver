@@ -9,7 +9,7 @@
 
 lim_webserver::Logger::ptr g_logger = LIM_LOG_ROOT();
 
-// 通过hook将异步的事件转换为同步的事件
+// 通过hook将同步的事件转换为异步的事件
 void test_sleep()
 {
     lim_webserver::IoManager iom(1);

@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/test_hook.dir/test_hook.cpp.o  -o ../output/test_hook ../lib/liblibconet.a -lyaml-cpp -lpthread -ldl 

@@ -13,6 +13,7 @@
 
 namespace lim_webserver
 {
+    class IPAddress;
     class Address
     {
     public:
