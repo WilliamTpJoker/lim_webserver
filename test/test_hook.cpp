@@ -71,7 +71,7 @@ int main(int argc, char *args[])
 {
     // test_sleep();
     lim_webserver::IoManager iom;
-    iom.schedule(test_socket);
+    iom.schedule(&test_socket);
 
     return 0;
 }

@@ -13,6 +13,63 @@ namespace lim_webserver
         using ptr = std::shared_ptr<Socket>;
         using weak_ptr = std::weak_ptr<Socket>;
 
+        /**
+         * @brief Socket类型
+         */
+        enum Type
+        {
+            /// TCP类型
+            TCP = SOCK_STREAM,
+            /// UDP类型
+            UDP = SOCK_DGRAM
+        };
+
+        /**
+         * @brief Socket协议簇
+         */
+        enum Family
+        {
+            /// IPv4 socket
+            IPv4 = AF_INET,
+            /// IPv6 socket
+            IPv6 = AF_INET6,
+            /// Unix socket
+            UNIX = AF_UNIX,
+        };
+
+        static Socket::ptr CreateTCP(Address::ptr address);
+        static Socket::ptr CreateUDP(Address::ptr address);
+
+        /**
+         * @brief 创建IPv4的TCP Socket
+         */
+        static Socket::ptr CreateTCPSocket();
+
+        /**
+         * @brief 创建IPv4的UDP Socket
+         */
+        static Socket::ptr CreateUDPSocket();
+
+        /**
+         * @brief 创建IPv6的TCP Socket
+         */
+        static Socket::ptr CreateTCPSocket6();
+
+        /**
+         * @brief 创建IPv6的UDP Socket
+         */
+        static Socket::ptr CreateUDPSocket6();
+
+        /**
+         * @brief 创建Unix的TCP Socket
+         */
+        static Socket::ptr CreateUnixTCPSocket();
+
+        /**
+         * @brief 创建Unix的UDP Socket
+         */
+        static Socket::ptr CreateUnixUDPSocket();
+
     public:
         Socket(int family, int type, int protocol = 0);
         ~Socket();
@@ -57,16 +114,16 @@ namespace lim_webserver
         Address::ptr getRemoteAddress();
         Address::ptr getLocalAddress();
 
-        int getFamily() const {return m_family;}
-        int getType() const {return m_type;}
-        int getProtocol() const {return m_protocol;}
+        int getFamily() const { return m_family; }
+        int getType() const { return m_type; }
+        int getProtocol() const { return m_protocol; }
 
-        bool isConnected() const {return m_isConnected;}
+        bool isConnected() const { return m_isConnected; }
         bool isValid() const;
         int getError();
 
         std::ostream &dump(std::ostream &os) const;
-        int getSocket() const {return m_sock;}
+        int getSocket() const { return m_sock; }
 
         bool cancelRead();
         bool cancelWrite();

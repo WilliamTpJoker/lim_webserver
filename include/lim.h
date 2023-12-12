@@ -1,6 +1,7 @@
 #ifndef __LIM_LIM_H__
 #define __LIM_LIM_H__
 
+#include "address.h"
 #include "config.h"
 #include "fd_manager.h"
 #include "fiber.h"
@@ -12,6 +13,7 @@
 #include "noncopyable.h"
 #include "scheduler.h"
 #include "singleton.h"
+#include "socket.h"
 #include "thread.h"
 #include "time.h"
 #include "util.h"
