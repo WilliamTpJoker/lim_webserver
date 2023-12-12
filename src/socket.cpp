@@ -55,9 +55,9 @@ namespace lim_webserver
         setOption(SOL_SOCKET, SO_RCVTIMEO, tv);
     }
 
-    bool Socket::getOption(int level, int option, void *result, size_t *len)
+    bool Socket::getOption(int level, int option, void *result, socklen_t *len)
     {
-        int rt = getsockopt(m_sock, level, option, result, (socklen_t *)len);
+        int rt = getsockopt(m_sock, level, option, result, len);
         if (rt)
         {
             LIM_LOG_DEBUG(g_logger) << "getOption sock=" << m_sock
@@ -68,9 +68,9 @@ namespace lim_webserver
         return true;
     }
 
-    bool Socket::setOption(int level, int option, const void *value, size_t *len)
+    bool Socket::setOption(int level, int option, const void *value, socklen_t len)
     {
-        if (setsockopt(m_sock, level, option, value, (socklen_t)len))
+        if (setsockopt(m_sock, level, option, value, len))
         {
             LIM_LOG_DEBUG(g_logger) << "setOption sock=" << m_sock
                                     << " level=" << level << " option=" << option
@@ -402,27 +402,41 @@ namespace lim_webserver
 
     std::ostream &Socket::dump(std::ostream &os) const
     {
-        // TODO: 在此处插入 return 语句
+        os << "[Socket sock=" << m_sock
+           << " is_connected=" << m_isConnected
+           << " family=" << m_family
+           << " type=" << m_type
+           << " protocol=" << m_protocol;
+        if (m_localAddress)
+        {
+            os << " local_address=" << m_localAddress->toString();
+        }
+        if (m_remoteAddress)
+        {
+            os << " remote_address=" << m_remoteAddress->toString();
+        }
+        os << "]";
+        return os;
     }
 
     bool Socket::cancelRead()
     {
-        return false;
+        return IoManager::GetThis()->cancelEvent(m_sock, IoManager::READ);
     }
 
     bool Socket::cancelWrite()
     {
-        return false;
+        return IoManager::GetThis()->cancelEvent(m_sock, IoManager::WRITE);
     }
 
     bool Socket::cancelAccept()
     {
-        return false;
+        return IoManager::GetThis()->cancelEvent(m_sock, IoManager::READ);
     }
 
     bool Socket::cancelAll()
     {
-        return false;
+        return IoManager::GetThis()->cancelAll(m_sock);
     }
 
     void Socket::initSock()

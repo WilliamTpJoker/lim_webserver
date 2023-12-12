@@ -8,11 +8,13 @@
 #include "log.h"
 #include "macro.h"
 #include "config.h"
+#include "timer.h"
+
+static lim_webserver::Logger::ptr g_logger = LIM_LOG_NAME("system");
 
 namespace lim_webserver
 {
     static thread_local bool t_hook_enable = false;
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
     static ConfigVar<int>::ptr g_tcp_connect_timeout = Config::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
 
 #define HOOK_FUN(F) \
@@ -97,13 +99,13 @@ template <typename OriginFun, typename... Args>
 static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t event, int timeout_so, Args &&...args)
 {
     // 如果全局变量 t_hook_enable 为否，不启用钩子，则直接调用系统原生函数
-    if (!t_hook_enable)
+    if (!lim_webserver::t_hook_enable)
     {
         return fun(fd, std::forward<Args>(args)...);
     }
 
     // 获取文件描述符的上下文信息，如果无法获取上下文信息，则说明文件句柄不存在，直接调用原生函数
-    FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
+    lim_webserver::FdCtx::ptr ctx = lim_webserver::FdMgr::GetInstance()->get(fd);
     if (!ctx)
     {
         return fun(fd, std::forward<Args>(args)...);
@@ -130,8 +132,8 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
     std::shared_ptr<timer_info> tinfo(new timer_info);
     std::weak_ptr<timer_info> winfo(tinfo);
     ssize_t n;
-    IoManager *iom;
-    Timer::ptr timer;
+    lim_webserver::IoManager *iom;
+    lim_webserver::Timer::ptr timer;
     // 进入无限循环，用于重试IO 操作
     while (true)
     {
@@ -152,7 +154,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
 
         // 后续则为函数调用成功但资源不可用,则表明需要进行异步操作
 
-        iom = IoManager::GetThis();
+        iom = lim_webserver::IoManager::GetThis();
 
         // 若设置了超时时间，则创建一个条件定时器来处理超时事件
         if (to != (uint64_t)-1)
@@ -166,12 +168,12 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
                             return;
                         }
                         t->cancelled = ETIMEDOUT;
-                        iom->cancelEvent(fd, (IoManager::IoEvent)event); },
+                        iom->cancelEvent(fd, (lim_webserver::IoManager::IoEvent)event); },
                 winfo);
         }
 
         // 添加该协程事件，即后续内容
-        int rt = iom->addEvent(fd, (IoManager::IoEvent)event);
+        int rt = iom->addEvent(fd, (lim_webserver::IoManager::IoEvent)event);
 
         // 处理添加事件失败的情况，设置错误码并返回 -1
         if (rt)
@@ -186,7 +188,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         // 添加成功了则让出协程执行权，等待读到事件的唤醒或者定时器的唤醒
         else
         {
-            Fiber::YieldToHold();
+            lim_webserver::Fiber::YieldToHold();
             if (timer)
             {
                 timer->cancel();
@@ -354,7 +356,7 @@ extern "C"
             {
                 timer->cancel();
             }
-            LIM_LOG_ERROR(lim_webserver::g_logger) << "connect addEvent(" << fd << ", WRITE) error";
+            LIM_LOG_ERROR(g_logger) << "connect addEvent(" << fd << ", WRITE) error";
         }
 
         int error = 0;
