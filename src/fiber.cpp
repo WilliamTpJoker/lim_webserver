@@ -254,14 +254,14 @@ namespace lim_webserver
         {
             cur->m_state = FiberState::EXCEPT;
             LIM_LOG_ERROR(g_logger) << "Fiber Except: " << e.what() << " fiber_id=" << cur->getId()
-                                    << std::endl
+                                    << "\n"
                                     << BackTraceToString();
         }
         catch (...)
         {
             cur->m_state = FiberState::EXCEPT;
             LIM_LOG_ERROR(g_logger) << "Fiber Except: fiber_id=" << cur->getId()
-                                    << std::endl
+                                    << "\n"
                                     << BackTraceToString();
         }
 
@@ -287,14 +287,14 @@ namespace lim_webserver
         {
             cur->m_state = FiberState::EXCEPT;
             LIM_LOG_ERROR(g_logger) << "Fiber Except: " << e.what() << " fiber_id=" << cur->getId()
-                                    << std::endl
+                                    << "\n"
                                     << BackTraceToString();
         }
         catch (...)
         {
             cur->m_state = FiberState::EXCEPT;
             LIM_LOG_ERROR(g_logger) << "Fiber Except: fiber_id=" << cur->getId()
-                                    << std::endl
+                                    << "\n"
                                     << BackTraceToString();
         }
 

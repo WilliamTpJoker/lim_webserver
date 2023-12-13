@@ -49,9 +49,9 @@ namespace lim_webserver
     {
     public:
         MessageFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getContent();
+            event->stream() << event->getContent();
         }
     };
 
@@ -59,9 +59,9 @@ namespace lim_webserver
     {
     public:
         LevelFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getLevelString();
+            event->stream() << event->getLevelString();
         }
     };
 
@@ -69,9 +69,9 @@ namespace lim_webserver
     {
     public:
         ElapseFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getElapse();
+            event->stream() << event->getElapse();
         }
     };
 
@@ -79,9 +79,9 @@ namespace lim_webserver
     {
     public:
         NameFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getLogger()->getName();
+            event->stream() << event->getLogger()->getName();
         }
     };
 
@@ -89,9 +89,9 @@ namespace lim_webserver
     {
     public:
         ThreadIdFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getThreadId();
+            event->stream() << event->getThreadId();
         }
     };
 
@@ -99,9 +99,9 @@ namespace lim_webserver
     {
     public:
         ThreadNameFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getThreadName();
+            event->stream() << event->getThreadName();
         }
     };
 
@@ -109,9 +109,9 @@ namespace lim_webserver
     {
     public:
         FiberIdFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getFiberId();
+            event->stream() << event->getFiberId();
         }
     };
 
@@ -120,14 +120,14 @@ namespace lim_webserver
     public:
         DateTimeFormatItem(const std::string &format = "%Y-%m-%d %H:%M:%S")
             : m_format(format) {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
             struct tm time_struct;              // 定义存储时间的结构体
             time_t time_l = event->getTime();   // 获取时间
             localtime_r(&time_l, &time_struct); // 将时间数转换成当地时间格式
             char buf[64]{0};
             strftime(buf, sizeof(buf), m_format.c_str(), &time_struct); // 将时间输出成文本
-            os << buf;
+            event->stream() << buf;
         }
 
     private:
@@ -138,9 +138,9 @@ namespace lim_webserver
     {
     public:
         FileNameFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getFile();
+            event->stream() << event->getFile();
         }
     };
 
@@ -148,9 +148,9 @@ namespace lim_webserver
     {
     public:
         LineFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << event->getLine();
+            event->stream() << event->getLine();
         }
     };
 
@@ -158,9 +158,9 @@ namespace lim_webserver
     {
     public:
         NewLineFormatItem(const std::string &str = "") {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << std::endl;
+            event->stream() << '\n';
         }
     };
 
@@ -169,9 +169,9 @@ namespace lim_webserver
     public:
         StringFormatItem(const std::string &str)
             : m_string(str) {}
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << m_string;
+            event->stream() << m_string;
         }
 
     private:
@@ -181,18 +181,18 @@ namespace lim_webserver
     class PercentSignFormatItem : public LogFormatter::FormatItem
     {
     public:
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << '%';
+            event->stream() << '%';
         }
     };
 
     class TabFormatItem : public LogFormatter::FormatItem
     {
     public:
-        void format(std::ostream &os, LogEvent::ptr event) override
+        void format(LogEvent::ptr event) override
         {
-            os << '\t';
+            event->stream() << '\t';
         }
     };
 
@@ -390,7 +390,7 @@ namespace lim_webserver
     }
 
     FileLogAppender::FileLogAppender(const std::string &filename)
-        : m_filename(filename)
+    : m_filename(filename)
     {
         reopen();
     }
@@ -405,22 +405,21 @@ namespace lim_webserver
                 reopen();
             }
             MutexType::Lock lock(m_mutex);
-            std::string s;
-            s = m_formatter->format(event);
-            m_filestream << s;
-            m_filestream.flush();
+            m_formatter->format(event);
+            const LogStream::Buffer &buf(event->stream().buffer());
+            fwrite(buf.data(), 1, buf.length(), m_ptr);
         }
     }
 
     bool FileLogAppender::reopen()
     {
         MutexType::Lock lock(m_mutex);
-        if (m_filestream)
+        if (m_ptr)
         {
-            m_filestream.close();
+            fclose(m_ptr);
         }
-        m_filestream.open(m_filename);
-        return !!m_filestream;
+        m_ptr = fopen(m_filename.c_str(), "w+");
+        return !!m_ptr;
     }
 
     bool FileLogAppender::fileExist()
@@ -434,7 +433,9 @@ namespace lim_webserver
         if (level >= m_level)
         {
             MutexType::Lock lock(m_mutex);
-            std::cout << m_formatter->format(event);
+            m_formatter->format(event);
+            const LogStream::Buffer &buf(event->stream().buffer());
+            fwrite(buf.data(), 1, buf.length(), stdout);
         }
     }
 
@@ -444,15 +445,12 @@ namespace lim_webserver
         init();
     }
 
-    std::string LogFormatter::format(LogEvent::ptr event)
+    void LogFormatter::format(LogEvent::ptr event)
     {
-        std::stringstream ss;
         for (auto &i : m_items)
         {
-            i->format(ss, event);
+            i->format(event);
         }
-
-        return ss.str();
     }
 
     void LogFormatter::init()

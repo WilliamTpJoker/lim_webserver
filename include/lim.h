@@ -1,5 +1,4 @@
-#ifndef __LIM_LIM_H__
-#define __LIM_LIM_H__
+#pragma once
 
 #include "address.h"
 #include "config.h"
@@ -17,5 +16,3 @@
 #include "thread.h"
 #include "time.h"
 #include "util.h"
-
-#endif

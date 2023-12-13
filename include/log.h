@@ -15,6 +15,7 @@
 #include "util.h"
 #include "thread.h"
 #include "singleton.h"
+#include "logstream.h"
 
 #define LIM_DEFAULT_PATTERN "%d%T%t %N%T%F%T[%c] [%p] %f:%l%T%m%n"
 
@@ -237,6 +238,8 @@ namespace lim_webserver
          */
         std::shared_ptr<Logger> getLogger() const { return m_logger; }
 
+        LogStream &stream() { return m_logStream; }
+
     private:
         const char *m_file = nullptr;     // 文件名
         LogLevel m_level;                 // 级别
@@ -248,6 +251,7 @@ namespace lim_webserver
         std::stringstream m_ss;           // 内容流
         std::shared_ptr<Logger> m_logger; // 日志器
         std::string m_threadName;         // 线程名
+        LogStream m_logStream;            // 完整日志流
     };
 
     /**
@@ -293,7 +297,7 @@ namespace lim_webserver
         /**
          * @brief 构造字符流
          */
-        std::string format(LogEvent::ptr event);
+        void format(LogEvent::ptr event);
         /**
          * @brief 获得格式
          */
@@ -321,7 +325,7 @@ namespace lim_webserver
             /**
              * @brief 构造字符流
              */
-            virtual void format(std::ostream &os, LogEvent::ptr event) = 0;
+            virtual void format(LogEvent::ptr event) = 0;
         };
 
     private:
@@ -516,8 +520,8 @@ namespace lim_webserver
         std::string toYamlString();
 
     private:
-        std::string m_filename;     // 文件名
-        std::ofstream m_filestream; // 文件流
+        std::string m_filename; // 文件名
+        FILE *m_ptr;            // 文件流
     };
 
     class LoggerManager
