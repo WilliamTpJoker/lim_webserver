@@ -19,9 +19,9 @@ void test_stream()
     lim_webserver::LogStream ls;
     ls<<"dsfsadfasdfasdfasa\n";
     defaultOutput(ls.buffer().data(),ls.buffer().length());
-    defaultFlush();
-    ls<<"dfsdfsdfsdfsdfsd";
-    std::cout<<ls.buffer().toString()<<std::endl;
+    lim_webserver::LogStream ls2;
+    ls2<<ls.buffer().data();
+    defaultOutput(ls2.buffer().data(),ls2.buffer().length());
 }
 
 int main(int argc, char* args[])

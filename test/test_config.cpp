@@ -8,12 +8,6 @@ typename ConfigVar<int>::ptr g_int_value_config = Config::Lookup("system.port", 
 
 typename ConfigVar<std::vector<int>>::ptr g_int_vec_value_config = Config::Lookup("system.inc_vec", std::vector<int>{1, 2}, "system port");
 
-void test_yaml()
-{
-    YAML::Node r = YAML::LoadFile("./config/log.yaml");
-    LIM_LOG_INFO(LIM_LOG_ROOT()) << r;
-}
-
 // 配置替换测试
 void test_config()
 {

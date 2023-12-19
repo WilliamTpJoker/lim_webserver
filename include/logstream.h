@@ -49,6 +49,8 @@ namespace lim_webserver
 
         // 将当前位置重置为缓冲区开头
         void reset() { m_cur = m_data; }
+
+        // 将数据全部置零
         void bzero() { memset(m_data, 0, sizeof(m_data)); }
 
         // 将缓冲区转换为字符串

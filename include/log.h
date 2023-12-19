@@ -1,5 +1,4 @@
-#ifndef __LIM_LOG_H__
-#define __LIM_LOG_H__
+#pragma once
 
 #include <string>
 #include <stdint.h>
@@ -19,48 +18,54 @@
 
 #define LIM_DEFAULT_PATTERN "%d%T%t %N%T%F%T[%c] [%p] %f:%l%T%m%n"
 
+#define LogLevel_DEBUG lim_webserver::LogLevel::DEBUG
+#define LogLevel_INFO lim_webserver::LogLevel::INFO
+#define LogLevel_WARN lim_webserver::LogLevel::WARN
+#define LogLevel_ERROR lim_webserver::LogLevel::ERROR
+#define LogLevel_FATAL lim_webserver::LogLevel::FATAL
+
 /**
  * @brief 使用流式方式将设定的日志级别的日志事件写入到logger
  *
  * @param logger 目标日志器
  * @param level  事件级别
  */
-#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::LogEvent::Create(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), lim_webserver::GetFiberId(), time(0), level, lim_webserver::Thread::GetThisThreadName())).getSS()
+#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::LogEvent::Create(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), lim_webserver::GetFiberId(), time(0), level, lim_webserver::Thread::GetThisThreadName())).getStream()
 
 /**
  * @brief 使用流式方式将日志级别debug的日志事件写入到logger
  *
  * @param logger 目标日志器
  */
-#define LIM_LOG_DEBUG(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::DEBUG)
+#define LIM_LOG_DEBUG(logger) LIM_LOG_LEVEL(logger, LogLevel_DEBUG)
 
 /**
  * @brief 使用流式方式将日志级别info的日志事件写入到logger
  *
  * @param logger 目标日志器
  */
-#define LIM_LOG_INFO(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::INFO)
+#define LIM_LOG_INFO(logger) LIM_LOG_LEVEL(logger, LogLevel_INFO)
 
 /**
  * @brief 使用流式方式将日志级别warn的日志事件写入到logger
  *
  * @param logger 目标日志器
  */
-#define LIM_LOG_WARN(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::WARN)
+#define LIM_LOG_WARN(logger) LIM_LOG_LEVEL(logger, LogLevel_WARN)
 
 /**
  * @brief 使用流式方式将日志级别error的日志事件写入到logger
  *
  * @param logger 目标日志器
  */
-#define LIM_LOG_ERROR(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::ERROR)
+#define LIM_LOG_ERROR(logger) LIM_LOG_LEVEL(logger, LogLevel_ERROR)
 
 /**
  * @brief 使用流式方式将日志级别fatal的日志事件写入到logger
  *
  * @param logger 目标日志器
  */
-#define LIM_LOG_FATAL(logger) LIM_LOG_LEVEL(logger, lim_webserver::LogLevel::FATAL)
+#define LIM_LOG_FATAL(logger) LIM_LOG_LEVEL(logger, LogLevel_FATAL)
 
 /**
  * @brief 获取根日志器
@@ -74,11 +79,7 @@
  */
 #define LIM_LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
 
-#define LogLevel_DEBUG lim_webserver::LogLevel::DEBUG
-#define LogLevel_INFO lim_webserver::LogLevel::INFO
-#define LogLevel_WARN lim_webserver::LogLevel::WARN
-#define LogLevel_ERROR lim_webserver::LogLevel::ERROR
-#define LogLevel_FATAL lim_webserver::LogLevel::FATAL
+
 
 namespace lim_webserver
 {
@@ -224,21 +225,19 @@ namespace lim_webserver
          *
          * @return std::string 日志内容。
          */
-        std::string getContent() const { return m_ss.str(); }
+        std::string getContent() const { return m_logStream.buffer().toString(); }
         /**
          * @brief 获取用于向日志事件内容中追加文本的内容流。
          *
-         * @return std::stringstream& 内容流的引用。
+         * @return LogStream& 内容流的引用。
          */
-        std::stringstream &getSS() { return m_ss; }
+        LogStream &getStream() { return m_logStream; }
         /**
          * @brief 获取与该日志事件关联的日志器。
          *
          * @return std::shared_ptr<Logger> 日志器的智能指针。
          */
         std::shared_ptr<Logger> getLogger() const { return m_logger; }
-
-        LogStream &stream() { return m_logStream; }
 
     private:
         const char *m_file = nullptr;     // 文件名
@@ -248,10 +247,9 @@ namespace lim_webserver
         uint32_t m_threadId = 0;          // 线程id
         uint32_t m_fiberId = 0;           // 协程id
         uint64_t m_time;                  // 时间戳
-        std::stringstream m_ss;           // 内容流
         std::shared_ptr<Logger> m_logger; // 日志器
         std::string m_threadName;         // 线程名
-        LogStream m_logStream;            // 完整日志流
+        LogStream m_logStream;            // 内容流
     };
 
     /**
@@ -273,7 +271,7 @@ namespace lim_webserver
         /**
          * @brief 获得日志内容流，以便左移操作补充内容
          */
-        std::stringstream &getSS() { return m_event->getSS(); }
+        LogStream &getStream() { return m_event->getStream(); }
 
     private:
         LogEvent::ptr m_event; // 事件
@@ -297,7 +295,7 @@ namespace lim_webserver
         /**
          * @brief 构造字符流
          */
-        void format(LogEvent::ptr event);
+        void format(LogStream &stream,LogEvent::ptr event);
         /**
          * @brief 获得格式
          */
@@ -325,7 +323,7 @@ namespace lim_webserver
             /**
              * @brief 构造字符流
              */
-            virtual void format(LogEvent::ptr event) = 0;
+            virtual void format(LogStream &stream, LogEvent::ptr event) = 0;
         };
 
     private:
@@ -554,5 +552,3 @@ namespace lim_webserver
     };
     using LoggerMgr = Singleton<LoggerManager>;
 }
-
-#endif

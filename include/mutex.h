@@ -236,10 +236,10 @@ namespace lim_webserver
          */
         void unlock() { pthread_mutex_unlock(&m_mutex); }
 
-        pthread_mutex_t *getMutex() { return &m_mutex; }
-
     private:
         pthread_mutex_t m_mutex; // 互斥锁
+    private:
+        friend class ConditionVariable;
     };
 
     /**
@@ -342,11 +342,11 @@ namespace lim_webserver
         pthread_spinlock_t m_mutex; // 自旋锁
     };
 
-    template <class T = Mutex>
     class ConditionVariable : Noncopyable
     {
     public:
-        ConditionVariable()
+        ConditionVariable(Mutex &mutex)
+            : m_mutex(mutex)
         {
             pthread_cond_init(&cond, nullptr);
         }
@@ -358,37 +358,41 @@ namespace lim_webserver
         /**
          * @brief 当条件不成立时，则会将该线程置于等待状态
          */
-        void wait(
-            T &mutex, std::function<bool()> condition = []
-                      { return false; })
+        void wait(const std::function<bool()> condition = []
+                  { return false; })
         {
-            ++waitersCount;
             while (!condition())
             {
-                pthread_cond_wait(&cond, mutex.getMutex());
+                pthread_cond_wait(&cond, &m_mutex.m_mutex);
             }
-            --waitersCount;
+        }
+
+        void wait()
+        {
+            pthread_cond_wait(&cond, &m_mutex.m_mutex);
+        }
+
+        bool waitForSeconds(int seconds)
+        {
+            struct timespec abstime;
+            clock_gettime(CLOCK_REALTIME, &abstime);
+            abstime.tv_sec += static_cast<time_t>(seconds);
+            return ETIMEDOUT == pthread_cond_timedwait(&cond, &m_mutex.m_mutex, &abstime);
         }
 
         void notify_one()
         {
-            if (waitersCount > 0)
-            {
-                pthread_cond_signal(&cond);
-            }
+            pthread_cond_signal(&cond);
         }
 
         void notify_all()
         {
-            if (waitersCount > 0)
-            {
-                pthread_cond_broadcast(&cond);
-            }
+            pthread_cond_broadcast(&cond);
         }
 
     private:
         pthread_cond_t cond;
-        int waitersCount = 0;
+        Mutex& m_mutex;
     };
 
 }

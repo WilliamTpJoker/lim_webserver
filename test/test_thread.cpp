@@ -62,14 +62,14 @@ void test_log_thread()
 }
 
 Mutex mtx;
-ConditionVariable<Mutex> cv;
+ConditionVariable cv(mtx);
 int ready=0;
 
 void func4()
 {
     {
         lim_webserver::Mutex::Lock lock(mtx);
-        cv.wait(mtx, []
+        cv.wait([]
                 { std::cout<<ready++<<std::endl;return ready>2; });
     }
     std::cout<< "in func4"<<std::endl;
