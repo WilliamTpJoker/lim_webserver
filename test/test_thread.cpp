@@ -13,7 +13,7 @@ int count = 0;
 
 void func1()
 {
-    LIM_LOG_INFO(g_logger) << "name:" << Thread::GetThisThreadName()
+    LIM_LOG_INFO(g_logger) << "name:" << Thread::GetThreadName()
                            << " this.name:" << Thread::GetThis()->getName()
                            << " id:" << GetThreadId()
                            << " this.id:" << Thread::GetThis()->getId();

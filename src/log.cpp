@@ -1,5 +1,6 @@
 #include "log.h"
 #include "config.h"
+#include "fiber.h"
 
 namespace lim_webserver
 {
@@ -101,7 +102,7 @@ namespace lim_webserver
         ThreadNameFormatItem(const std::string &str = "") {}
         void format(LogStream &stream,LogEvent::ptr event) override
         {
-            stream << event->getThreadName();
+            stream << Thread::GetThreadName();
         }
     };
 
@@ -111,7 +112,7 @@ namespace lim_webserver
         FiberIdFormatItem(const std::string &str = "") {}
         void format(LogStream &stream,LogEvent::ptr event) override
         {
-            stream << event->getFiberId();
+            stream << Fiber::GetFiberId();
         }
     };
 
@@ -390,7 +391,7 @@ namespace lim_webserver
     }
 
     FileLogAppender::FileLogAppender(const std::string &filename)
-        : m_filename(filename)
+        : m_filename(filename),m_ptr(nullptr)
     {
         reopen();
     }
@@ -706,9 +707,9 @@ namespace lim_webserver
     // 读取配置
     ConfigVar<std::set<LogDefine>>::ptr g_log_defines = Config::Lookup("logs", std::set<LogDefine>(), "logs config");
 
-    struct LogIniter
+    struct LogInitializer
     {
-        LogIniter()
+        LogInitializer()
         {
             auto log_listener_func = [](const std::set<LogDefine> &old_val, const std::set<LogDefine> &new_val)
             {
@@ -772,5 +773,5 @@ namespace lim_webserver
         }
     };
 
-    static LogIniter __log__init;
+    static LogInitializer __log__init;
 }

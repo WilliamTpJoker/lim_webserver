@@ -54,6 +54,6 @@ int main(int argc, char *argv[])
 {
     // g_l->setLevel(LogLevel_INFO);
     // test(3, true, "test");
-    test2(2, true, "test");
+    test(2, true, "test");
     return 0;
 }

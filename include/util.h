@@ -1,5 +1,4 @@
-#ifndef __LIM_UTIL_H__
-#define __LIM_UTIL_H__
+#pragma once
 
 #include <pthread.h>
 #include <unistd.h>
@@ -16,9 +15,6 @@ namespace lim_webserver
     
     /** 获取线程的ID */
     pid_t GetThreadId();
-
-    /** 获取协程的ID */
-    uint32_t GetFiberId();
 
     /** 获取当前毫秒时间 */
     uint64_t GetCurrentMS();
@@ -45,5 +41,3 @@ namespace lim_webserver
      */
     std::string BackTraceToString(int size=64, int skip=0, const std::string &prefix = "");
 }
-
-#endif

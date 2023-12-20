@@ -3,6 +3,7 @@
 #include "util.h"
 #include "fiber.h"
 #include "log.h"
+#include "thread.h"
 
 namespace lim_webserver
 {
@@ -11,11 +12,6 @@ namespace lim_webserver
     pid_t GetThreadId()
     {
         return syscall(SYS_gettid);
-    }
-
-    uint32_t GetFiberId()
-    {
-        return Fiber::GetFiberId();
     }
 
     uint64_t GetCurrentMS()

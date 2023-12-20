@@ -1,11 +1,26 @@
 #include "thread.h"
 #include "log.h"
+#include <sys/syscall.h>
+#include <unistd.h>
+
 
 namespace lim_webserver
 {
     static thread_local Thread *t_thread = nullptr;
     static thread_local std::string t_thread_name = "unknown";
-    static Logger::ptr thread_logger = LIM_LOG_NAME("system");
+    static thread_local pid_t t_thread_id = 0;
+    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+
+    struct ThreadInitializer
+    {
+        ThreadInitializer()
+        {
+            t_thread_name = "main";
+            t_thread_id = syscall(SYS_gettid);
+        }
+    };
+
+    ThreadInitializer g_thread_init;
 
     Thread::Thread(std::function<void()> callback, const std::string &name)
         : m_name(name), m_callback(callback)
@@ -13,10 +28,10 @@ namespace lim_webserver
         int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
         if (rt)
         {
-            LIM_LOG_ERROR(thread_logger) << "pthread_create thread fail, rt=" << rt << " name=" << name;
+            LIM_LOG_ERROR(g_logger) << "pthread_create thread fail, rt=" << rt << " name=" << name;
             throw std::logic_error("pthread_create error");
         }
-        m_semaphore.wait(); //等待初始化 确保各线程的执行顺序
+        m_semaphore.wait(); // 等待初始化 确保各线程的执行顺序
     }
 
     Thread::~Thread()
@@ -32,7 +47,7 @@ namespace lim_webserver
         return t_thread;
     }
 
-    std::string Thread::GetThisThreadName()
+    const std::string &Thread::GetThreadName()
     {
         return t_thread_name;
     }
@@ -57,7 +72,7 @@ namespace lim_webserver
         std::function<void()> callback;
         callback.swap(thread->m_callback);
 
-        thread->m_semaphore.notify(); //初始化完毕，唤醒
+        thread->m_semaphore.notify(); // 初始化完毕，唤醒
         callback();
         return 0;
     }
@@ -69,7 +84,7 @@ namespace lim_webserver
             int rt = pthread_join(m_thread, nullptr);
             if (rt)
             {
-                LIM_LOG_ERROR(thread_logger) << "pthread_join thread fail, rt=" << rt << " name=" << m_name;
+                LIM_LOG_ERROR(g_logger) << "pthread_join thread fail, rt=" << rt << " name=" << m_name;
                 throw std::logic_error("pthread_join error");
             }
             m_thread = 0;

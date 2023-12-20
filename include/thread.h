@@ -1,5 +1,4 @@
-#ifndef __LIM_THREAD_H__
-#define __LIM_THREAD_H__
+#pragma once
 
 #include "mutex.h"
 
@@ -47,7 +46,7 @@ namespace lim_webserver
         static Thread *GetThis();
 
         /** 获取当前线程的名称 */
-        static std::string GetThisThreadName();
+        static const std::string& GetThreadName();
 
         /** 设置当前线程的名称 */
         static void SetName(const std::string &name);
@@ -64,5 +63,3 @@ namespace lim_webserver
         Semaphore m_semaphore;            // 信号量，用于同步线程的初始化
     };
 }
-
-#endif

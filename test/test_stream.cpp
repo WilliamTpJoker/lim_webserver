@@ -17,10 +17,10 @@ void defaultFlush()
 void test_stream()
 {
     lim_webserver::LogStream ls;
-    ls<<"dsfsadfasdfasdfasa\n";
+    ls<<"this is a test stream\n";
     defaultOutput(ls.buffer().data(),ls.buffer().length());
     lim_webserver::LogStream ls2;
-    ls2<<ls.buffer().data();
+    ls2<<ls.buffer().toString();
     defaultOutput(ls2.buffer().data(),ls2.buffer().length());
 }
 
