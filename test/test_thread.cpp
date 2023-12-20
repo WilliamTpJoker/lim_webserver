@@ -15,7 +15,7 @@ void func1()
 {
     LIM_LOG_INFO(g_logger) << "name:" << Thread::GetThreadName()
                            << " this.name:" << Thread::GetThis()->getName()
-                           << " id:" << GetThreadId()
+                           << " id:" << Thread::GetThreadId()
                            << " this.id:" << Thread::GetThis()->getId();
     for (int i = 0; i < 10000000; ++i)
     {

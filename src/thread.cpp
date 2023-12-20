@@ -6,21 +6,27 @@
 
 namespace lim_webserver
 {
+    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    
     static thread_local Thread *t_thread = nullptr;
     static thread_local std::string t_thread_name = "unknown";
     static thread_local pid_t t_thread_id = 0;
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+
+    void setThreadID()
+    {
+        t_thread_id = syscall(SYS_gettid);
+    }
 
     struct ThreadInitializer
     {
         ThreadInitializer()
         {
             t_thread_name = "main";
-            t_thread_id = syscall(SYS_gettid);
+            setThreadID();
         }
     };
 
-    ThreadInitializer g_thread_init;
+    static ThreadInitializer g_thread_init;
 
     Thread::Thread(std::function<void()> callback, const std::string &name)
         : m_name(name), m_callback(callback)
@@ -52,6 +58,11 @@ namespace lim_webserver
         return t_thread_name;
     }
 
+    const pid_t Thread::GetThreadId()
+    {
+        return t_thread_id;
+    }
+
     void Thread::SetName(const std::string &name)
     {
         if (t_thread)
@@ -66,7 +77,8 @@ namespace lim_webserver
         Thread *thread = (Thread *)args;
         t_thread = thread;
         t_thread_name = thread->m_name;
-        thread->m_id = lim_webserver::GetThreadId();
+        setThreadID();
+        thread->m_id = t_thread_id;
         pthread_setname_np(pthread_self(), thread->m_name.substr(0, 15).c_str());
 
         std::function<void()> callback;

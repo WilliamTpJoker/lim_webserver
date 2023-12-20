@@ -1,18 +1,11 @@
 #include <execinfo.h>
 
 #include "util.h"
-#include "fiber.h"
 #include "log.h"
-#include "thread.h"
 
 namespace lim_webserver
 {
-    Logger::ptr g_logger = LIM_LOG_NAME("system");
-
-    pid_t GetThreadId()
-    {
-        return syscall(SYS_gettid);
-    }
+    static Logger::ptr g_logger = LIM_LOG_NAME("system");
 
     uint64_t GetCurrentMS()
     {

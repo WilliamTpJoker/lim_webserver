@@ -48,6 +48,9 @@ namespace lim_webserver
         /** 获取当前线程的名称 */
         static const std::string& GetThreadName();
 
+        /** 获取当前线程的ID */
+        static const pid_t GetThreadId();
+
         /** 设置当前线程的名称 */
         static void SetName(const std::string &name);
 

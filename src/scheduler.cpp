@@ -24,7 +24,7 @@ namespace lim_webserver
             Thread::SetName(m_name);
 
             t_fiber = m_rootFiber.get();
-            m_rootThread = GetThreadId();
+            m_rootThread = Thread::GetThreadId();
             m_threadIds.emplace_back(m_rootThread);
         }
         else
@@ -138,7 +138,7 @@ namespace lim_webserver
         LIM_LOG_DEBUG(g_logger) << m_name << " run";
         set_hook_enable(true);
         t_scheduler = this;
-        if (GetThreadId() != m_rootThread)
+        if (Thread::GetThreadId() != m_rootThread)
         {
             t_fiber = Fiber::GetThis().get();
         }

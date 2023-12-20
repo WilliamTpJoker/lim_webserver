@@ -12,9 +12,6 @@
 
 namespace lim_webserver
 {
-    
-    /** 获取线程的ID */
-    pid_t GetThreadId();
 
     /** 获取当前毫秒时间 */
     uint64_t GetCurrentMS();

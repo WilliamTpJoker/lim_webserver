@@ -52,7 +52,7 @@ namespace lim_webserver
         MessageFormatItem(const std::string &str = "") {}
         void format(LogStream &stream,LogEvent::ptr event) override
         {
-            stream << event->getContent();
+            stream << event->getStream();
         }
     };
 
@@ -92,7 +92,7 @@ namespace lim_webserver
         ThreadIdFormatItem(const std::string &str = "") {}
         void format(LogStream &stream,LogEvent::ptr event) override
         {
-            stream << event->getThreadId();
+            stream << Thread::GetThreadId();
         }
     };
 

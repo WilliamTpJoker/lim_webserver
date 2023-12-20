@@ -12,7 +12,6 @@ void test_logger()
 
     auto event = LogEvent::Create(
         logger, __FILE__, __LINE__, 0,
-        GetThreadId(),
         time(0),
         LogLevel::DEBUG);
     logger->log(LogLevel::DEBUG, event);

@@ -30,7 +30,7 @@
  * @param logger 目标日志器
  * @param level  事件级别
  */
-#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::LogEvent::Create(logger, __FILE__, __LINE__, 0, lim_webserver::GetThreadId(), time(0), level)).getStream()
+#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogEventWrap(lim_webserver::LogEvent::Create(logger, __FILE__, __LINE__, 0, time(0), level)).getStream()
 
 /**
  * @brief 使用流式方式将日志级别debug的日志事件写入到logger
@@ -78,8 +78,6 @@
  * @param name 日志名称
  */
 #define LIM_LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
-
-
 
 namespace lim_webserver
 {
@@ -141,10 +139,9 @@ namespace lim_webserver
          * @param level         日志级别，默认为DEBUG级别
          * @param thread_name   线程名
          */
-        static ptr Create(std::shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse, uint32_t thread_id,
-                          uint64_t time, LogLevel level)
+        static ptr Create(std::shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse, uint64_t time, LogLevel level)
         {
-            return std::make_shared<LogEvent>(logger, file, line, elapse, thread_id, time, level);
+            return std::make_shared<LogEvent>(logger, file, line, elapse, time, level);
         }
 
     public:
@@ -160,10 +157,8 @@ namespace lim_webserver
          * @param time          时间戳
          * @param level         日志级别，默认为DEBUG级别
          */
-        LogEvent(std::shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse, uint32_t thread_id,
-                 uint64_t time, LogLevel level)
-            : m_logger(logger), m_file(file), m_line(line), m_elapse(elapse), m_threadId(thread_id),
-              m_time(time), m_level(level){}
+        LogEvent(std::shared_ptr<Logger> logger, const char *file, int32_t line, uint32_t elapse, uint64_t time, LogLevel level)
+            : m_logger(logger), m_file(file), m_line(line), m_elapse(elapse), m_time(time), m_level(level) {}
 
         /**
          * @brief 获取文件路径。
@@ -184,12 +179,6 @@ namespace lim_webserver
          */
         uint32_t getElapse() const { return m_elapse; }
         /**
-         * @brief 获取执行该日志事件的线程的ID。
-         *
-         * @return uint32_t 线程ID。
-         */
-        uint32_t getThreadId() const { return m_threadId; }
-        /**
          * @brief 获取日志事件发生的时间戳。
          *
          * @return uint64_t 时间戳。
@@ -207,12 +196,6 @@ namespace lim_webserver
          * @return std::string 事件级别字符串。
          */
         std::string getLevelString() { return LogLevelHandler::ToString(m_level); }
-        /**
-         * @brief 获取日志事件的内容。
-         *
-         * @return std::string 日志内容。
-         */
-        std::string getContent() const { return m_logStream.buffer().toString(); }
         /**
          * @brief 获取用于向日志事件内容中追加文本的内容流。
          *
@@ -280,7 +263,7 @@ namespace lim_webserver
         /**
          * @brief 构造字符流
          */
-        void format(LogStream &stream,LogEvent::ptr event);
+        void format(LogStream &stream, LogEvent::ptr event);
         /**
          * @brief 获得格式
          */

@@ -123,6 +123,12 @@ namespace lim_webserver
             return *this;
         }
 
+        LogStream &operator<<(LogStream& stream)
+        {
+            m_buffer.append(stream.buffer().data(),stream.buffer().length());
+            return *this;
+        }
+
         void append(const char *data, int len) { m_buffer.append(data, len); }
         const Buffer &buffer() const { return m_buffer; }
         void resetBuffer() { m_buffer.reset(); }
