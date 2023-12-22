@@ -12,8 +12,7 @@
 #include <assert.h>
 #include <unordered_map>
 
-#include "util.h"
-
+#include "Util.h"
 #include "LogAppender.h"
 #include "LogFormatter.h"
 #include "AsyncLog.h"

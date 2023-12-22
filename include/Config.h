@@ -1,5 +1,4 @@
-#ifndef __LIM_CONFIG_H__
-#define __LIM_CONFIG_H__
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -515,5 +514,3 @@ namespace lim_webserver
     };
 
 }
-
-#endif

@@ -1,5 +1,5 @@
-#include "hook.h"
-#include "io_manager.h"
+#include "Hook.h"
+#include "IoManager.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>

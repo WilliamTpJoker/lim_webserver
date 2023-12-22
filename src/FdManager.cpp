@@ -1,5 +1,5 @@
-#include "fd_manager.h"
-#include "hook.h"
+#include "FdManager.h"
+#include "Hook.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

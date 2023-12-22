@@ -1,5 +1,5 @@
-#include "scheduler.h"
-#include "hook.h"
+#include "Scheduler.h"
+#include "Hook.h"
 
 namespace lim_webserver
 {

@@ -1,4 +1,4 @@
-#include "bytearray.h"
+#include "ByteArray.h"
 #include "Logger.h"
 
 

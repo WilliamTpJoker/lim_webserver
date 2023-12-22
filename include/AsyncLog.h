@@ -1,7 +1,6 @@
 #pragma once
 
-#include "mutex.h"
-
+#include "Mutex.h"
 #include "Noncopyable.h"
 #include "LogStream.h"
 #include "Thread.h"

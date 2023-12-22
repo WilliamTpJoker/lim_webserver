@@ -1,5 +1,4 @@
-#ifndef __LIM_ADDRESS_H__
-#define __LIM_ADDRESS_H__
+#pragma once
 
 #include <memory>
 #include <string>
@@ -216,5 +215,3 @@ namespace lim_webserver
         sockaddr m_addr;
     };
 }
-
-#endif

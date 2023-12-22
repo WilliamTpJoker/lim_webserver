@@ -1,12 +1,11 @@
-#ifndef __LIM_SCHEDULER_H__
-#define __LIM_SCHEDULER_H__
+#pragma once
 
 #include <atomic>
 #include <queue>
 
-#include "macro.h"
+#include "Macro.h"
 #include "Fiber.h"
-#include "mutex.h"
+#include "Mutex.h"
 #include "Thread.h"
 
 namespace lim_webserver
@@ -177,5 +176,3 @@ namespace lim_webserver
         Fiber::ptr m_rootFiber;                  // 主协程
     };
 }
-
-#endif

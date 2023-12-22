@@ -1,6 +1,6 @@
 #include "Thread.h"
 #include "Logger.h"
-#include "config.h"
+#include "Config.h"
 
 #include <unistd.h>
 

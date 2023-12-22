@@ -1,10 +1,9 @@
-#ifndef __LIM_FD_MANAGER_H__
-#define __LIM_FD_MANAGER_H__
+#pragma once
 
 #include <memory>
 
 #include "Thread.h"
-#include "io_manager.h"
+#include "IoManager.h"
 #include "Singleton.h"
 
 namespace lim_webserver
@@ -67,5 +66,3 @@ namespace lim_webserver
     using FdMgr = Singleton<FdManager>;
 
 }
-
-#endif

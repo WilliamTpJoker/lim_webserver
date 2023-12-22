@@ -1,5 +1,4 @@
-#ifndef __LIM_HOOK_H__
-#define __LIM_HOOK_H__
+#pragma once
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -101,4 +100,3 @@ extern "C"
 
     extern int connect_with_timeout(int fd, const struct sockaddr* addr, socklen_t addrlen, uint64_t timeout_ms);
 }
-#endif
