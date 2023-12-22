@@ -26,52 +26,13 @@
  * @param level  事件级别
  */
 #define LIM_LOG_LEVEL(logger, level) lim_webserver::LogMessageWrap(lim_webserver::LogMessage::Create(logger, __FILE__, __LINE__, time(0), level, logger->getName())).getStream()
-
-/**
- * @brief 使用流式方式将日志级别debug的日志事件写入到logger
- *
- * @param logger 目标日志器
- */
 #define LIM_LOG_DEBUG(logger) LIM_LOG_LEVEL(logger, LogLevel_DEBUG)
-
-/**
- * @brief 使用流式方式将日志级别info的日志事件写入到logger
- *
- * @param logger 目标日志器
- */
 #define LIM_LOG_INFO(logger) LIM_LOG_LEVEL(logger, LogLevel_INFO)
-
-/**
- * @brief 使用流式方式将日志级别warn的日志事件写入到logger
- *
- * @param logger 目标日志器
- */
 #define LIM_LOG_WARN(logger) LIM_LOG_LEVEL(logger, LogLevel_WARN)
-
-/**
- * @brief 使用流式方式将日志级别error的日志事件写入到logger
- *
- * @param logger 目标日志器
- */
 #define LIM_LOG_ERROR(logger) LIM_LOG_LEVEL(logger, LogLevel_ERROR)
-
-/**
- * @brief 使用流式方式将日志级别fatal的日志事件写入到logger
- *
- * @param logger 目标日志器
- */
 #define LIM_LOG_FATAL(logger) LIM_LOG_LEVEL(logger, LogLevel_FATAL)
 
-/**
- * @brief 获取根日志器
- */
 #define LIM_LOG_ROOT() lim_webserver::LoggerMgr::GetInstance()->getRoot()
-
-/**
- * @brief 获取对应名字的日志器
- *
- * @param name 日志名称
- */
 #define LIM_LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace lim_webserver
