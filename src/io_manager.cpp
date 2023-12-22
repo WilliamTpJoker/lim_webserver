@@ -1,4 +1,6 @@
 #include "io_manager.h"
+#include "Logger.h"
+
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include <errno.h>

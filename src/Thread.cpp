@@ -1,5 +1,6 @@
-#include "thread.h"
-#include "log.h"
+#include "Thread.h"
+#include "Logger.h"
+
 #include <sys/syscall.h>
 #include <unistd.h>
 

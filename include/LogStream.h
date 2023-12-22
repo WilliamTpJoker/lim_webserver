@@ -3,7 +3,8 @@
 #include <string.h>
 #include <string>
 #include <stdio.h>
-#include "noncopyable.h"
+
+#include "Noncopyable.h"
 
 namespace lim_webserver
 {
@@ -26,7 +27,7 @@ namespace lim_webserver
         // 向缓冲区追加数据
         void append(const char *buf, size_t len)
         {
-            if (avail() > static_cast<int>(len))
+            if (avail() >= static_cast<int>(len))
             {
                 memcpy(m_cur, buf, len);
                 m_cur += len;
@@ -66,7 +67,7 @@ namespace lim_webserver
 
     class LogStream : Noncopyable
     {
-
+    
     public:
         using Buffer = FixedBuffer<kSmallBuffer>;
 

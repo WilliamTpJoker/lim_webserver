@@ -4,7 +4,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "logstream.h"
+
+#include "LogStream.h"
 
 namespace lim_webserver
 {

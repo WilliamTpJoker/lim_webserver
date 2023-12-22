@@ -1,11 +1,11 @@
-#include "async_log.h"
+#include "AsyncLog.h"
 #include <assert.h>
 
 namespace lim_webserver
 {
     AppendFile::AppendFile(const char *filename)
     {
-        m_file_ptr = fopen(filename, "a");
+        m_file_ptr = fopen(filename, "w+");
         setbuffer(m_file_ptr, m_buffer, sizeof(m_buffer));
     }
 

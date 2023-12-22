@@ -1,9 +1,8 @@
-#ifndef __LIM_FIBER_H__
-#define __LIM_FIBER_H__
+#pragma once
 
 #include <ucontext.h>
 
-#include "thread.h"
+#include "Thread.h"
 
 #define FiberState_INIT lim_webserver::FiberState::INIT
 #define FiberState_HOLD lim_webserver::FiberState::HOLD
@@ -165,5 +164,3 @@ namespace lim_webserver
         std::function<void()> m_callback;      // 协程执行的回调函数
     };
 }
-
-#endif

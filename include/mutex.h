@@ -1,12 +1,11 @@
-#ifndef __LIM_MUTEX_H__
-#define __LIM_MUTEX_H__
+#pragma once
 
 #include <pthread.h>
 #include <thread>
 #include <functional>
 #include <semaphore.h>
 
-#include "noncopyable.h"
+#include "Noncopyable.h"
 
 namespace lim_webserver
 {
@@ -396,5 +395,3 @@ namespace lim_webserver
     };
 
 }
-
-#endif

@@ -1,11 +1,10 @@
-#ifndef __LIM_TIMER_H__
-#define __LIM_TIMER_H__
+#pragma once
 
 #include <memory>
 #include <set>
 #include <vector>
 
-#include "thread.h"
+#include "Thread.h"
 
 namespace lim_webserver
 {
@@ -126,5 +125,3 @@ namespace lim_webserver
         RWMutexType m_mutex;
     };
 }
-
-#endif

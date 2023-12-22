@@ -1,8 +1,7 @@
 #include <iostream>
-#include <iostream>
 #include <memory>
 
-#include "log.h"
+#include "Logger.h"
 #include "util.h"
 int main(int argc, char *argv[])
 {

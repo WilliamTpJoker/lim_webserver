@@ -1,5 +1,5 @@
 #include "config.h"
-#include "log.h"
+#include "Logger.h"
 #include <yaml-cpp/yaml.h>
 
 using namespace lim_webserver;
@@ -54,7 +54,7 @@ void test_log()
     std::cout << LoggerMgr::GetInstance()->toYamlString() << std::endl;
 
     LIM_LOG_INFO(sys_logger) << "hello system";
-    sys_logger->setFormatter("%d -%m- %n");
+    sys_logger->setPattern("%d -%m- %n");
     LIM_LOG_INFO(sys_logger) << "hello system";
 
     LIM_LOG_DEBUG(LIM_LOG_ROOT()) << "hello root";

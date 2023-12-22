@@ -1,202 +1,10 @@
-#include "log.h"
+#include "Logger.h"
 #include "config.h"
-#include "fiber.h"
+#include "Fiber.h"
+#include "AsyncLog.h"
 
 namespace lim_webserver
 {
-
-    std::string LogLevelHandler::ToString(LogLevel level)
-    {
-        static const std::unordered_map<LogLevel, std::string> levelStrings = {
-            {LogLevel::DEBUG, "DEBUG"},
-            {LogLevel::INFO, "INFO"},
-            {LogLevel::WARN, "WARN"},
-            {LogLevel::ERROR, "ERROR"},
-            {LogLevel::FATAL, "FATAL"}};
-        auto it = levelStrings.find(level);
-        if (it != levelStrings.end())
-        {
-            return it->second;
-        }
-        else
-        {
-            return std::string("UNKNOWN");
-        }
-    }
-    LogLevel LogLevelHandler::FromString(const std::string &val)
-    {
-        static const std::unordered_map<std::string, LogLevel> stringToLevel = {
-            {"DEBUG", LogLevel::DEBUG},
-            {"INFO", LogLevel::INFO},
-            {"WARN", LogLevel::WARN},
-            {"ERROR", LogLevel::ERROR},
-            {"FATAL", LogLevel::FATAL}};
-
-        auto it = stringToLevel.find(val);
-        if (it != stringToLevel.end())
-        {
-            return it->second;
-        }
-        else
-        {
-            return LogLevel::UNKNOWN;
-        }
-    }
-    LogEventWrap::~LogEventWrap()
-    {
-        m_event->getLogger()->log(m_event->getLevel(), m_event);
-    }
-    class MessageFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        MessageFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << event->getStream();
-        }
-    };
-
-    class LevelFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        LevelFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << event->getLevelString();
-        }
-    };
-
-    class ElapseFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        ElapseFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << event->getElapse();
-        }
-    };
-
-    class NameFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        NameFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << event->getLogger()->getName();
-        }
-    };
-
-    class ThreadIdFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        ThreadIdFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << Thread::GetThreadId();
-        }
-    };
-
-    class ThreadNameFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        ThreadNameFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << Thread::GetThreadName();
-        }
-    };
-
-    class FiberIdFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        FiberIdFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << Fiber::GetFiberId();
-        }
-    };
-
-    class DateTimeFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        DateTimeFormatItem(const std::string &format = "%Y-%m-%d %H:%M:%S")
-            : m_format(format) {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            struct tm time_struct;              // 定义存储时间的结构体
-            time_t time_l = event->getTime();   // 获取时间
-            localtime_r(&time_l, &time_struct); // 将时间数转换成当地时间格式
-            char buf[64]{0};
-            strftime(buf, sizeof(buf), m_format.c_str(), &time_struct); // 将时间输出成文本
-            stream << buf;
-        }
-
-    private:
-        std::string m_format;
-    };
-
-    class FileNameFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        FileNameFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << event->getFile();
-        }
-    };
-
-    class LineFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        LineFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << event->getLine();
-        }
-    };
-
-    class NewLineFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        NewLineFormatItem(const std::string &str = "") {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << '\n';
-        }
-    };
-
-    class StringFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        StringFormatItem(const std::string &str)
-            : m_string(str) {}
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << m_string;
-        }
-
-    private:
-        std ::string m_string;
-    };
-
-    class PercentSignFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << '%';
-        }
-    };
-
-    class TabFormatItem : public LogFormatter::FormatItem
-    {
-    public:
-        void format(LogStream &stream,LogEvent::ptr event) override
-        {
-            stream << '\t';
-        }
-    };
-
     /**
      * %p 输出日志等级
      * %f 输出文件名
@@ -232,26 +40,6 @@ namespace lim_webserver
 #undef FN
     };
 
-    void LogAppender::setFormatter(const std::string &pattern)
-    {
-        MutexType::Lock lock(m_mutex);
-        m_formatter = LogFormatter::Create(pattern);
-        m_custom_pattern = true;
-    }
-
-    void LogAppender::setFormatter(LogFormatter::ptr formatter)
-    {
-        MutexType::Lock lock(m_mutex);
-        m_formatter = formatter;
-        m_custom_pattern = true;
-    }
-
-    const LogFormatter::ptr &LogAppender::getFormatter()
-    {
-        MutexType::Lock lock(m_mutex);
-        return m_formatter;
-    }
-
     /**
      * @brief Logger成员函数
      */
@@ -285,7 +73,12 @@ namespace lim_webserver
         return ss.str();
     }
 
-    void Logger::log(LogLevel level, const LogEvent::ptr &event)
+    bool Logger::isUnifiedFormatter()
+    {
+        return f_unifiedFormatter == 0;
+    }
+
+    void Logger::log(LogLevel level, const LogMessage::ptr &message)
     {
         if (level >= m_level)
         {
@@ -293,14 +86,35 @@ namespace lim_webserver
             // 若该日志没有指定输出地，则默认在root的输出地中进行输出
             if (!m_appenders.empty())
             {
-                for (auto &i : m_appenders)
+                // 若存在格式器则说明存在同格输出地，直接构造输出流
+                if (m_formatter)
                 {
-                    i->log(level, event);
+                    LogStream stream;
+                    m_formatter->format(stream, message);
+                    // 遍历输出地，若没有格式器或格式相同，则直接将日志流输出
+                    for (auto &appender : m_appenders)
+                    {
+                        if (appender->getFormatter() && appender->getFormatter()->getPattern() == m_pattern)
+                        {
+                            appender->log(level, message);
+                        }
+                        else
+                        {
+                            appender->log(level, stream);
+                        }
+                    }
+                }
+                else // 若没有同格输出地，直接进入输出地构造
+                {
+                    for (auto &appender : m_appenders)
+                    {
+                        appender->log(level, message);
+                    }
                 }
             }
             else
             {
-                LIM_LOG_ROOT()->log(level, event);
+                LIM_LOG_ROOT()->log(level, message);
             }
         }
     }
@@ -308,22 +122,40 @@ namespace lim_webserver
     void Logger::addAppender(LogAppender::ptr appender)
     {
         MutexType::Lock lock(m_mutex);
-        if (!appender->getFormatter())
+        // 若输出地存在格式器且格式与日志不一致，则标志加一，即异化格式输出地数量
+        if (appender->getFormatter() && appender->getFormatter()->getPattern() != m_pattern)
         {
-            MutexType::Lock appender_lock(appender->m_mutex);
-            appender->m_formatter = LogFormatter::Create(m_pattern);
+            ++f_unifiedFormatter;
         }
         m_appenders.emplace_back(appender);
+        // 若输出地数量大于异化格式输出地数量并且不存在格式器，表明存在同化格式输出地，可以提前生成消息，需要创建格式器
+        if (!m_formatter && m_appenders.size() > f_unifiedFormatter)
+        {
+            m_formatter = LogFormatter::Create(m_pattern);
+        }
     }
 
     void Logger::delAppender(LogAppender::ptr appender)
     {
         MutexType::Lock lock(m_mutex);
+        // 遍历查找目标输出地
         for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it)
         {
+            // 找到则删除
             if (*it == appender)
             {
                 m_appenders.erase(it);
+                // 若输出地存在格式器且格式与日志不一致，则标志减一，即异化格式输出地被删除了
+                if (appender->getFormatter() && appender->getFormatter()->getPattern() != m_pattern)
+                {
+                    --f_unifiedFormatter;
+                    assert(f_unifiedFormatter >= 0);
+                    // 若输出地数量等于异化格式输出地数量并且存在格式器，表明不存在同化格式输出地，不需要提前生成消息，删除格式器
+                    if (m_formatter && m_appenders.size() == f_unifiedFormatter)
+                    {
+                        m_formatter = nullptr;
+                    }
+                }
                 break;
             }
         }
@@ -332,19 +164,16 @@ namespace lim_webserver
     void Logger::clearAppender()
     {
         MutexType::Lock lock(m_mutex);
+        // 清空
         m_appenders.clear();
+        f_unifiedFormatter = 0;
+        m_formatter = nullptr;
     }
 
-    void Logger::setFormatter(const std::string &pattern)
+    void Logger::setPattern(const std::string &pattern)
     {
         MutexType::Lock lock(m_mutex);
         m_pattern = pattern;
-    }
-
-    const std::string &Logger::getFormatter()
-    {
-        MutexType::Lock lock(m_mutex);
-        return m_pattern;
     }
 
     const std::string &Logger::getPattern()
@@ -353,106 +182,17 @@ namespace lim_webserver
         return m_pattern;
     }
 
-    std::string StdoutLogAppender::toYamlString()
-    {
-        MutexType::Lock lock(m_mutex);
-        YAML::Node node;
-        node["type"] = "StdoutLogAppender";
-        if (m_level != LogLevel::UNKNOWN)
-        {
-            node["level"] = LogLevelHandler::ToString(m_level);
-        }
-        if (m_custom_pattern)
-        {
-            node["formatter"] = m_formatter->getPattern();
-        }
-        std::stringstream ss;
-        ss << node;
-        return ss.str();
-    }
-
-    std::string FileLogAppender::toYamlString()
-    {
-        MutexType::Lock lock(m_mutex);
-        YAML::Node node;
-        node["type"] = "FileLogAppender";
-        node["file"] = m_filename;
-        if (m_level != LogLevel::UNKNOWN)
-        {
-            node["level"] = LogLevelHandler::ToString(m_level);
-        }
-        if (m_custom_pattern)
-        {
-            node["formatter"] = m_formatter->getPattern();
-        }
-        std::stringstream ss;
-        ss << node;
-        return ss.str();
-    }
-
-    FileLogAppender::FileLogAppender(const std::string &filename)
-        : m_filename(filename),m_ptr(nullptr)
-    {
-        reopen();
-    }
-
-    void FileLogAppender::log(LogLevel level, LogEvent::ptr event)
-    {
-        if (level >= m_level)
-        {
-            if (!fileExist())
-            {
-                std::cout << "file: " << m_filename << " deleted, Create new one" << std::endl;
-                reopen();
-            }
-            MutexType::Lock lock(m_mutex);
-            LogStream logstream;
-            m_formatter->format(logstream,event);
-            const LogStream::Buffer &buf(logstream.buffer());
-            fwrite(buf.data(), 1, buf.length(), m_ptr);
-        }
-    }
-
-    bool FileLogAppender::reopen()
-    {
-        MutexType::Lock lock(m_mutex);
-        if (m_ptr)
-        {
-            fclose(m_ptr);
-        }
-        m_ptr = fopen(m_filename.c_str(), "w");
-        return !!m_ptr;
-    }
-
-    bool FileLogAppender::fileExist()
-    {
-        std::ifstream file(m_filename);
-        return file.good();
-    }
-
-    void StdoutLogAppender::log(LogLevel level, LogEvent::ptr event)
-    {
-        if (level >= m_level)
-        {
-            MutexType::Lock lock(m_mutex);
-            LogStream logstream;
-            m_formatter->format(logstream,event);
-            const LogStream::Buffer &buf(logstream.buffer());
-            fwrite(buf.data(), 1, buf.length(), stdout);
-        }
-    }
-
     LogFormatter::LogFormatter(const std::string &pattern)
         : m_pattern(pattern)
     {
         init();
     }
 
-    void LogFormatter::format(LogStream &stream, LogEvent::ptr event)
+    void LogFormatter::format(LogStream &stream, LogMessage::ptr message)
     {
         for (auto &i : m_items)
         {
-            i->format(stream, event);
+            i->format(stream, message);
         }
     }
 
@@ -725,7 +465,7 @@ namespace lim_webserver
                     logger->setLevel(i.level);
                     if (!i.formatter.empty())
                     {
-                        logger->setFormatter(i.formatter);
+                        logger->setPattern(i.formatter);
                     }
                     logger->clearAppender();
                     for (auto &a : i.appenders)

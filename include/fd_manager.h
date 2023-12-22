@@ -3,9 +3,9 @@
 
 #include <memory>
 
-#include "thread.h"
+#include "Thread.h"
 #include "io_manager.h"
-#include "singleton.h"
+#include "Singleton.h"
 
 namespace lim_webserver
 {

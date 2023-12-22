@@ -166,7 +166,7 @@ namespace lim_webserver
             {
                 tickle();
             }
-            // 如果是 callback 任务，为则在专门的callback_fiber运行
+            // 如果是 callback 任务，则在专门的callback_fiber运行
             if (ft.fiber && (ft.fiber->getState() != FiberState::TERM && ft.fiber->getState() != FiberState::EXCEPT))
             {
                 ft.fiber->swapIn();

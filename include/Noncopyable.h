@@ -1,5 +1,4 @@
-#ifndef __LIM_NONCOPYABLE_H__
-#define __LIM_NONCOPYABLE_H__
+#pragma once
 
 namespace lim_webserver
 {
@@ -22,5 +21,3 @@ namespace lim_webserver
         Noncopyable &operator=(const Noncopyable &) = delete;
     };
 }
-
-#endif

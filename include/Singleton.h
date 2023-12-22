@@ -1,5 +1,4 @@
-#ifndef __LIM_SINGLETON_H__
-#define __LIM_SINGLETON_H__
+#pragma once
 
 #include <memory>
 
@@ -32,5 +31,3 @@ namespace lim_webserver
         }
     };
 }
-
-#endif

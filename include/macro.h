@@ -1,10 +1,9 @@
-#ifndef __LIM_MACRO_H__
-#define __LIM_MACRO_H__
+#pragma once
 
 #include <assert.h>
 
 #include "util.h"
-#include "log.h"
+#include "Logger.h"
 
 #if defined __GNUC__ || defined __llvm__
 #   define LIKELY(x) __builtin_expect(!!(x), 1)
@@ -28,5 +27,4 @@
             assert(condition);                                                      \
         }                                                                           \
     } while (false)
-
-#endif
+    

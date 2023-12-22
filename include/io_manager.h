@@ -1,5 +1,4 @@
-#ifndef __LIM_IO_H__
-#define __LIM_IO_H__
+#pragma once
 
 #include "scheduler.h"
 #include "timer.h"
@@ -71,5 +70,3 @@ namespace lim_webserver
         RWMutexType m_mutex;
     };
 }
-
-#endif

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "logstream.h"
-#include "noncopyable.h"
 #include "mutex.h"
-#include "thread.h"
+
+#include "Noncopyable.h"
+#include "LogStream.h"
+#include "Thread.h"
+
 #include <vector>
 
 namespace lim_webserver
@@ -19,7 +21,7 @@ namespace lim_webserver
     private:
         size_t write(const char *logline, size_t len);
         FILE *m_file_ptr;
-        char m_buffer[64 * 1024];   // 64k 缓存
+        char m_buffer[64 * 1024]; // 64k 缓存
     };
 
     class LogFile : Noncopyable
@@ -50,6 +52,9 @@ namespace lim_webserver
     {
     public:
         using MutexType = Mutex;
+        using Buffer = FixedBuffer<kLargeBuffer>;
+        using BufferPtr = std::shared_ptr<Buffer>;
+        using BufferVec = std::vector<BufferPtr>;
 
     public:
         AsyncLog(const std::string &basename, int flushInterval = 2)
@@ -100,10 +105,6 @@ namespace lim_webserver
          */
         void run();
 
-        using Buffer = FixedBuffer<kLargeBuffer>;
-        using BufferPtr = std::shared_ptr<Buffer>;
-        using BufferVec = std::vector<BufferPtr>;
-
         bool m_running = false;     // 工作状态
         std::string m_basename;     //
         int m_flushInterval;        // 写入间隔
@@ -114,4 +115,5 @@ namespace lim_webserver
         BufferPtr m_next_buffer;    // 备用缓存
         BufferVec m_buffer_vec;     // 满缓存存储区
     };
+
 } // namespace lim_webserver

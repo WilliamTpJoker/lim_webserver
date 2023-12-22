@@ -9,8 +9,8 @@
 #include <yaml-cpp/yaml.h>
 #include <unordered_set>
 
-#include "log.h"
-#include "thread.h"
+#include "Logger.h"
+#include "Thread.h"
 
 namespace lim_webserver
 {

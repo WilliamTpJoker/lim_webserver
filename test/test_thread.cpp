@@ -1,7 +1,8 @@
-#include "thread.h"
-#include "log.h"
-#include <unistd.h>
+#include "Thread.h"
+#include "Logger.h"
 #include "config.h"
+
+#include <unistd.h>
 
 using namespace lim_webserver;
 
