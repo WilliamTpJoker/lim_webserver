@@ -6,7 +6,7 @@
 
 using namespace lim_webserver;
 
-static Logger::ptr g_logger = LIM_LOG_NAME("system");
+static Logger::ptr g_logger = LOG_NAME("system");
 RWMutex s_rwmutex;
 Mutex s_mutex;
 
@@ -14,7 +14,7 @@ int count = 0;
 
 void func1()
 {
-    LIM_LOG_INFO(g_logger) << "name:" << Thread::GetThreadName()
+    LOG_INFO(g_logger) << "name:" << Thread::GetThreadName()
                            << " this.name:" << Thread::GetThis()->getName()
                            << " id:" << Thread::GetThreadId()
                            << " this.id:" << Thread::GetThis()->getId();
@@ -30,7 +30,7 @@ void func2()
 {
     while (true)
     {
-        LIM_LOG_INFO(g_logger) << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+        LOG_INFO(g_logger) << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
     }
 }
 
@@ -38,13 +38,13 @@ void func3()
 {
     while (true)
     {
-        LIM_LOG_INFO(g_logger) << "========================================";
+        LOG_INFO(g_logger) << "========================================";
     }
 }
 
 void test_log_thread()
 {
-    LIM_LOG_INFO(g_logger) << "thread test begin";
+    LOG_INFO(g_logger) << "thread test begin";
     std::vector<Thread::ptr> thread_vec;
     for (int i = 0; i < 1; ++i)
     {
@@ -58,8 +58,8 @@ void test_log_thread()
     {
         thread_vec[i]->join();
     }
-    LIM_LOG_INFO(g_logger) << "thread test end";
-    LIM_LOG_INFO(g_logger) << "count=" << count;
+    LOG_INFO(g_logger) << "thread test end";
+    LOG_INFO(g_logger) << "count=" << count;
 }
 
 Mutex mtx;

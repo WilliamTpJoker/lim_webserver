@@ -7,7 +7,7 @@
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_NAME("system");
     
     static thread_local Thread *t_thread = nullptr;
     static thread_local std::string t_thread_name = "unknown";
@@ -35,7 +35,7 @@ namespace lim_webserver
         int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
         if (rt)
         {
-            LIM_LOG_ERROR(g_logger) << "pthread_create thread fail, rt=" << rt << " name=" << name;
+            LOG_ERROR(g_logger) << "pthread_create thread fail, rt=" << rt << " name=" << name;
             throw std::logic_error("pthread_create error");
         }
         m_semaphore.wait(); // 等待初始化 确保各线程的执行顺序
@@ -97,7 +97,7 @@ namespace lim_webserver
             int rt = pthread_join(m_thread, nullptr);
             if (rt)
             {
-                LIM_LOG_ERROR(g_logger) << "pthread_join thread fail, rt=" << rt << " name=" << m_name;
+                LOG_ERROR(g_logger) << "pthread_join thread fail, rt=" << rt << " name=" << m_name;
                 throw std::logic_error("pthread_join error");
             }
             m_thread = 0;

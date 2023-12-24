@@ -21,7 +21,7 @@ namespace lim_webserver
         }
         else
         {
-            LIM_LOG_ERROR(LIM_LOG_ROOT()) << "Lookup name invalid" << prefix;
+            LOG_ERROR(LOG_ROOT()) << "Lookup name invalid" << prefix;
             throw std::invalid_argument(prefix);
         }
         // 为映射则后续还有配置

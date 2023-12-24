@@ -25,24 +25,26 @@
  * @param logger 目标日志器
  * @param level  事件级别
  */
-#define LIM_LOG_LEVEL(logger, level) lim_webserver::LogMessageWrap(lim_webserver::LogMessage::Create(logger, __FILE__, __LINE__, time(0), level, logger->getName())).getStream()
-#define LIM_LOG_DEBUG(logger) LIM_LOG_LEVEL(logger, LogLevel_DEBUG)
-#define LIM_LOG_INFO(logger) LIM_LOG_LEVEL(logger, LogLevel_INFO)
-#define LIM_LOG_WARN(logger) LIM_LOG_LEVEL(logger, LogLevel_WARN)
-#define LIM_LOG_ERROR(logger) LIM_LOG_LEVEL(logger, LogLevel_ERROR)
-#define LIM_LOG_FATAL(logger) LIM_LOG_LEVEL(logger, LogLevel_FATAL)
+#define LOG_LEVEL(logger, level) lim_webserver::LogMessageWrap(lim_webserver::LogMessage::Create(logger, __FILE__, __LINE__, time(0), level, logger->getName())).getStream()
+#define LOG_DEBUG(logger) LOG_LEVEL(logger, LogLevel_DEBUG)
+#define LOG_INFO(logger) LOG_LEVEL(logger, LogLevel_INFO)
+#define LOG_WARN(logger) LOG_LEVEL(logger, LogLevel_WARN)
+#define LOG_ERROR(logger) LOG_LEVEL(logger, LogLevel_ERROR)
+#define LOG_FATAL(logger) LOG_LEVEL(logger, LogLevel_FATAL)
 
-#define LIM_LOG_ROOT() lim_webserver::LoggerMgr::GetInstance()->getRoot()
-#define LIM_LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
+#define LOG_ROOT() lim_webserver::LoggerMgr::GetInstance()->getRoot()
+#define LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace lim_webserver
 {
-    class LogAppender;
+    class LogVisitor;
+    class YamlVisitor;
     /**
      * @brief 日志器
      */
-    class Logger : public std::enable_shared_from_this<Logger>
+    class Logger 
     {
+        friend YamlVisitor;
     public:
         using ptr = std::shared_ptr<Logger>;
         static ptr Create()
@@ -53,20 +55,22 @@ namespace lim_webserver
         {
             return std::make_shared<Logger>(name);
         }
-        static ptr Create(const std::string &name, LogLevel level, const std::string &pattern)
+        static ptr Create(const std::string &name, LogLevel level)
         {
-            return std::make_shared<Logger>(name, level, pattern);
+            return std::make_shared<Logger>(name, level);
         }
 
     public:
         using MutexType = Spinlock;
         Logger() {}
         Logger(const std::string &name);
-        Logger(const std::string &name, LogLevel level, const std::string &pattern);
+        Logger(const std::string &name, LogLevel level);
         /**
          * @brief 输出日志
          */
         void log(LogLevel level, const LogMessage::ptr &message);
+
+        const char* accept(LogVisitor& visitor);
 
         /**
          * @brief 添加日志输出地
@@ -75,21 +79,11 @@ namespace lim_webserver
         /**
          * @brief 删除日志输出地
          */
-        void delAppender(LogAppender::ptr appender);
+        void delAppender(std::string &name);
         /**
          * @brief 清空日志输出地
          */
         void clearAppender();
-
-        /**
-         * @brief 设置日志的默认格式
-         */
-        void setPattern(const std::string &pattern);
-
-        /**
-         * @brief 获取日志的输出格式
-         */
-        const std::string &getPattern();
 
         /**
          * @brief 获取日志的默认级别
@@ -104,24 +98,10 @@ namespace lim_webserver
          */
         const std::string &getName() const { return m_name; }
 
-        /**
-         * @brief 打印成Yaml格式字符串
-         */
-        std::string toYamlString();
-
     private:
-        /**
-         * @brief 确认所有输出地是否统一格式
-         */
-        bool isUnifiedFormatter();
-
-    private:
-        std::string m_name = "root";                 // 日志名称
-        LogLevel m_level = LogLevel_DEBUG;           // 日志级别
-        std::list<LogAppender::ptr> m_appenders;     // Appender集合
-        std::string m_pattern = LIM_DEFAULT_PATTERN; // 日志格式
-        LogFormatter::ptr m_formatter = nullptr;     // 日志格式器
-        int f_unifiedFormatter = 0;                  // 统一格式标志位,0:统一格式 >0:不统一格式
+        std::string m_name = "root";             // 日志名称
+        LogLevel m_level = LogLevel_DEBUG;       // 日志级别
+        std::list<LogAppender::ptr> m_appenders; // Appender集合
         MutexType m_mutex;
     };
 
@@ -154,12 +134,6 @@ namespace lim_webserver
         LogMessage::ptr m_message; // 事件
     };
 
-    class LoggerBuilder
-    {
-    public:
-    private:
-    };
-
     class LoggerManager
     {
     public:
@@ -189,4 +163,31 @@ namespace lim_webserver
         MutexType m_mutex;
     };
     using LoggerMgr = Singleton<LoggerManager>;
+
+    struct LoggerDefine
+    {
+        std::string name;
+        LogLevel level = LogLevel_UNKNOWN;
+        std::vector<std::string> appender_refs;
+
+        bool operator==(const LoggerDefine &oth) const
+        {
+            return name == oth.name && level == oth.level && appender_refs == oth.appender_refs;
+        }
+
+        bool operator<(const LoggerDefine &oth) const
+        {
+            return name < oth.name;
+        }
+
+        bool operator!=(const LoggerDefine &oth) const
+        {
+            return !(*this == oth);
+        }
+
+        bool isValid() const
+        {
+            return !name.empty();
+        }
+    };
 }

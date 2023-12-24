@@ -1,43 +1,51 @@
 # logs 配置格式
-# logs:
-#   - name:      [日志名称]
-#     level:     [日志等级，可选类型为 UNKNOWN, DEBUG, INFO, WARN, ERROR, FATAL]
-#     formatter: [日志打印格式，支持以下特殊符号：
-#                   %p 输出日志等级
-#                   %f 输出文件名
-#                   %l 输出行号
-#                   %d 输出日志时间
-#                   %t 输出线程号
-#                   %F 输出协程号
-#                   %m 输出日志消息
-#                   %n 输出换行
-#                   %% 输出百分号
-#                   %T 输出制表符
-#                   %r 输出自启动到现在的时间
-#                   %c 输出日志信息所属的类目
-#                ]
-#     appender:
-#       - type:      [日志输出器类型，可选类型为 0 和 1， 分别对应 StdoutLogAppender, FileLogAppender]
-#         file:      [日志输出的目标文件，当 type 为 FileLogAppender 时才需要提供]
-#         level:     [可选配置，日志输出器的等级，若没提供则继承所在 log 的 level]
-#         formatter: [可选配置，日志打印格式，若没提供则继承所在 log 的 formatter]
+# logconfig:
+#   appenders:
+#     - type:           [日志输出器类型，可选类型为 0 和 1， 分别对应 ConsoleAppender, FileAppender]
+#       file:           [日志输出的目标文件，当 type 为 FileLogAppender 时才需要提供]
+#       level:          [可选配置，日志输出器的等级，若没提供则继承所在 log 的 level]
+#       formatter:      [打印格式，支持以下特殊符号：
+#                          %p 输出日志等级
+#                          %f 输出文件名
+#                          %l 输出行号
+#                          %d 输出日志时间
+#                          %t 输出线程号
+#                          %F 输出协程号
+#                          %m 输出日志消息
+#                          %n 输出换行
+#                          %% 输出百分号
+#                          %T 输出制表符
+#                          %r 输出自启动到现在的时间
+#                          %c 输出日志信息所属的类目
+#                       ]
+#       append:         [追加模式]
+#   logs:     
+#     - name:           [日志名称]
+#       level:          [日志等级，可选类型为 UNKNOWN, DEBUG, INFO, WARN, ERROR, FATAL]
+#       appender-ref:   [绑定appender]
 
-logs:
-  - name: root
-    level: DEBUG
-    formatter: "[%d] [%p] [%f:%l]%T%m%n"
-    appenders:
-      - type: 1
-        level: DEBUG
-        file: ./log/root_log.txt
-      - type: 0
-  - name: system
-    level: DEBUG
-    formatter: "[%d] [%p] [%f]%T%m%n"
-    appenders:
-      - type: 1
-        file: ./log/system_log.txt
-      - type: 0
 
-system:
-  port: 8088
+logconfig:
+  appenders:
+    - type: 0
+      name: console
+      level: DEBUG
+      formatter:  "[%d] [%p] [%f:%l]%T%m%n"
+    - type: 1
+      name: file
+      level: DEBUG
+      formatter:  "[%d] [%p] [%f:%l]%T%m%n"
+      append: true
+      file: ./log/test_log.txt
+
+  loggers:
+    - name: root
+      level: DEBUG
+      appender-ref:
+        - console
+        - file
+    - name: system
+      level: DEBUG
+      appender-ref:
+        - console
+        - file

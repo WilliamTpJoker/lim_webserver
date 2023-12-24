@@ -1,5 +1,8 @@
 #include "LogAppender.h"
+#include "LogVisitor.h"
 #include "Config.h"
+
+#include <iostream>
 
 namespace lim_webserver
 {
@@ -21,60 +24,26 @@ namespace lim_webserver
         return m_formatter;
     }
 
-    std::string StdoutLogAppender::toYamlString()
+    void LogAppender::delFormatter()
     {
         MutexType::Lock lock(m_mutex);
-        YAML::Node node;
-        node["type"] = "StdoutLogAppender";
-        if (m_level != LogLevel::UNKNOWN)
-        {
-            node["level"] = LogLevelHandler::ToString(m_level);
-        }
-        std::stringstream ss;
-        ss << node;
-        return ss.str();
+        m_formatter = nullptr;
     }
 
-    std::string FileLogAppender::toYamlString()
-    {
-        MutexType::Lock lock(m_mutex);
-        YAML::Node node;
-        node["type"] = "FileLogAppender";
-        node["file"] = m_filename;
-        if (m_level != LogLevel::UNKNOWN)
-        {
-            node["level"] = LogLevelHandler::ToString(m_level);
-        }
-        std::stringstream ss;
-        ss << node;
-        return ss.str();
-    }
-
-    FileLogAppender::FileLogAppender(const std::string &filename)
-        : m_filename(filename), m_ptr(nullptr)
-    {
-        reopen();
-    }
-
-    void FileLogAppender::log(LogLevel level, LogMessage::ptr event)
+    void OutputAppender::log(LogLevel level, LogMessage::ptr message)
     {
         if (level >= m_level)
         {
-            if (!fileExist())
-            {
-                std::cout << "file: " << m_filename << " deleted, Create new one" << std::endl;
-                reopen();
-            }
             LogStream logstream;
             {
                 MutexType::Lock lock(m_mutex);
-                m_formatter->format(logstream, event);
+                m_formatter->format(logstream, message);
             }
             log(level, logstream);
         }
     }
 
-    void FileLogAppender::log(LogLevel level, LogStream &stream)
+    void OutputAppender::log(LogLevel level, LogStream &stream)
     {
         if (level >= m_level)
         {
@@ -83,41 +52,61 @@ namespace lim_webserver
         }
     }
 
-    bool FileLogAppender::reopen()
+    ConsoleAppender::ConsoleAppender(FILE *target)
+    {
+        setTarget(target);
+    }
+
+    void ConsoleAppender::setTarget(FILE *target)
     {
         MutexType::Lock lock(m_mutex);
+        if (fileno(target) != fileno(stdout) | fileno(target) != fileno(stdout))
+        {
+            std::cout << "ConsoleAppender error: wrong target, default set stdout" << std::endl;
+            m_ptr = stdout;
+        }
+        else
+        {
+            m_ptr = target;
+        }
+    }
+
+    const char* ConsoleAppender::accept(LogVisitor &visitor)
+    {
+        return visitor.visitConsoleAppender(*this);
+    }
+
+    FileAppender::FileAppender(const std::string &filename, bool append)
+        : m_filename(filename), m_append(append)
+    {
+        reopen();
+    }
+
+    bool FileAppender::reopen()
+    {
+        MutexType::Lock lock(m_mutex);
+
         if (m_ptr)
         {
             fclose(m_ptr);
         }
-        m_ptr = fopen(m_filename.c_str(), "w");
+        const char *mode = m_append ? "a" : "w";
+        m_ptr = fopen(m_filename.c_str(), mode);
+        if (!m_ptr)
+        {
+            std::cout << "FileAppender error: file open failed" << std::endl;
+        }
         return !!m_ptr;
     }
 
-    bool FileLogAppender::fileExist()
+    const char* FileAppender::accept(LogVisitor &visitor)
     {
-        std::ifstream file(m_filename);
-        return file.good();
+        return visitor.visitFileAppender(*this);
     }
 
-    void StdoutLogAppender::log(LogLevel level, LogMessage::ptr event)
+    RollingFileAppender::RollingFileAppender(const std::string &filename, RollingPolicy::ptr rollingPolicy)
+        : FileAppender(filename, true), m_rollingPolicy(rollingPolicy)
     {
-        if (level >= m_level)
-        {
-            LogStream logstream;
-            {
-                MutexType::Lock lock(m_mutex);
-                m_formatter->format(logstream, event);
-            }
-            log(level, logstream);
-        }
     }
-    void StdoutLogAppender::log(LogLevel level, LogStream &stream)
-    {
-        if (level >= m_level)
-        {
-            const LogStream::Buffer &buf(stream.buffer());
-            fwrite(buf.data(), 1, buf.length(), stdout);
-        }
-    }
+
 } // namespace lim_webserver

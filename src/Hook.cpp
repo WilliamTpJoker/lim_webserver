@@ -10,7 +10,7 @@
 #include "Config.h"
 #include "Timer.h"
 
-static lim_webserver::Logger::ptr g_logger = LIM_LOG_NAME("system");
+static lim_webserver::Logger::ptr g_logger = LOG_NAME("system");
 
 namespace lim_webserver
 {
@@ -71,7 +71,7 @@ namespace lim_webserver
             g_tcp_connect_timeout->addListener(
                 [](const int &old_value, const int &new_value)
                 {
-                    LIM_LOG_INFO(g_logger) << "tcp connect timeout changed from " << old_value << " to " << new_value;
+                    LOG_INFO(g_logger) << "tcp connect timeout changed from " << old_value << " to " << new_value;
                     s_connect_timeout = new_value;
                 });
         }
@@ -178,7 +178,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         // 处理添加事件失败的情况，设置错误码并返回 -1
         if (rt)
         {
-            LIM_LOG_ERROR(g_logger) << hook_fun_name << " addEvent(" << fd << ", " << event << ")";
+            LOG_ERROR(g_logger) << hook_fun_name << " addEvent(" << fd << ", " << event << ")";
             if (timer)
             {
                 timer->cancel();
@@ -356,7 +356,7 @@ extern "C"
             {
                 timer->cancel();
             }
-            LIM_LOG_ERROR(g_logger) << "connect addEvent(" << fd << ", WRITE) error";
+            LOG_ERROR(g_logger) << "connect addEvent(" << fd << ", WRITE) error";
         }
 
         int error = 0;

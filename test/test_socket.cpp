@@ -1,35 +1,35 @@
 #include "lim.h"
 
-static lim_webserver::Logger::ptr g_logger = LIM_LOG_ROOT();
+static lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 
 void test_socket()
 {
     lim_webserver::IPAddress::ptr addr= lim_webserver::Address::LookupAnyIPAddress("www.baidu.com");
     if(!addr)
     {
-    LIM_LOG_INFO(g_logger) << "get address: "<< addr->toString();
+    LOG_INFO(g_logger) << "get address: "<< addr->toString();
 
     }else
     {
-        LIM_LOG_ERROR(g_logger) << "get address fail";
+        LOG_ERROR(g_logger) << "get address fail";
     }
 
     lim_webserver::Socket::ptr sock = lim_webserver::Socket::CreateTCP(addr);
     addr->setPort(80);
     if(!sock->connect(addr))
     {
-        LIM_LOG_ERROR(g_logger) << "connect "<< addr->toString()<<"fail";
+        LOG_ERROR(g_logger) << "connect "<< addr->toString()<<"fail";
     }
     else
     {
-        LIM_LOG_INFO(g_logger)<< "connnect"<<addr->toString()<<" success";
+        LOG_INFO(g_logger)<< "connnect"<<addr->toString()<<" success";
     }
 
     const char buff[] = "GET / HTTP/1.0\r\n\r\n";
     int rt = sock->send(buff, sizeof(buff));
     if(rt<=0)
     {
-        LIM_LOG_INFO(g_logger) << "send fail rt="<<rt;
+        LOG_INFO(g_logger) << "send fail rt="<<rt;
         return;
     }
 
@@ -39,11 +39,11 @@ void test_socket()
 
     if(rt <=0)
     {
-        LIM_LOG_INFO(g_logger) << "recv fail rt="<<rt;
+        LOG_INFO(g_logger) << "recv fail rt="<<rt;
         return;
     }
     buffs.resize(rt);
-    LIM_LOG_INFO(g_logger)<<buffs;
+    LOG_INFO(g_logger)<<buffs;
 }
 
 

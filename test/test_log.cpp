@@ -6,33 +6,29 @@ using namespace lim_webserver;
 
 void test_logger()
 {
-    auto logger = Logger::Create();
-    logger->setPattern(LIM_DEFAULT_PATTERN);
-    logger->addAppender(FileLogAppender::Create("log/log.txt"));
+    Logger::ptr logger = Logger::Create();
+    LogAppender::ptr appender = FileAppender::Create("log/log.txt");
+    appender->setFormatter(DEFAULT_PATTERN);
+
+    logger->addAppender(FileAppender::Create("log/log.txt"));
 
     auto event = LogMessage::Create(
         logger, __FILE__, __LINE__, time(0), LogLevel::DEBUG, logger->getName());
     logger->log(LogLevel::DEBUG, event);
 
-    LIM_LOG_LEVEL(logger, LogLevel::DEBUG) << " test log: support operator<<";
-    LIM_LOG_FATAL(logger);
+    LOG_LEVEL(logger, LogLevel::DEBUG) << " test log: support operator<<";
+    LOG_FATAL(logger);
 }
 
 void test_new_logger()
 {
     Logger::ptr l = LoggerMgr::GetInstance()->getLogger("XX");
-    LIM_LOG_DEBUG(l) << " XXX";
-    LIM_LOG_INFO(LIM_LOG_NAME("XX")) << " this msg from XX logger";
+    LOG_DEBUG(l) << " XXX";
+    LOG_INFO(LOG_NAME("XX")) << " this msg from XX logger";
 }
 
-void stress_test(bool longLog, int round, int kBatch)
+void stress_test(Logger::ptr &logger, bool longLog, int round, int kBatch)
 {
-    Logger::ptr logger = LIM_LOG_NAME("test");
-    FileLogAppender::ptr appender = FileLogAppender::Create("./log/stress_log.txt");
-    logger->addAppender(appender);
-    logger->setPattern("%t %N%T%F%T[%c] [%p] %f:%l%T%m%n");
-    // logger->addAppender(StdoutLogAppender::Create());
-
     int cnt = 0;
     std::string empty = " ";
     std::string longStr(3000, 'X');
@@ -41,7 +37,7 @@ void stress_test(bool longLog, int round, int kBatch)
     {
         for (int i = 0; i < kBatch; ++i)
         {
-            LIM_LOG_INFO(logger) << "Hello 123456789"
+            LOG_INFO(logger) << "Hello 123456789"
                                  << " abcdefghijklmnopqrstuvwxyz " << (longLog ? longStr : empty) << cnt;
             ++cnt;
         }
@@ -50,13 +46,24 @@ void stress_test(bool longLog, int round, int kBatch)
     printf("%lf\n", (float)(end - start) * 1000 / CLOCKS_PER_SEC);
 }
 
+void test_stress()
+{
+    Logger::ptr logger = LOG_NAME("test");
+    FileAppender::ptr appender = FileAppender::Create("./log/stress_log.txt", false);
+    appender->setFormatter("%t %N%T%F%T[%c] [%p] %f:%l%T%m%n");
+    logger->addAppender(appender);
+
+    stress_test(logger, false, 300, 1000);
+    stress_test(logger, true, 300, 1000);
+}
+
 int main(int argc, char *argv[])
 {
     // test_logger();
     // test_new_logger();
     printf("program started, pid = %d\n", getpid());
-    stress_test(false, 300, 1000);
-    stress_test(true, 300, 1000);
+    
+    test_stress();
 
     return 0;
 }

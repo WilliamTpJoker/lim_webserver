@@ -3,7 +3,7 @@
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_NAME("system");
 
     static thread_local Scheduler *t_scheduler = nullptr;
     static thread_local Fiber *t_fiber = nullptr;
@@ -11,12 +11,12 @@ namespace lim_webserver
     Scheduler::Scheduler(size_t threads, bool use_caller, const std::string &name)
         : m_name(name)
     {
-        LIM_ASSERT(threads > 0);
+        ASSERT(threads > 0);
         if (use_caller)
         {
             Fiber::GetThis();
             --threads;
-            LIM_ASSERT(GetThis() == nullptr);
+            ASSERT(GetThis() == nullptr);
             t_scheduler = this;
             m_rootFiber = Fiber::Create([this]()
                                         { this->run(); },
@@ -36,7 +36,7 @@ namespace lim_webserver
 
     Scheduler::~Scheduler()
     {
-        LIM_ASSERT(m_stopping);
+        ASSERT(m_stopping);
         if (GetThis() == this)
         {
             t_scheduler = nullptr;
@@ -51,7 +51,7 @@ namespace lim_webserver
             return;
         }
         m_stopping = false;
-        LIM_ASSERT(m_thread_list.empty());
+        ASSERT(m_thread_list.empty());
 
         m_thread_list.resize(m_threadCount);
         for (size_t i = 0; i < m_threadCount; ++i)
@@ -65,7 +65,7 @@ namespace lim_webserver
 
     void Scheduler::stop()
     {
-        LIM_LOG_INFO(g_logger) << this << " stopping";
+        LOG_INFO(g_logger) << this << " stopping";
         {
             MutexType::Lock lock(m_mutex);
             m_autoStop = true;
@@ -82,11 +82,11 @@ namespace lim_webserver
         }
         if (m_rootThread != -1)
         {
-            LIM_ASSERT(GetThis() == this);
+            ASSERT(GetThis() == this);
         }
         else
         {
-            LIM_ASSERT(GetThis() != this);
+            ASSERT(GetThis() != this);
         }
 
         for (size_t i = 0; i < m_threadCount; ++i)
@@ -112,7 +112,7 @@ namespace lim_webserver
         {
             i->join();
         }
-        LIM_LOG_INFO(g_logger) << this << " stopped";
+        LOG_INFO(g_logger) << this << " stopped";
     }
 
     void Scheduler::tickle()
@@ -121,12 +121,12 @@ namespace lim_webserver
         {
             return;
         }
-        LIM_LOG_DEBUG(g_logger) << "on tickle";
+        LOG_DEBUG(g_logger) << "on tickle";
     }
 
     void Scheduler::onIdle()
     {
-        LIM_LOG_DEBUG(g_logger) << "on idle";
+        LOG_DEBUG(g_logger) << "on idle";
         while (!onStop())
         {
             Fiber::YieldToHold();
@@ -135,7 +135,7 @@ namespace lim_webserver
 
     void Scheduler::run()
     {
-        LIM_LOG_DEBUG(g_logger) << m_name << " run";
+        LOG_DEBUG(g_logger) << m_name << " run";
         set_hook_enable(true);
         t_scheduler = this;
         if (Thread::GetThreadId() != m_rootThread)
@@ -157,7 +157,7 @@ namespace lim_webserver
                 {
                     ft = m_task_queue.front();
                     m_task_queue.pop();
-                    LIM_ASSERT(ft.fiber || ft.callback);
+                    ASSERT(ft.fiber || ft.callback);
                     tickle_me = true;
                     ++m_activeThreadCount;
                 }
@@ -217,7 +217,7 @@ namespace lim_webserver
             {
                 if (idle_fiber->getState() == FiberState::TERM)
                 {
-                    LIM_LOG_INFO(g_logger) << "idle fiber term";
+                    LOG_INFO(g_logger) << "idle fiber term";
                     break;
                 }
                 ++m_idleThreadCount;

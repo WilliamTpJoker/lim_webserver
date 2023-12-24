@@ -5,7 +5,7 @@
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_NAME("system");
 
     uint64_t GetCurrentMS()
     {
@@ -32,7 +32,7 @@ namespace lim_webserver
         char **strings = backtrace_symbols(array, numFrames);
         if (strings == NULL)
         {
-            LIM_LOG_ERROR(g_logger) << "backtrace_symbols error";
+            LOG_ERROR(g_logger) << "backtrace_symbols error";
             return;
         }
 

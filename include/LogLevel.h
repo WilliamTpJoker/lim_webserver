@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <string>
 
+#define LogLevel_UNKNOWN lim_webserver::LogLevel::UNKNOWN
 #define LogLevel_DEBUG lim_webserver::LogLevel::DEBUG
 #define LogLevel_INFO lim_webserver::LogLevel::INFO
 #define LogLevel_WARN lim_webserver::LogLevel::WARN

@@ -8,16 +8,16 @@
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_NAME("system");
 
     IoManager::IoManager(size_t threads, bool use_caller, const std::string &name)
         : Scheduler(threads, use_caller, name)
     {
         m_epollFd = epoll_create(5000);
-        LIM_ASSERT(m_epollFd > 0);
+        ASSERT(m_epollFd > 0);
 
         int rt = pipe(m_ticlefds);
-        LIM_ASSERT(!rt);
+        ASSERT(!rt);
 
         // 创建 epoll_event 对象
         epoll_event event;
@@ -28,11 +28,11 @@ namespace lim_webserver
 
         // 设置管道的文件描述符为非阻塞
         rt = fcntl(m_ticlefds[0], F_SETFL, O_NONBLOCK);
-        LIM_ASSERT(!rt);
+        ASSERT(!rt);
 
         // 将管道文件描述符添加到 epoll 中监听可读事件
         rt = epoll_ctl(m_epollFd, EPOLL_CTL_ADD, m_ticlefds[0], &event);
-        LIM_ASSERT(!rt);
+        ASSERT(!rt);
 
         // 初始化 FdContext 列表的大小
         contextResize(32);
@@ -75,8 +75,8 @@ namespace lim_webserver
         // 检查给定的事件是否已经存在于fd_context 的事件中,存在则报错
         if (fd_context->events & event)
         {
-            LIM_LOG_ERROR(g_logger) << "addEvent assert fd=" << fd << " event=" << (EPOLL_EVENTS)event << " fd_ctx.event=" << (EPOLL_EVENTS)fd_context->events;
-            LIM_ASSERT(!(fd_context->events & event));
+            LOG_ERROR(g_logger) << "addEvent assert fd=" << fd << " event=" << (EPOLL_EVENTS)event << " fd_ctx.event=" << (EPOLL_EVENTS)fd_context->events;
+            ASSERT(!(fd_context->events & event));
         }
 
         IoEvent new_event = (IoEvent)(fd_context->events | event);
@@ -93,7 +93,7 @@ namespace lim_webserver
         if (rt == -1)
         {
             // 操作失败，返回错误码
-            LIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd << ", " << (EPOLL_EVENTS)epEvent.events << "):"
+            LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd << ", " << (EPOLL_EVENTS)epEvent.events << "):"
                                     << rt << " (" << errno << ") (" << strerror(errno) << ") fd_ctx->events=" << (EPOLL_EVENTS)fd_context->events;
             return -1;
         }
@@ -103,7 +103,7 @@ namespace lim_webserver
         fd_context->events = new_event;
         // 获取事件上下文
         FdContext::EventContext &ev_context = fd_context->getContext(event);
-        LIM_ASSERT(!ev_context.scheduler && !ev_context.fiber && !ev_context.callback);
+        ASSERT(!ev_context.scheduler && !ev_context.fiber && !ev_context.callback);
 
         ev_context.scheduler = Scheduler::GetThis();
         // 更新事件所要执行的任务，若指定回调，则直接交换；若未指定，则将该协程添加进去
@@ -114,7 +114,7 @@ namespace lim_webserver
         else
         {
             ev_context.fiber = Fiber::GetThis();
-            LIM_ASSERT(ev_context.fiber->getState() == FiberState::EXEC, "state=" << ev_context.fiber->getState());
+            ASSERT(ev_context.fiber->getState() == FiberState::EXEC, "state=" << ev_context.fiber->getState());
         }
         return 0;
     }
@@ -150,7 +150,7 @@ namespace lim_webserver
         if (rt == -1)
         {
             // 操作失败，返回错误码
-            LIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd << ", " << (EPOLL_EVENTS)epEvent.events << "):"
+            LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd << ", " << (EPOLL_EVENTS)epEvent.events << "):"
                                     << rt << " (" << errno << ") (" << strerror(errno) << ")";
             return false;
         }
@@ -194,7 +194,7 @@ namespace lim_webserver
         if (rt == -1)
         {
             // 操作失败，返回错误码
-            LIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd << ", " << (EPOLL_EVENTS)epEvent.events << "):"
+            LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd << ", " << (EPOLL_EVENTS)epEvent.events << "):"
                                     << rt << " (" << errno << ") (" << strerror(errno) << ")";
             return false;
         }
@@ -235,7 +235,7 @@ namespace lim_webserver
         if (rt == -1)
         {
             // 操作失败，返回错误码
-            LIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd << ", " << (EPOLL_EVENTS)epEvent.events << "):"
+            LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd << ", " << (EPOLL_EVENTS)epEvent.events << "):"
                                     << rt << " (" << errno << ") (" << strerror(errno) << ")";
             return false;
         }
@@ -251,7 +251,7 @@ namespace lim_webserver
             fd_context->triggerEvent(IoEvent::WRITE);
             --m_pendingEventCount;
         }
-        LIM_ASSERT(fd_context->events == 0);
+        ASSERT(fd_context->events == 0);
         return true;
     }
 
@@ -270,7 +270,7 @@ namespace lim_webserver
         {
             return write;
         }
-        LIM_ASSERT(false, "getContext");
+        ASSERT(false, "getContext");
         throw std::invalid_argument("getContext invalid event");
     }
 
@@ -284,7 +284,7 @@ namespace lim_webserver
 
     void IoManager::FdContext::triggerEvent(IoEvent event)
     {
-        LIM_ASSERT(events & event);
+        ASSERT(events & event);
         events = (IoEvent)(events & ~event);
         EventContext &ev_context = getContext(event);
         if (ev_context.callback)
@@ -306,7 +306,7 @@ namespace lim_webserver
             return;
         }
         int rt = write(m_ticlefds[1], "T", 1);
-        LIM_ASSERT(rt == 1);
+        ASSERT(rt == 1);
     }
 
     bool IoManager::onStop()
@@ -333,7 +333,7 @@ namespace lim_webserver
             uint64_t next_timeout = 0;
             if (onStop(next_timeout))
             {
-                LIM_LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
+                LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
                 break;
             }
 
@@ -349,9 +349,9 @@ namespace lim_webserver
                 {
                     next_timeout = MAX_TIMEOUT;
                 }
-                // LIM_LOG_DEBUG(g_logger) << "next_timeout=" << next_timeout;
+                // LOG_DEBUG(g_logger) << "next_timeout=" << next_timeout;
                 rt = epoll_wait(m_epollFd, events, MAX_EVENTS, (int)next_timeout);
-                // LIM_LOG_DEBUG(g_logger) << "epoll_wait rt=" << rt;
+                // LOG_DEBUG(g_logger) << "epoll_wait rt=" << rt;
                 if (rt < 0 && errno == EINTR)
                 {
                 }
@@ -410,7 +410,7 @@ namespace lim_webserver
                 int rt2 = epoll_ctl(m_epollFd, op, fd_context->fd, &event);
                 if (rt2)
                 {
-                    LIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd_context->fd << ", " << (EPOLL_EVENTS)event.events << "):"
+                    LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollFd << ", " << op << ", " << fd_context->fd << ", " << (EPOLL_EVENTS)event.events << "):"
                                             << rt2 << " (" << errno << ") (" << strerror(errno) << ")";
                     continue;
                 }

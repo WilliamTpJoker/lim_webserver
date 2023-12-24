@@ -5,7 +5,7 @@
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_NAME("system");
 
     Socket::ptr Socket::CreateTCP(Address::ptr address)
     {
@@ -114,7 +114,7 @@ namespace lim_webserver
         int rt = getsockopt(m_sock, level, option, result, len);
         if (rt)
         {
-            LIM_LOG_DEBUG(g_logger) << "getOption sock=" << m_sock
+            LOG_DEBUG(g_logger) << "getOption sock=" << m_sock
                                     << " level=" << level << " option=" << option
                                     << " errno=" << errno << " errstr=" << strerror(errno);
             return false;
@@ -126,7 +126,7 @@ namespace lim_webserver
     {
         if (setsockopt(m_sock, level, option, value, len))
         {
-            LIM_LOG_DEBUG(g_logger) << "setOption sock=" << m_sock
+            LOG_DEBUG(g_logger) << "setOption sock=" << m_sock
                                     << " level=" << level << " option=" << option
                                     << " errno=" << errno << " errstr=" << strerror(errno);
             return false;
@@ -140,7 +140,7 @@ namespace lim_webserver
         int newsock = ::accept(m_sock, nullptr, nullptr);
         if (newsock == -1)
         {
-            LIM_LOG_ERROR(g_logger) << "accept(" << m_sock << ") errno="
+            LOG_ERROR(g_logger) << "accept(" << m_sock << ") errno="
                                     << errno << " errstr=" << strerror(errno);
             return nullptr;
         }
@@ -178,7 +178,7 @@ namespace lim_webserver
         }
         if (UNLIKELY(addr->getFamily() != m_family))
         {
-            LIM_LOG_ERROR(g_logger) << "bind sock.family("
+            LOG_ERROR(g_logger) << "bind sock.family("
                                     << m_family << ") addr.family(" << addr->getFamily()
                                     << ") not equal, addr=" << addr->toString();
             return false;
@@ -186,7 +186,7 @@ namespace lim_webserver
 
         if (::bind(m_sock, addr->getAddr(), addr->getAddrLen()))
         {
-            LIM_LOG_ERROR(g_logger) << "bind error errrno=" << errno
+            LOG_ERROR(g_logger) << "bind error errrno=" << errno
                                     << " errstr=" << strerror(errno);
             return false;
         }
@@ -207,7 +207,7 @@ namespace lim_webserver
 
         if (UNLIKELY(addr->getFamily() != m_family))
         {
-            LIM_LOG_ERROR(g_logger) << "connect sock.family("
+            LOG_ERROR(g_logger) << "connect sock.family("
                                     << m_family << ") addr.family(" << addr->getFamily()
                                     << ") not equal, addr=" << addr->toString();
             return false;
@@ -217,7 +217,7 @@ namespace lim_webserver
         {
             if (::connect(m_sock, addr->getAddr(), addr->getAddrLen()))
             {
-                LIM_LOG_ERROR(g_logger) << "sock=" << m_sock << " connect(" << addr->toString()
+                LOG_ERROR(g_logger) << "sock=" << m_sock << " connect(" << addr->toString()
                                         << ") error errno=" << errno << " errstr=" << strerror(errno);
                 close();
                 return false;
@@ -227,7 +227,7 @@ namespace lim_webserver
         {
             if (::connect_with_timeout(m_sock, addr->getAddr(), addr->getAddrLen(), timeout_ms))
             {
-                LIM_LOG_ERROR(g_logger) << "sock=" << m_sock << " connect(" << addr->toString()
+                LOG_ERROR(g_logger) << "sock=" << m_sock << " connect(" << addr->toString()
                                         << ") timeout=" << timeout_ms << " error errno="
                                         << errno << " errstr=" << strerror(errno);
                 close();
@@ -244,12 +244,12 @@ namespace lim_webserver
     {
         if (!isValid())
         {
-            LIM_LOG_ERROR(g_logger) << "listen error sock=-1";
+            LOG_ERROR(g_logger) << "listen error sock=-1";
             return false;
         }
         if (::listen(m_sock, backlog) == 0)
         {
-            LIM_LOG_ERROR(g_logger) << "listen error errno=" << errno
+            LOG_ERROR(g_logger) << "listen error errno=" << errno
                                     << " errstr=" << strerror(errno);
             return false;
         }
@@ -512,7 +512,7 @@ namespace lim_webserver
         }
         else
         {
-            LIM_LOG_ERROR(g_logger) << "socket(" << m_family
+            LOG_ERROR(g_logger) << "socket(" << m_family
                                     << ", " << m_type << ", " << m_protocol << ") errno="
                                     << errno << " errstr=" << strerror(errno);
         }

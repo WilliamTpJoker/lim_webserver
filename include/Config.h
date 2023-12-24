@@ -9,7 +9,6 @@
 #include <unordered_set>
 
 #include "Logger.h"
-#include "Thread.h"
 
 namespace lim_webserver
 {
@@ -326,7 +325,7 @@ namespace lim_webserver
             }
             catch (const std::exception &e)
             {
-                LIM_LOG_ERROR(LIM_LOG_ROOT()) << "ConfigVar::toString exception" << e.what() << " convert:" << typeid(getValue()).name() << "to string";
+                LOG_ERROR(LOG_ROOT()) << "ConfigVar::toString exception" << e.what() << " convert:" << typeid(getValue()).name() << "to string";
             }
             return "";
         }
@@ -344,7 +343,7 @@ namespace lim_webserver
             }
             catch (const std::exception &e)
             {
-                LIM_LOG_ERROR(LIM_LOG_ROOT()) << "ConfigVar::fromString exception" << e.what() << " convert:string to" << typeid(getValue()).name();
+                LOG_ERROR(LOG_ROOT()) << "ConfigVar::fromString exception" << e.what() << " convert:string to" << typeid(getValue()).name();
             }
             return false;
         }
@@ -422,7 +421,7 @@ namespace lim_webserver
             auto tmp = Lookup<T>(name);
             if (tmp)
             {
-                LIM_LOG_INFO(LIM_LOG_ROOT()) << "Lookup name=" << name << "exists";
+                LOG_INFO(LOG_ROOT()) << "Lookup name=" << name << "exists";
                 return tmp;
             }
             // 检验名字是否合法
@@ -435,7 +434,7 @@ namespace lim_webserver
             }
             else
             {
-                LIM_LOG_ERROR(LIM_LOG_ROOT()) << "Lookup name invalid" << name;
+                LOG_ERROR(LOG_ROOT()) << "Lookup name invalid" << name;
                 throw std::invalid_argument(name);
             }
         }

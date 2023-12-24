@@ -6,7 +6,7 @@
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_NAME("system");
 
     template <class T>
     static T CreateMask(uint32_t bits)
@@ -105,7 +105,7 @@ namespace lim_webserver
         int error = getaddrinfo(node.c_str(), service, &hints, &res);
         if (error)
         {
-            LIM_LOG_ERROR(g_logger) << "Address::Lookup getaddress(" << host << ", "
+            LOG_ERROR(g_logger) << "Address::Lookup getaddress(" << host << ", "
                                     << family << ", " << type << ") err=" << error << " errstr="
                                     << gai_strerror(error);
             return false;
@@ -152,7 +152,7 @@ namespace lim_webserver
         struct ifaddrs *next, *results;
         if (getifaddrs(&results) != 0)
         {
-            LIM_LOG_DEBUG(g_logger) << "Address::GetInterfaceAddresses getifaddrs err=" << errno << " errstr=" << strerror(errno);
+            LOG_DEBUG(g_logger) << "Address::GetInterfaceAddresses getifaddrs err=" << errno << " errstr=" << strerror(errno);
             return false;
         }
 
@@ -199,7 +199,7 @@ namespace lim_webserver
         }
         catch (...)
         {
-            LIM_LOG_ERROR(g_logger) << "Address::GetInterfaceAddresses exception";
+            LOG_ERROR(g_logger) << "Address::GetInterfaceAddresses exception";
             freeifaddrs(results);
             return false;
         }
@@ -254,7 +254,7 @@ namespace lim_webserver
         int error = getaddrinfo(address, NULL, &hints, &results);
         if (error)
         {
-            LIM_LOG_ERROR(g_logger) << "IPAddress::Create(" << address
+            LOG_ERROR(g_logger) << "IPAddress::Create(" << address
                                     << ", " << port << ") error=" << error
                                     << " errno=" << errno << " errstr=" << strerror(errno);
             return nullptr;
@@ -290,7 +290,7 @@ namespace lim_webserver
         if (rt <= 0)
         {
             // 转换失败，输出错误消息
-            LIM_LOG_ERROR(g_logger) << "IPv4Address::Create(" << address << ", "
+            LOG_ERROR(g_logger) << "IPv4Address::Create(" << address << ", "
                                     << port << ") rt=" << rt << " errno=" << errno
                                     << " errstr=" << strerror(errno);
             return nullptr;
@@ -385,7 +385,7 @@ namespace lim_webserver
         if (rt <= 0)
         {
             // 转换失败，输出错误消息
-            LIM_LOG_ERROR(g_logger) << "IPv6Address::Create(" << address << ", "
+            LOG_ERROR(g_logger) << "IPv6Address::Create(" << address << ", "
                                     << port << ") rt=" << rt << " errno=" << errno
                                     << " errstr=" << strerror(errno);
             return nullptr;

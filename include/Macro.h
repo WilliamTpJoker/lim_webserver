@@ -16,12 +16,12 @@
 /**
  * @brief 断言宏封装
  */
-#define LIM_ASSERT(condition, ...)                                                  \
+#define ASSERT(condition, ...)                                                  \
     do                                                                              \
     {                                                                               \
         if (!(condition))                                                           \
         {                                                                           \
-            LIM_LOG_ERROR(LIM_LOG_ROOT()) << "\nASSERTION: " << #condition << "\t"  \
+            LOG_ERROR(LOG_ROOT()) << "\nASSERTION: " << #condition << "\t"  \
                                           << #__VA_ARGS__ << "\nbacktrace:"         \
                                           << lim_webserver::BackTraceToString(100); \
             assert(condition);                                                      \

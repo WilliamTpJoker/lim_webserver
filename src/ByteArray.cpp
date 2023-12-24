@@ -4,7 +4,7 @@
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LIM_LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_NAME("system");
 
 ByteArray::Node::Node(size_t s)
     :ptr(new char[s])

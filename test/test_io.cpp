@@ -5,13 +5,13 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 
-lim_webserver::Logger::ptr g_logger = LIM_LOG_ROOT();
+lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 
 int sock;
 
 void test_fiber()
 {
-    LIM_LOG_INFO(g_logger) << "test_fiber sock=" << sock;
+    LOG_INFO(g_logger) << "test_fiber sock=" << sock;
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
     fcntl(sock, F_SETFL, O_NONBLOCK);
@@ -24,14 +24,14 @@ void test_fiber()
 
     if (!connect(sock, (const sockaddr *)&addr, sizeof(addr)))
     {
-        LIM_LOG_ERROR(g_logger)<< "connect error";
+        LOG_ERROR(g_logger)<< "connect error";
     }
     else if (errno == EINPROGRESS)
     {
         lim_webserver::IoManager::GetThis()->addEvent(sock, lim_webserver::IoManager::READ, []()
-                                                      { LIM_LOG_INFO(g_logger) << "read callback"; });
+                                                      { LOG_INFO(g_logger) << "read callback"; });
         lim_webserver::IoManager::GetThis()->addEvent(sock, lim_webserver::IoManager::WRITE, []()
-                                                      { LIM_LOG_INFO(g_logger) << "write callback";
+                                                      { LOG_INFO(g_logger) << "write callback";
                                                       lim_webserver::IoManager::GetThis()->cancelEvent(sock, lim_webserver::IoManager::READ);
                                                         close(sock); 
                                                         });
@@ -39,7 +39,7 @@ void test_fiber()
     }
     else
     {
-        LIM_LOG_INFO(g_logger) << "else " << errno << " " << strerror(errno);
+        LOG_INFO(g_logger) << "else " << errno << " " << strerror(errno);
     }
 }
 
@@ -55,7 +55,7 @@ void test_timer()
     lim_webserver::IoManager iom(2);
     s_timer =iom.addTimer(500,[](){
         static int i=0;
-        LIM_LOG_INFO(g_logger)<<"hello timer, i="<<i;
+        LOG_INFO(g_logger)<<"hello timer, i="<<i;
         if(++i==3)
         {
             s_timer->reset(2000);

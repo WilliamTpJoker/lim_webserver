@@ -5,17 +5,33 @@
 #include "LogLevel.h"
 #include "LogMessage.h"
 #include "LogFormatter.h"
+#include "Policy.h"
 
 namespace lim_webserver
 {
-    class Logger;
+
+    struct LogAppenderDefine
+    {
+        int type = 0; // 1 File, 0 Stdout
+        std::string name;
+        LogLevel level = LogLevel_UNKNOWN;
+        std::string formatter;
+        std::string file;
+        bool append;
+
+        bool operator==(const LogAppenderDefine &oth) const
+        {
+            return type == oth.type && level == oth.level && formatter == oth.formatter && file == oth.file && append == oth.append && name == oth.name;
+        }
+    };
+
+    class LogVisitor;
+    class YamlVisitor;
     /**
      * @brief 日志输出地
      */
     class LogAppender
     {
-        friend class Logger;
-
     public:
         using ptr = std::shared_ptr<LogAppender>;
         using MutexType = Spinlock;
@@ -23,6 +39,11 @@ namespace lim_webserver
     public:
         virtual ~LogAppender(){};
 
+        void setName(const std::string &name) { m_name = name; }
+
+        virtual const char* accept(LogVisitor& visitor)=0;
+
+        const std::string &getName() { return m_name; }
         /**
          * @brief 输出日志，必须重构
          */
@@ -30,13 +51,8 @@ namespace lim_webserver
 
         /**
          * @brief 输出日志，必须重构
-        */
-        virtual void log(LogLevel level, LogStream &stream)=0;
-
-        /**
-         * @brief 输出为Yaml字符串格式，必须重构
          */
-        virtual std::string toYamlString() = 0;
+        virtual void log(LogLevel level, LogStream &stream) = 0;
 
         /**
          * @brief 设置格式器
@@ -49,6 +65,11 @@ namespace lim_webserver
         const LogFormatter::ptr &getFormatter();
 
         /**
+         * @brief 删除格式器
+         */
+        void delFormatter();
+
+        /**
          * @brief 设置输出地级别
          */
         void setLevel(LogLevel level) { m_level = level; }
@@ -59,90 +80,89 @@ namespace lim_webserver
         LogLevel getLevel() const { return m_level; }
 
     protected:
-        LogLevel m_level; // 级别
-        MutexType m_mutex;
-        LogFormatter::ptr m_formatter; // 格式器
+        std::string m_name;                      // 名字
+        LogLevel m_level;                        // 级别
+        MutexType m_mutex;                       // 锁
+        LogFormatter::ptr m_formatter;           // 格式器
     };
 
-    class DecoratorLogAppender : public LogAppender
+    class OutputAppender : public LogAppender
     {
+    public:
+        using ptr = std::shared_ptr<OutputAppender>;
+
+    public:
+        /**
+         * @brief 输出日志，必须重构
+         */
+        void log(LogLevel level, LogMessage::ptr message) override;
+
+        /**
+         * @brief 输出日志，必须重构
+         */
+        void log(LogLevel level, LogStream &stream) override;
+
     protected:
-        LogAppender::ptr m_appender;
-        DecoratorLogAppender(LogAppender::ptr appender)
-            : m_appender(appender)
-        {
-        }
+        FILE *m_ptr = nullptr; // 文件流
     };
 
     /**
      * @brief 输出到控制台Appender
      */
-    class StdoutLogAppender : public LogAppender
+    class ConsoleAppender : public OutputAppender
     {
+        friend YamlVisitor;
     public:
-        using ptr = std::shared_ptr<StdoutLogAppender>;
-        static ptr Create()
+        using ptr = std::shared_ptr<ConsoleAppender>;
+        static ptr Create(FILE *target = stdout)
         {
-            return std::make_shared<StdoutLogAppender>();
+            return std::make_shared<ConsoleAppender>(target);
         }
 
     public:
-        /**
-         * @brief 输出日志到控制台中
-         */
-        void log(LogLevel level, LogMessage::ptr message) override;
+        ConsoleAppender(FILE *target = stdout);
+        void setTarget(FILE *target);
 
-        /**
-         * @brief 输出日志到控制台中
-        */
-        void log(LogLevel level, LogStream &stream) override;
-
-        /**
-         * @brief 打印成Yaml格式字符串
-         */
-        std::string toYamlString();
+        const char* accept(LogVisitor& visitor) override;
     };
+
     /**
      * @brief 输出到文件的Appender
      */
-    class FileLogAppender : public LogAppender
+    class FileAppender : public OutputAppender
     {
+        friend YamlVisitor;
     public:
-        using ptr = std::shared_ptr<FileLogAppender>;
-        static ptr Create(const std::string &filename)
+        using ptr = std::shared_ptr<FileAppender>;
+        static ptr Create(const std::string &filename, bool append = true)
         {
-            return std::make_shared<FileLogAppender>(filename);
+            return std::make_shared<FileAppender>(filename, append);
         }
 
     public:
-        FileLogAppender(const std::string &filename);
-
-        /**
-         * @brief 输出日志到文件中
-         */
-        void log(LogLevel level, LogMessage::ptr message) override;
-
-        /**
-         * @brief 输出日志到文件中
-         */
-        void log(LogLevel level, LogStream &stream) override;
+        FileAppender(const std::string &filename, bool append = true);
 
         /**
          * @brief 重新打开文件，打开成功返回true
          */
         bool reopen();
-        /**
-         * @brief 检测文件是否存在
-         */
-        bool fileExist();
 
-        /**
-         * @brief 打印成Yaml格式字符串
-         */
-        std::string toYamlString();
+        const char* accept(LogVisitor& visitor) override;
+
+    protected:
+        std::string m_filename; // 文件名
+        bool m_append;          // 追加模式
+    };
+
+    class RollingFileAppender : public FileAppender
+    {
+    public:
+        using ptr = std::shared_ptr<RollingFileAppender>;
+
+    public:
+        RollingFileAppender(const std::string &filename, RollingPolicy::ptr rollingPolicy);
 
     private:
-        std::string m_filename; // 文件名
-        FILE *m_ptr;            // 文件流
+        RollingPolicy::ptr m_rollingPolicy;
     };
 } // namespace lim_webserver

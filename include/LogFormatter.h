@@ -8,7 +8,7 @@
 #include "Thread.h"
 #include "Fiber.h"
 
-#define LIM_DEFAULT_PATTERN "%d%T%t %N%T%F%T[%c] [%p] %f:%l%T%m%n"
+#define DEFAULT_PATTERN "%d%T%t %N%T%F%T[%c] [%p] %f:%l%T%m%n"
 
 namespace lim_webserver
 {

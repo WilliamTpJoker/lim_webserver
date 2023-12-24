@@ -1,29 +1,29 @@
 #include "lim.h"
 
-lim_webserver::Logger::ptr g_logger = LIM_LOG_ROOT();
+lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 
 void run_in_fiber()
 {
-    LIM_LOG_INFO(g_logger) << "run_in_fiber begin";
+    LOG_INFO(g_logger) << "run_in_fiber begin";
     lim_webserver::Fiber::YieldToHold();
-    LIM_LOG_INFO(g_logger) << "run_in_fiber end";
+    LOG_INFO(g_logger) << "run_in_fiber end";
     lim_webserver::Fiber::YieldToHold();
 }
 
 void test_fiber()
 {
-    LIM_LOG_INFO(g_logger) << "main begin -1";
+    LOG_INFO(g_logger) << "main begin -1";
     {
         lim_webserver::Fiber::GetThis();
-        LIM_LOG_INFO(g_logger) << "main begin";
+        LOG_INFO(g_logger) << "main begin";
         lim_webserver::Fiber::ptr fiber = lim_webserver::Fiber::Create(run_in_fiber,0,true);
         fiber->call();
-        LIM_LOG_INFO(g_logger) << "main after call";
+        LOG_INFO(g_logger) << "main after call";
         fiber->call();
-        LIM_LOG_INFO(g_logger) << "main after end";
+        LOG_INFO(g_logger) << "main after end";
         fiber->call();
     }
-    LIM_LOG_INFO(g_logger) << "main after end2";
+    LOG_INFO(g_logger) << "main after end2";
 }
 
 void test_thread()

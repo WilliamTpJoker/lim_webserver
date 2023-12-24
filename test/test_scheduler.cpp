@@ -1,19 +1,19 @@
 #include "lim.h"
 
-lim_webserver::Logger::ptr g_logger = LIM_LOG_ROOT();
-lim_webserver::Logger::ptr g_l = LIM_LOG_NAME("system");
+lim_webserver::Logger::ptr g_logger = LOG_ROOT();
+lim_webserver::Logger::ptr g_l = LOG_NAME("system");
 
 static int s_count1 = 500;
 
 static int s_count2 = 5;
 void run_in_fiber()
 {
-    LIM_LOG_INFO(g_logger) << "test in fiber, s_count=" << --s_count1;
+    LOG_INFO(g_logger) << "test in fiber, s_count=" << --s_count1;
 }
 
 void run_in_fiber2()
 {
-    LIM_LOG_INFO(g_logger) << "test in fiber, s_count=" << s_count2;
+    LOG_INFO(g_logger) << "test in fiber, s_count=" << s_count2;
     // lim_webserver::Fiber::YieldToReady();
     sleep(1);
     if (--s_count2 >= 0)
@@ -29,25 +29,25 @@ void test(int threads, bool use_caller, std::string name)
     {
         f.push_back(&run_in_fiber);
     }
-    LIM_LOG_INFO(g_logger) << " main";
+    LOG_INFO(g_logger) << " main";
     lim_webserver::Scheduler sc(threads, use_caller, name);
     sc.start();
-    LIM_LOG_INFO(g_logger) << " schedule";
+    LOG_INFO(g_logger) << " schedule";
     sc.schedule(f.begin(), f.end());
     sc.stop();
-    LIM_LOG_INFO(g_logger) << " over" << s_count1;
+    LOG_INFO(g_logger) << " over" << s_count1;
 }
 
 void test2(int threads, bool use_caller, std::string name)
 {
 
-    LIM_LOG_INFO(g_logger) << " main";
+    LOG_INFO(g_logger) << " main";
     lim_webserver::Scheduler sc(threads, use_caller, name);
     sc.start();
-    LIM_LOG_INFO(g_logger) << " schedule";
+    LOG_INFO(g_logger) << " schedule";
     sc.schedule(&run_in_fiber2);
     sc.stop();
-    LIM_LOG_INFO(g_logger) << " over" << s_count2;
+    LOG_INFO(g_logger) << " over" << s_count2;
 }
 
 int main(int argc, char *argv[])
