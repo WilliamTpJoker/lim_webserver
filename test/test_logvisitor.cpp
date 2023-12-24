@@ -1,5 +1,4 @@
-#include "LogVisitor.h"
-#include "Logger.h"
+#include "SpikeLog.h"
 
 
 using namespace lim_webserver;

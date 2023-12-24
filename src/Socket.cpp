@@ -1,6 +1,6 @@
 #include "Socket.h"
 #include "FdManager.h"
-#include "Logger.h"
+#include "LogManager.h"
 #include "Hook.h"
 
 namespace lim_webserver

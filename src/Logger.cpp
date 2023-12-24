@@ -3,6 +3,7 @@
 #include "Fiber.h"
 #include "AsyncLog.h"
 #include "LogVisitor.h"
+#include "LogManager.h"
 
 namespace lim_webserver
 {
@@ -61,40 +62,5 @@ namespace lim_webserver
         MutexType::Lock lock(m_mutex);
         m_appenders.clear();
     }
-
-    LoggerManager::LoggerManager()
-    {
-        m_root = Logger::Create();
-        LogAppender::ptr default_appender = ConsoleAppender::Create();
-        default_appender->setFormatter(DEFAULT_PATTERN);
-        m_root->addAppender(default_appender);
-        m_logger_map[m_root->getName()] = m_root;
-    }
-
-    Logger::ptr LoggerManager::getLogger(const std::string &name)
-    {
-        MutexType::Lock lock(m_mutex);
-        auto it = m_logger_map.find(name);
-        if (it != m_logger_map.end())
-        {
-            return it->second;
-        }
-        else
-        {
-            Logger::ptr logger = Logger::Create(name);
-            m_logger_map[name] = logger;
-            return logger;
-        }
-    }
-
-    std::string LoggerManager::toYamlString()
-    {
-        MutexType::Lock lock(m_mutex);
-        YAML::Node node;
-        std::stringstream ss;
-        ss << node;
-        return ss.str();
-    }
-
     
 }

@@ -9,6 +9,12 @@
 
 namespace lim_webserver
 {
+    enum class AppenderType
+    {
+        Console,
+        File,
+        RollingFile
+    };
 
     struct LogAppenderDefine
     {
@@ -164,5 +170,10 @@ namespace lim_webserver
 
     private:
         RollingPolicy::ptr m_rollingPolicy;
+    };
+
+    class AppenderBuilder
+    {
+        
     };
 } // namespace lim_webserver

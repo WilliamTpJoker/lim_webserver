@@ -1,5 +1,5 @@
 #include "Address.h"
-#include "Logger.h"
+#include "LogManager.h"
 
 #include <sstream>
 #include <ifaddrs.h>

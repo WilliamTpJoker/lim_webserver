@@ -2,7 +2,6 @@
 
 namespace lim_webserver
 {
-
     void Config::analysisYaml(const std::string &prefix, const YAML::Node &node, std::list<std::pair<std::string, const YAML::Node>> &output)
     {
         std::regex pattern("^[\\w.].*|");
@@ -10,9 +9,9 @@ namespace lim_webserver
     }
 
     void Config::recursiveAnalysis(const std::regex &pattern,
-                                    const std::string &prefix,
-                                    const YAML::Node &node,
-                                    std::list<std::pair<std::string, const YAML::Node>> &output)
+                                   const std::string &prefix,
+                                   const YAML::Node &node,
+                                   std::list<std::pair<std::string, const YAML::Node>> &output)
     {
 
         if (std::regex_match(prefix, pattern))
@@ -21,7 +20,7 @@ namespace lim_webserver
         }
         else
         {
-            LOG_ERROR(LOG_ROOT()) << "Lookup name invalid" << prefix;
+            std::cerr << "Lookup name invalid" << prefix<<std::endl;
             throw std::invalid_argument(prefix);
         }
         // 为映射则后续还有配置

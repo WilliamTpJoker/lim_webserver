@@ -1,5 +1,5 @@
 #include "IoManager.h"
-#include "Logger.h"
+#include "LogManager.h"
 
 #include <sys/epoll.h>
 #include <fcntl.h>

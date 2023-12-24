@@ -1,5 +1,4 @@
-#include "LogFactory.h"
-#include "Config.h"
+#include "LogInitializer.h"
 
 namespace lim_webserver
 {
@@ -67,6 +66,5 @@ namespace lim_webserver
             g_log_defines->addListener(log_listener_func);
         }
     };
-
     static LogInitializer __log__init;
 } // namespace lim_webserver

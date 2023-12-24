@@ -1,16 +1,14 @@
 #pragma once
 
 #include "Logger.h"
-#include "Singleton.h"
-#include "Mutex.h"
+#include "Config.h"
 
+#include <iostream>
 #include <yaml-cpp/yaml.h>
+#include <vector>
 
 namespace lim_webserver
 {
-    template <typename Source, typename Target>
-    class LexicalCast;
-
     struct LogConfigDefine
     {
         std::vector<LoggerDefine> loggers;
@@ -107,7 +105,6 @@ namespace lim_webserver
                     if (logNode["appender-ref"].IsDefined())
                     {
                         ld.appender_refs = logNode["appender-ref"].as<std::vector<std::string>>();
-                        ;
                     }
 
                     lcd.loggers.push_back(ld);
@@ -176,17 +173,5 @@ namespace lim_webserver
             return ss.str();
         }
     };
-
-    class LogFactory
-    {
-    public:
-        using MutexType = Spinlock;
-
-    public:
-    private:
-        std::unordered_map<std::string, LogAppender::ptr> m_appenders; // 系统全部输出地
-        std::unordered_map<std::string, Logger::ptr> m_loggers;        // 系统全部日志器
-        MutexType m_mutex;                                             // 锁
-    };
-    using LogFactoryS = Singleton<LogFactory>;
+    
 } // namespace lim_webserver

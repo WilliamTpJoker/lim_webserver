@@ -1,5 +1,4 @@
-#include "Hook.h"
-#include "IoManager.h"
+#include "SpikeLog.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>

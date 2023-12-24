@@ -7,8 +7,9 @@
 #include <regex>
 #include <yaml-cpp/yaml.h>
 #include <unordered_set>
+#include <iostream>
 
-#include "Logger.h"
+#include "Mutex.h"
 
 namespace lim_webserver
 {
@@ -325,7 +326,7 @@ namespace lim_webserver
             }
             catch (const std::exception &e)
             {
-                LOG_ERROR(LOG_ROOT()) << "ConfigVar::toString exception" << e.what() << " convert:" << typeid(getValue()).name() << "to string";
+                std::cerr << "ConfigVar::toString exception" << e.what() << " convert:" << typeid(getValue()).name() << "to string"<<std::endl;
             }
             return "";
         }
@@ -343,7 +344,7 @@ namespace lim_webserver
             }
             catch (const std::exception &e)
             {
-                LOG_ERROR(LOG_ROOT()) << "ConfigVar::fromString exception" << e.what() << " convert:string to" << typeid(getValue()).name();
+                std::cerr << "ConfigVar::fromString exception" << e.what() << " convert:string to" << typeid(getValue()).name()<<std::endl;
             }
             return false;
         }
@@ -421,7 +422,7 @@ namespace lim_webserver
             auto tmp = Lookup<T>(name);
             if (tmp)
             {
-                LOG_INFO(LOG_ROOT()) << "Lookup name=" << name << "exists";
+                std::cout << "Lookup name=" << name << "exists"<<std::endl;
                 return tmp;
             }
             // 检验名字是否合法
@@ -434,7 +435,7 @@ namespace lim_webserver
             }
             else
             {
-                LOG_ERROR(LOG_ROOT()) << "Lookup name invalid" << name;
+                std::cerr << "Lookup name invalid" << name<<std::endl;
                 throw std::invalid_argument(name);
             }
         }

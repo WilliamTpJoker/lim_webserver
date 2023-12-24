@@ -1,13 +1,13 @@
 #include <dlfcn.h>
 
+#include "Config.h"
 #include "Hook.h"
 #include "Fiber.h"
 #include "Thread.h"
 #include "IoManager.h"
 #include "FdManager.h"
-#include "Logger.h"
+#include "LogManager.h"
 #include "Macro.h"
-#include "Config.h"
 #include "Timer.h"
 
 static lim_webserver::Logger::ptr g_logger = LOG_NAME("system");

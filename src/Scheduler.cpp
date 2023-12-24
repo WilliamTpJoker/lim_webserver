@@ -1,5 +1,6 @@
 #include "Scheduler.h"
 #include "Hook.h"
+#include "LogManager.h"
 
 namespace lim_webserver
 {

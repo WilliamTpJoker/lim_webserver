@@ -1,5 +1,4 @@
-#include "LogFactory.h"
-#include "Config.h"
+#include "SpikeLog.h"
 
 using namespace lim_webserver;
 
@@ -58,23 +57,6 @@ void test_change_callback()
     Config::LoadFromYaml(r);
 
     LOG_INFO(LOG_ROOT()) << g_int_value_config->getValue();
-}
-
-void test_log()
-{
-    static Logger::ptr sys_logger = LOG_NAME("system");
-    LOG_INFO(sys_logger) << "hello system";
-
-    std::cout << LoggerMgr::GetInstance()->toYamlString() << std::endl;
-
-    YAML::Node r = YAML::LoadFile("./config/log.yaml");
-    Config::LoadFromYaml(r);
-    std::cout << "=====================================" << std::endl;
-    std::cout << LoggerMgr::GetInstance()->toYamlString() << std::endl;
-
-    LOG_INFO(sys_logger) << "hello system";
-
-    LOG_DEBUG(LOG_ROOT()) << "hello root";
 }
 
 void test_visit()

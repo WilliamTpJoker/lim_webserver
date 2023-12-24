@@ -1,5 +1,4 @@
-#include "Address.h"
-#include "Logger.h"
+#include "SpikeLog.h"
 
 lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 

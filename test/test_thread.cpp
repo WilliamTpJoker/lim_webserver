@@ -1,6 +1,4 @@
-#include "Thread.h"
-#include "Logger.h"
-#include "Config.h"
+#include "SpikeLog.h"
 
 #include <unistd.h>
 

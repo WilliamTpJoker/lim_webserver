@@ -5,6 +5,7 @@
 #include "Macro.h"
 #include "Scheduler.h"
 #include "Mutex.h"
+#include "LogManager.h"
 
 namespace lim_webserver
 {

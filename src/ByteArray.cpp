@@ -1,5 +1,5 @@
 #include "ByteArray.h"
-#include "Logger.h"
+#include "LogManager.h"
 
 
 namespace lim_webserver

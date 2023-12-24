@@ -1,6 +1,5 @@
 #include <iostream>
-#include "Logger.h"
-#include "Util.h"
+#include "SpikeLog.h"
 
 using namespace lim_webserver;
 

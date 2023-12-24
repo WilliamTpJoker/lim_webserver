@@ -1,12 +1,15 @@
 #pragma once
 
+#include "LogInitializer.h"
+#include "LogManager.h"
+#include "LogVisitor.h"
+
 #include "Address.h"
 #include "Config.h"
 #include "FdManager.h"
 #include "Fiber.h"
 #include "Hook.h"
 #include "IoManager.h"
-#include "Logger.h"
 #include "Macro.h"
 #include "Mutex.h"
 #include "Noncopyable.h"
@@ -16,3 +19,6 @@
 #include "Thread.h"
 #include "Timer.h"
 #include "Util.h"
+
+
+

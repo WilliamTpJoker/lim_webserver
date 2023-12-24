@@ -1,6 +1,6 @@
-#include "lim.h"
+#include "SpikeLog.h"
 
-lim_webserver::Logger::ptr g_logger = LOG_ROOT();
+static lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 
 void run_in_fiber()
 {
