@@ -34,27 +34,29 @@ void test_stress()
     LogManager* logManager = LogMgr::GetInstance();
     LogAppenderDefine lad;
     lad.name = "test";
-    lad.file = "/home/book/Webserver/config/log.yaml";
+    lad.file = "/home/book/Webserver/log/stress_log.txt";
     lad.append = false;
     lad.level = LogLevel_DEBUG;
+    lad.type = 1;
     lad.formatter = "%t %N%T%F%T[%c] [%p] %f:%l%T%m%n";
 
     logManager->createAppender(lad);
 
     LoggerDefine ld;
     ld.name = "test";
-
+    ld.appender_refs = {"test"};
     Logger::ptr logger = logManager->createLogger(ld);;
-
+    YamlVisitor visitor;
+    std::cout<<logger->accept(visitor)<<std::endl;
     stress_test(logger, false, 300, 1000);
     stress_test(logger, true, 300, 1000);
 }
 
 int main(int argc, char *argv[])
 {
-    test_logger();
+    // test_logger();
     // test_new_logger();
-    // test_stress();
+    test_stress();
 
     return 0;
 }

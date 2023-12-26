@@ -31,7 +31,9 @@ namespace lim_webserver
         }
         else
         {
-            return m_root_logger;
+            Logger::ptr logger = Logger::ptr(new Logger);
+            m_loggers["name"]=logger;
+            return logger;
         }
     }
 
@@ -80,6 +82,7 @@ namespace lim_webserver
 
     void LogManager::updateLogger(Logger::ptr logger, const LoggerDefine &ld)
     {
+        logger->setName(ld.name);
         logger->setLevel(ld.level);
         logger->clearAppender();
         for (auto appender_name : ld.appender_refs)
@@ -152,6 +155,7 @@ namespace lim_webserver
 
     void LogManager::updateAppender(LogAppender::ptr appender, const LogAppenderDefine &lad)
     {
+        appender->setName(lad.name);
         appender->setLevel(lad.level);
         appender->setFormatter(lad.formatter);
     }
