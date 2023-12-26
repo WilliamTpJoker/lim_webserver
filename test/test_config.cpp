@@ -1,4 +1,5 @@
 #include "SpikeLog.h"
+#include "LogInitializer.h"
 
 using namespace lim_webserver;
 
@@ -6,12 +7,12 @@ typename ConfigVar<int>::ptr g_int_value_config = Config::Lookup("system.port", 
 
 typename ConfigVar<std::vector<int>>::ptr g_int_vec_value_config = Config::Lookup("system.inc_vec", std::vector<int>{1, 2}, "system port");
 
-typename ConfigVar<LogConfigDefine>::ptr g_defines = Config::Lookup("logconfig", LogConfigDefine(), "logs config");
+// typename ConfigVar<LogConfigDefine>::ptr g_defines = Config::Lookup("logconfig", LogConfigDefine(), "logs config");
 
 
 void test_yaml()
 {
-    YAML::Node r = YAML::LoadFile("./config/log.yaml");
+    YAML::Node r = YAML::LoadFile("home/Webserver/config/log.yaml");
     auto node = r["logconfig"][0]["loggers"][0]["appender-ref"];
     auto s = node.as<std::vector<std::string>>();
     std::cout<<node<<std::endl;
@@ -27,7 +28,7 @@ void test_config()
 {
     // LOG_INFO(LOG_ROOT()) << g_int_value_config->getValue();
 
-    YAML::Node r = YAML::LoadFile("./config/log.yaml");
+    YAML::Node r = YAML::LoadFile("home/book/Webserver/config/log.yaml");
     Config::LoadFromYaml(r);
     Config::LoadFromYaml("./config/test.yaml");
     Config::Visit([](ConfigVarBase::ptr var){
@@ -53,7 +54,7 @@ void test_change_callback()
 
     LOG_INFO(LOG_ROOT()) << g_int_value_config->getValue();
 
-    YAML::Node r = YAML::LoadFile("./config/log.yaml");
+    YAML::Node r = YAML::LoadFile("./config/test.yaml");
     Config::LoadFromYaml(r);
 
     LOG_INFO(LOG_ROOT()) << g_int_value_config->getValue();
@@ -61,7 +62,8 @@ void test_change_callback()
 
 void test_visit()
 {
-    Config::LoadFromYaml("./config/log.yaml");
+    Config::LoadFromYaml("/home/book/Webserver/config/log.yaml");
+
     auto f = [](ConfigVarBase::ptr var)
     {
         LOG_INFO(LOG_ROOT()) << "name=" << var->getName()
@@ -69,15 +71,18 @@ void test_visit()
                                      << " value=" << var->toString();
     };
     Config::Visit(f);
+
+    YamlVisitor visitor;
+    LOG_INFO(LOG_ROOT())<<LOG_ROOT()->accept(visitor);
 }
 
 int main(int argc, char **argv)
 {
     // test_yaml();
-    test_config();
+    // test_config();
     // test_lexical();
     // test_change_callback();
     // test_log();
-    // test_visit();
+    test_visit();
     return 0;
 }

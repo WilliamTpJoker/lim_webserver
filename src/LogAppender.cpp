@@ -1,12 +1,13 @@
 #include "LogAppender.h"
 #include "LogVisitor.h"
+#include "LogManager.h"
 #include "Config.h"
 
 #include <iostream>
 
 namespace lim_webserver
 {
-    void LogAppender::setFormatter(const std::string &pattern)
+        void LogAppender::setFormatter(const std::string &pattern)
     {
         MutexType::Lock lock(m_mutex);
         m_formatter = LogFormatter::Create(pattern);
@@ -28,6 +29,13 @@ namespace lim_webserver
     {
         MutexType::Lock lock(m_mutex);
         m_formatter = nullptr;
+    }
+
+    OutputAppender::OutputAppender(const LogAppenderDefine &lad)
+    {
+        m_name=lad.name;
+        m_level = lad.level;
+        m_formatter = LogFormatter::Create(lad.formatter);
     }
 
     void OutputAppender::log(LogLevel level, LogMessage::ptr message)
@@ -52,26 +60,23 @@ namespace lim_webserver
         }
     }
 
-    ConsoleAppender::ConsoleAppender(FILE *target)
+    ConsoleAppender::ConsoleAppender()
     {
-        setTarget(target);
+        m_ptr = stdout;
     }
 
-    void ConsoleAppender::setTarget(FILE *target)
+    ConsoleAppender::ConsoleAppender(const LogAppenderDefine &lad)
+    :OutputAppender(lad)
     {
-        MutexType::Lock lock(m_mutex);
-        if (fileno(target) != fileno(stdout) | fileno(target) != fileno(stdout))
-        {
-            std::cout << "ConsoleAppender error: wrong target, default set stdout" << std::endl;
-            m_ptr = stdout;
-        }
-        else
-        {
-            m_ptr = target;
-        }
+        m_ptr = stdout;
     }
 
-    const char* ConsoleAppender::accept(LogVisitor &visitor)
+    int ConsoleAppender::getType()
+    {
+        return 0;
+    }
+
+    const char *ConsoleAppender::accept(LogVisitor &visitor)
     {
         return visitor.visitConsoleAppender(*this);
     }
@@ -79,6 +84,14 @@ namespace lim_webserver
     FileAppender::FileAppender(const std::string &filename, bool append)
         : m_filename(filename), m_append(append)
     {
+        reopen();
+    }
+
+    FileAppender::FileAppender(const LogAppenderDefine &lad)
+    : OutputAppender(lad)
+    {
+        m_append = lad.append;
+        m_filename = lad.file;
         reopen();
     }
 
@@ -90,16 +103,40 @@ namespace lim_webserver
         {
             fclose(m_ptr);
         }
-        const char *mode = m_append ? "a" : "w";
-        m_ptr = fopen(m_filename.c_str(), mode);
-        if (!m_ptr)
+        std::string mode;
+        if(m_append)
+        {
+            mode = "a";
+        }
+        else
+        {
+            mode = "w";
+        }
+        m_ptr = std::move(fopen(m_filename.c_str(), mode.c_str()));
+        if (m_ptr==nullptr)
         {
             std::cout << "FileAppender error: file open failed" << std::endl;
         }
         return !!m_ptr;
     }
 
-    const char* FileAppender::accept(LogVisitor &visitor)
+    void FileAppender::setFile(const std::string &filename)
+    {
+        m_filename = filename;
+        reopen();
+    }
+
+    void FileAppender::setAppend(bool append)
+    {
+        m_append = append;
+    }
+
+    int FileAppender::getType()
+    {
+        return 1;
+    }
+
+    const char *FileAppender::accept(LogVisitor &visitor)
     {
         return visitor.visitFileAppender(*this);
     }

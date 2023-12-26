@@ -3,7 +3,7 @@
 #include <assert.h>
 
 #include "Util.h"
-#include "Logger.h"
+#include "LogManager.h"
 
 #if defined __GNUC__ || defined __llvm__
 #   define LIKELY(x) __builtin_expect(!!(x), 1)

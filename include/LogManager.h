@@ -19,15 +19,46 @@
 
 
 
-#define LOG_ROOT() lim_webserver::LoggerMgr::GetInstance()->getRoot()
-#define LOG_NAME(name) lim_webserver::LoggerMgr::GetInstance()->getLogger(name)
+#define LOG_ROOT() lim_webserver::LogMgr::GetInstance()->getRoot()
+#define LOG_NAME(name) lim_webserver::LogMgr::GetInstance()->getLogger(name)
 
 namespace lim_webserver
 {
-    
+    /**
+     * @brief 日志事件包装器
+     */
+    class LogMessageWrap
+    {
+    public:
+        LogMessageWrap(LogMessage::ptr e)
+            : m_message(e) {}
+        /**
+         * @brief 析构时输出日志
+         */
+        ~LogMessageWrap()
+        {
+            m_message->getLogger()->log(m_message->getLevel(), m_message);
+        }
+
+        /**
+         * @brief 获得日志事件
+         */
+        LogMessage::ptr getMessage() const { return m_message; }
+        /**
+         * @brief 获得日志内容流，以便左移操作补充内容
+         */
+        LogStream &getStream() { return m_message->getStream(); }
+
+    private:
+        LogMessage::ptr m_message; // 事件
+    };
+
+    class LogVisiter;
+    class YamlVisiter;
 
     class LogManager
     {
+        friend YamlVisiter;
     public:
         using MutexType = Spinlock;
     public:
@@ -40,9 +71,25 @@ namespace lim_webserver
         /**
          * @brief 使用全局日志器
          */
-        Logger::ptr getRoot() const { return m_root_logger; }
+        Logger::ptr getRoot();
 
+        void delLogger(const std::string &name);
 
+        void createOrUpdateLogger(const LoggerDefine& ld);
+
+        Logger::ptr createLogger(const LoggerDefine& ld);
+
+        void updateLogger(Logger::ptr logger,const LoggerDefine& ld);
+
+        LogAppender::ptr& getAppender(const std::string &name);
+        
+        void createOrUpdateAppender(const LogAppenderDefine& lad);
+
+        LogAppender::ptr createAppender(const LogAppenderDefine& lad);
+
+        void updateAppender(LogAppender::ptr appender,const LogAppenderDefine& lad);
+
+        const char *accept(LogVisitor &visitor);
 
     private:
         std::unordered_map<std::string, LogAppender::ptr> m_appenders; // 系统全部输出地
@@ -50,5 +97,7 @@ namespace lim_webserver
         Logger::ptr m_root_logger;                                // 根日志
         MutexType m_mutex;                                             // 锁
     };
-    using LoggerMgr = Singleton<LogManager>;
+    using LogMgr = Singleton<LogManager>;
+
+    
 } // namespace lim_webserver

@@ -9,6 +9,7 @@
 #define LogLevel_WARN lim_webserver::LogLevel::WARN
 #define LogLevel_ERROR lim_webserver::LogLevel::ERROR
 #define LogLevel_FATAL lim_webserver::LogLevel::FATAL
+#define LogLevel_OFF lim_webserver::LogLevel::OFF
 
 namespace lim_webserver
 {

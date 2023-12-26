@@ -6,6 +6,11 @@
 
 namespace lim_webserver
 {
+    const char *YamlVisitor::visitLogManager(LogManager &manager)
+    {
+        return "";
+    }
+
     const char* YamlVisitor::visitLogger(Logger& logger)
     {
         YAML::Node node;
@@ -14,6 +19,10 @@ namespace lim_webserver
         if (level != LogLevel_UNKNOWN)
         {
             node["level"] = LogLevelHandler::ToString(level);
+        }
+        for(auto& appender:logger.m_appenders)
+        {
+            node["appender-ref"].push_back(appender->getName());
         }
         return getString(node);
     }

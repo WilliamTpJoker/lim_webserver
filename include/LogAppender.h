@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <stdio.h>
 
 #include "LogLevel.h"
 #include "LogMessage.h"
@@ -16,18 +17,34 @@ namespace lim_webserver
         RollingFile
     };
 
+    enum class ConsoleField
+    {
+        STDOUT,
+        STDERR
+    };
+
     struct LogAppenderDefine
     {
         int type = 0; // 1 File, 0 Stdout
         std::string name;
-        LogLevel level = LogLevel_UNKNOWN;
-        std::string formatter;
         std::string file;
-        bool append;
+        std::string formatter = DEFAULT_PATTERN;
+        LogLevel level = LogLevel_UNKNOWN;
+        bool append = true;
+
+        bool operator<(const LogAppenderDefine &oth) const
+        {
+            return name < oth.name;
+        }
 
         bool operator==(const LogAppenderDefine &oth) const
         {
-            return type == oth.type && level == oth.level && formatter == oth.formatter && file == oth.file && append == oth.append && name == oth.name;
+            return name == oth.name && type == oth.type && file == oth.file && formatter == oth.formatter && level == oth.level && append == oth.append;
+        }
+
+        bool isValid() const
+        {
+            return !name.empty();
         }
     };
 
@@ -47,7 +64,7 @@ namespace lim_webserver
 
         void setName(const std::string &name) { m_name = name; }
 
-        virtual const char* accept(LogVisitor& visitor)=0;
+        virtual const char *accept(LogVisitor &visitor) = 0;
 
         const std::string &getName() { return m_name; }
         /**
@@ -60,6 +77,7 @@ namespace lim_webserver
          */
         virtual void log(LogLevel level, LogStream &stream) = 0;
 
+        virtual int getType() = 0;
         /**
          * @brief 设置格式器
          */
@@ -86,10 +104,10 @@ namespace lim_webserver
         LogLevel getLevel() const { return m_level; }
 
     protected:
-        std::string m_name;                      // 名字
-        LogLevel m_level;                        // 级别
-        MutexType m_mutex;                       // 锁
-        LogFormatter::ptr m_formatter;           // 格式器
+        std::string m_name;            // 名字
+        LogLevel m_level;              // 级别
+        MutexType m_mutex;             // 锁
+        LogFormatter::ptr m_formatter; // 格式器
     };
 
     class OutputAppender : public LogAppender
@@ -98,6 +116,10 @@ namespace lim_webserver
         using ptr = std::shared_ptr<OutputAppender>;
 
     public:
+        OutputAppender(){};
+        OutputAppender(const LogAppenderDefine &lad);
+
+        virtual ~OutputAppender(){};
         /**
          * @brief 输出日志，必须重构
          */
@@ -109,7 +131,7 @@ namespace lim_webserver
         void log(LogLevel level, LogStream &stream) override;
 
     protected:
-        FILE *m_ptr = nullptr; // 文件流
+        FILE *m_ptr=nullptr; // 文件流
     };
 
     /**
@@ -118,18 +140,17 @@ namespace lim_webserver
     class ConsoleAppender : public OutputAppender
     {
         friend YamlVisitor;
+
     public:
         using ptr = std::shared_ptr<ConsoleAppender>;
-        static ptr Create(FILE *target = stdout)
-        {
-            return std::make_shared<ConsoleAppender>(target);
-        }
 
     public:
-        ConsoleAppender(FILE *target = stdout);
-        void setTarget(FILE *target);
+        ConsoleAppender();
+        ConsoleAppender(const LogAppenderDefine &lad);
 
-        const char* accept(LogVisitor& visitor) override;
+        int getType() override;
+
+        const char *accept(LogVisitor &visitor) override;
     };
 
     /**
@@ -138,22 +159,24 @@ namespace lim_webserver
     class FileAppender : public OutputAppender
     {
         friend YamlVisitor;
+
     public:
         using ptr = std::shared_ptr<FileAppender>;
-        static ptr Create(const std::string &filename, bool append = true)
-        {
-            return std::make_shared<FileAppender>(filename, append);
-        }
 
     public:
         FileAppender(const std::string &filename, bool append = true);
-
+        FileAppender(const LogAppenderDefine &lad);
         /**
          * @brief 重新打开文件，打开成功返回true
          */
         bool reopen();
 
-        const char* accept(LogVisitor& visitor) override;
+        void setFile(const std::string &filename);
+        void setAppend(bool append);
+
+        int getType() override;
+
+        const char *accept(LogVisitor &visitor) override;
 
     protected:
         std::string m_filename; // 文件名
@@ -172,8 +195,7 @@ namespace lim_webserver
         RollingPolicy::ptr m_rollingPolicy;
     };
 
-    class AppenderBuilder
+    class AppenderFactory
     {
-        
     };
 } // namespace lim_webserver

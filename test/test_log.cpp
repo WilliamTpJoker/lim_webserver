@@ -5,25 +5,9 @@ using namespace lim_webserver;
 
 void test_logger()
 {
-    Logger::ptr logger = Logger::Create();
-    LogAppender::ptr appender = FileAppender::Create("log/log.txt");
-    appender->setFormatter(DEFAULT_PATTERN);
-
-    logger->addAppender(FileAppender::Create("log/log.txt"));
-
-    auto event = LogMessage::Create(
-        logger, __FILE__, __LINE__, time(0), LogLevel::DEBUG, logger->getName());
-    logger->log(LogLevel::DEBUG, event);
-
-    LOG_LEVEL(logger, LogLevel::DEBUG) << " test log: support operator<<";
-    LOG_FATAL(logger);
-}
-
-void test_new_logger()
-{
-    Logger::ptr l = LoggerMgr::GetInstance()->getLogger("XX");
-    LOG_DEBUG(l) << " XXX";
-    LOG_INFO(LOG_NAME("XX")) << " this msg from XX logger";
+    LOG_DEBUG(LOG_ROOT()) << " test log: debug test";
+    LOG_INFO(LOG_ROOT()) << " test log: info test";
+    LOG_ERROR(LOG_NAME("system")) << "test log: error test";
 }
 
 void stress_test(Logger::ptr &logger, bool longLog, int round, int kBatch)
@@ -47,10 +31,20 @@ void stress_test(Logger::ptr &logger, bool longLog, int round, int kBatch)
 
 void test_stress()
 {
-    Logger::ptr logger = LOG_NAME("test");
-    FileAppender::ptr appender = FileAppender::Create("./log/stress_log.txt", false);
-    appender->setFormatter("%t %N%T%F%T[%c] [%p] %f:%l%T%m%n");
-    logger->addAppender(appender);
+    LogManager* logManager = LogMgr::GetInstance();
+    LogAppenderDefine lad;
+    lad.name = "test";
+    lad.file = "/home/book/Webserver/config/log.yaml";
+    lad.append = false;
+    lad.level = LogLevel_DEBUG;
+    lad.formatter = "%t %N%T%F%T[%c] [%p] %f:%l%T%m%n";
+
+    logManager->createAppender(lad);
+
+    LoggerDefine ld;
+    ld.name = "test";
+
+    Logger::ptr logger = logManager->createLogger(ld);;
 
     stress_test(logger, false, 300, 1000);
     stress_test(logger, true, 300, 1000);
@@ -58,11 +52,9 @@ void test_stress()
 
 int main(int argc, char *argv[])
 {
-    // test_logger();
+    test_logger();
     // test_new_logger();
-    printf("program started, pid = %d\n", getpid());
-    
-    test_stress();
+    // test_stress();
 
     return 0;
 }

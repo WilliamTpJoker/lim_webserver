@@ -33,10 +33,10 @@ logconfig:
       formatter:  "[%d] [%p] [%f:%l]%T%m%n"
     - type: 1
       name: file
-      level: DEBUG
+      level: INFO
       formatter:  "[%d] [%p] [%f:%l]%T%m%n"
       append: true
-      file: ./log/test_log.txt
+      file: /home/book/Webserver/log/test_log.txt
 
   loggers:
     - name: root

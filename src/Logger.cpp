@@ -4,6 +4,7 @@
 #include "AsyncLog.h"
 #include "LogVisitor.h"
 #include "LogManager.h"
+#include "LogAppender.h"
 
 namespace lim_webserver
 {
@@ -43,9 +44,10 @@ namespace lim_webserver
         }
     }
 
-    void Logger::addAppender(LogAppender::ptr appender)
+    void Logger::addAppender(LogAppender::ptr& appender)
     {
         MutexType::Lock lock(m_mutex);
+
         m_appenders.emplace_back(appender);
     }
 
@@ -62,5 +64,4 @@ namespace lim_webserver
         MutexType::Lock lock(m_mutex);
         m_appenders.clear();
     }
-    
 }

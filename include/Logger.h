@@ -21,45 +21,72 @@
 
 namespace lim_webserver
 {
+    class LogManager;
     class LogVisitor;
     class YamlVisitor;
+
+
+    /**
+     * @brief Logger构造单
+     * 
+     * @param name 
+     * @param level
+     * @param appender_refs
+    */
+    struct LoggerDefine
+    {
+        std::string name;
+        std::vector<std::string> appender_refs;
+        LogLevel level = LogLevel_UNKNOWN;
+
+        bool operator==(const LoggerDefine &oth) const
+        {
+            return name == oth.name && level == oth.level && appender_refs == oth.appender_refs;
+        }
+
+        bool operator<(const LoggerDefine &oth) const
+        {
+            return name < oth.name;
+        }
+
+        bool operator!=(const LoggerDefine &oth) const
+        {
+            return !(*this == oth);
+        }
+
+        bool isValid() const
+        {
+            return !name.empty();
+        }
+    };
+
     /**
      * @brief 日志器
      */
-    class Logger 
+    class Logger
     {
         friend YamlVisitor;
+
     public:
         using ptr = std::shared_ptr<Logger>;
-        static ptr Create()
-        {
-            return std::make_shared<Logger>();
-        }
-        static ptr Create(const std::string &name)
-        {
-            return std::make_shared<Logger>(name);
-        }
-        static ptr Create(const std::string &name, LogLevel level)
-        {
-            return std::make_shared<Logger>(name, level);
-        }
 
     public:
         using MutexType = Spinlock;
         Logger() {}
         Logger(const std::string &name);
         Logger(const std::string &name, LogLevel level);
+
         /**
          * @brief 输出日志
          */
         void log(LogLevel level, const LogMessage::ptr &message);
 
-        const char* accept(LogVisitor& visitor);
+        const char *accept(LogVisitor &visitor);
 
         /**
          * @brief 添加日志输出地
          */
-        void addAppender(LogAppender::ptr appender);
+        void addAppender(LogAppender::ptr& appender);
         /**
          * @brief 删除日志输出地
          */
@@ -82,6 +109,8 @@ namespace lim_webserver
          */
         const std::string &getName() const { return m_name; }
 
+        void setName(const std::string &name) { m_name = name; }
+
     private:
         std::string m_name = "root";             // 日志名称
         LogLevel m_level = LogLevel_DEBUG;       // 日志级别
@@ -89,59 +118,4 @@ namespace lim_webserver
         MutexType m_mutex;
     };
 
-    /**
-     * @brief 日志事件包装器
-     */
-    class LogMessageWrap
-    {
-    public:
-        LogMessageWrap(LogMessage::ptr e)
-            : m_message(e) {}
-        /**
-         * @brief 析构时输出日志
-         */
-        ~LogMessageWrap()
-        {
-            m_message->getLogger()->log(m_message->getLevel(), m_message);
-        }
-
-        /**
-         * @brief 获得日志事件
-         */
-        LogMessage::ptr getMessage() const { return m_message; }
-        /**
-         * @brief 获得日志内容流，以便左移操作补充内容
-         */
-        LogStream &getStream() { return m_message->getStream(); }
-
-    private:
-        LogMessage::ptr m_message; // 事件
-    };
-
-    struct LoggerDefine
-    {
-        std::string name;
-        LogLevel level = LogLevel_UNKNOWN;
-        std::vector<std::string> appender_refs;
-
-        bool operator==(const LoggerDefine &oth) const
-        {
-            return name == oth.name && level == oth.level && appender_refs == oth.appender_refs;
-        }
-
-        bool operator<(const LoggerDefine &oth) const
-        {
-            return name < oth.name;
-        }
-
-        bool operator!=(const LoggerDefine &oth) const
-        {
-            return !(*this == oth);
-        }
-
-        bool isValid() const
-        {
-            return !name.empty();
-        }
-    };
 }
