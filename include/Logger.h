@@ -86,11 +86,12 @@ namespace lim_webserver
         /**
          * @brief 添加日志输出地
          */
-        void addAppender(LogAppender::ptr& appender);
+        void addAppender(LogAppender::ptr appender);
         /**
          * @brief 删除日志输出地
+         * @return 是否存在并删除 true:删除成功
          */
-        void delAppender(std::string &name);
+        bool detachAppender(const std::string &name);
         /**
          * @brief 清空日志输出地
          */

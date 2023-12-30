@@ -19,7 +19,7 @@ namespace lim_webserver
     Logger::Logger(const std::string &name, LogLevel level)
         : m_name(name), m_level(level) {}
 
-    const char* Logger::accept(LogVisitor& visitor)
+    const char *Logger::accept(LogVisitor &visitor)
     {
         return visitor.visitLogger(*this);
     }
@@ -44,19 +44,22 @@ namespace lim_webserver
         }
     }
 
-    void Logger::addAppender(LogAppender::ptr& appender)
+    void Logger::addAppender(LogAppender::ptr appender)
     {
         MutexType::Lock lock(m_mutex);
 
         m_appenders.emplace_back(appender);
     }
 
-    void Logger::delAppender(std::string &name)
+    bool Logger::detachAppender(const std::string &name)
     {
         MutexType::Lock lock(m_mutex);
+        // 查找并将目标移动到链表尾部
         auto it = std::remove_if(m_appenders.begin(), m_appenders.end(), [name](LogAppender::ptr appender)
                                  { return appender->getName() == name; });
+        // 删除链表尾部
         m_appenders.erase(it, m_appenders.end());
+        return it != m_appenders.end();
     }
 
     void Logger::clearAppender()

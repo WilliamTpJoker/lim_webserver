@@ -81,8 +81,10 @@ namespace lim_webserver
 
         void updateLogger(Logger::ptr logger,const LoggerDefine& ld);
 
-        LogAppender::ptr& getAppender(const std::string &name);
+        LogAppender::ptr getAppender(const std::string &name);
         
+        void delAppender(const std::string &name);
+
         void createOrUpdateAppender(const LogAppenderDefine& lad);
 
         LogAppender::ptr createAppender(const LogAppenderDefine& lad);

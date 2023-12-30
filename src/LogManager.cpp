@@ -91,7 +91,7 @@ namespace lim_webserver
         }
     }
 
-    LogAppender::ptr &LogManager::getAppender(const std::string &name)
+    LogAppender::ptr LogManager::getAppender(const std::string &name)
     {
         MutexType::Lock lock(m_mutex);
         auto it = m_appenders.find(name);
@@ -106,6 +106,20 @@ namespace lim_webserver
         }
     }
 
+    void LogManager::delAppender(const std::string &name)
+    {
+        MutexType::Lock lock(m_mutex);
+        auto it = m_appenders.find(name);
+        if (it != m_appenders.end())
+        {
+            m_appenders.erase(it);
+        }
+        for(auto &it:m_loggers)
+        {
+            it.second->detachAppender(name);
+        }
+    }
+
     void LogManager::createOrUpdateAppender(const LogAppenderDefine &lad)
     {
         MutexType::Lock lock(m_mutex);
@@ -114,10 +128,10 @@ namespace lim_webserver
         if (it != m_appenders.end())
         {
             LogAppender::ptr appender = it->second;
-            // 输出地类型变化
+            // 输出地类型变化,则忽略
             if (appender->getType() != lad.type)
             {
-                createAppender(lad);
+                return;
             }
             else // 输出地没有变化，修改
             {
