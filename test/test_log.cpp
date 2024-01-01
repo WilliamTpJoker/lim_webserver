@@ -54,9 +54,9 @@ void test_stress()
 
 int main(int argc, char *argv[])
 {
-    // test_logger();
+    test_logger();
     // test_new_logger();
-    test_stress();
+    // test_stress();
 
     return 0;
 }

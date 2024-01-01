@@ -20,6 +20,9 @@ namespace lim_webserver
     public:
         using ptr = std::shared_ptr<TimeBasedRollingPolicy>;
 
+    public:
+        bool judge() override;
+
     private:
     };
 
@@ -27,6 +30,9 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<SizeAndTimeBasedRollingPolicy>;
+
+    public:
+        bool judge() override;
 
     private:
     };

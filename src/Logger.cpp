@@ -24,9 +24,9 @@ namespace lim_webserver
         return visitor.visitLogger(*this);
     }
 
-    void Logger::log(LogLevel level, const LogMessage::ptr &message)
+    void Logger::log(const LogMessage::ptr &message)
     {
-        if (level >= m_level)
+        if (message->getLevel() >= m_level)
         {
             MutexType::Lock lock(m_mutex);
             // 若该日志没有指定输出地，则默认在root的输出地中进行输出
@@ -34,12 +34,12 @@ namespace lim_webserver
             {
                 for (auto &appender : m_appenders)
                 {
-                    appender->log(level, message);
+                    appender->doAppend(message);
                 }
             }
             else
             {
-                LOG_ROOT()->log(level, message);
+                LOG_ROOT()->log(message);
             }
         }
     }

@@ -17,8 +17,6 @@
 #define LOG_ERROR(logger) LOG_LEVEL(logger, LogLevel_ERROR)
 #define LOG_FATAL(logger) LOG_LEVEL(logger, LogLevel_FATAL)
 
-
-
 #define LOG_ROOT() lim_webserver::LogMgr::GetInstance()->getRoot()
 #define LOG_NAME(name) lim_webserver::LogMgr::GetInstance()->getLogger(name)
 
@@ -37,7 +35,7 @@ namespace lim_webserver
          */
         ~LogMessageWrap()
         {
-            m_message->getLogger()->log(m_message->getLevel(), m_message);
+            m_message->getLogger()->log(m_message);
         }
 
         /**
@@ -53,14 +51,11 @@ namespace lim_webserver
         LogMessage::ptr m_message; // 事件
     };
 
-    class LogVisiter;
-    class YamlVisiter;
-
     class LogManager
     {
-        friend YamlVisiter;
     public:
         using MutexType = Spinlock;
+
     public:
         LogManager();
         /**
@@ -75,31 +70,30 @@ namespace lim_webserver
 
         void delLogger(const std::string &name);
 
-        void createOrUpdateLogger(const LoggerDefine& ld);
+        void createOrUpdateLogger(const LoggerDefine &ld);
 
-        Logger::ptr createLogger(const LoggerDefine& ld);
+        Logger::ptr createLogger(const LoggerDefine &ld);
 
-        void updateLogger(Logger::ptr logger,const LoggerDefine& ld);
+        void updateLogger(Logger::ptr logger, const LoggerDefine &ld);
 
         LogAppender::ptr getAppender(const std::string &name);
-        
+
         void delAppender(const std::string &name);
 
-        void createOrUpdateAppender(const LogAppenderDefine& lad);
+        void createOrUpdateAppender(const LogAppenderDefine &lad);
 
-        LogAppender::ptr createAppender(const LogAppenderDefine& lad);
+        LogAppender::ptr createAppender(const LogAppenderDefine &lad);
 
-        void updateAppender(LogAppender::ptr appender,const LogAppenderDefine& lad);
-
-        const char *accept(LogVisitor &visitor);
+        void updateAppender(LogAppender::ptr appender, const LogAppenderDefine &lad);
 
     private:
+        void init();
+
         std::unordered_map<std::string, LogAppender::ptr> m_appenders; // 系统全部输出地
         std::unordered_map<std::string, Logger::ptr> m_loggers;        // 系统全部日志器
-        Logger::ptr m_root_logger;                                // 根日志
+        Logger::ptr m_root_logger;                                     // 根日志
         MutexType m_mutex;                                             // 锁
     };
     using LogMgr = Singleton<LogManager>;
 
-    
 } // namespace lim_webserver

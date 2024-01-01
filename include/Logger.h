@@ -79,7 +79,7 @@ namespace lim_webserver
         /**
          * @brief 输出日志
          */
-        void log(LogLevel level, const LogMessage::ptr &message);
+        void log(const LogMessage::ptr &message);
 
         const char *accept(LogVisitor &visitor);
 

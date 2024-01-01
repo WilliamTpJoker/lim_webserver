@@ -5,25 +5,17 @@ namespace lim_webserver
 {
     LogManager::LogManager()
     {
-        LogAppenderDefine console_lad;
-        console_lad.name = "console";
-        console_lad.level = LogLevel_DEBUG;
-        createAppender(console_lad);
-
-        LoggerDefine root_ld;
-        root_ld.name = "root";
-        root_ld.appender_refs.push_back("console");
-        m_root_logger = createLogger(root_ld);
-
-        LoggerDefine sys_ld;
-        sys_ld.name = "system";
-        sys_ld.appender_refs.push_back("console");
-        createLogger(sys_ld);
+        init();
     }
 
     Logger::ptr LogManager::getLogger(const std::string &name)
     {
         MutexType::Lock lock(m_mutex);
+        if(m_root_logger->getName()==name)
+        {
+            return m_root_logger;
+        }
+
         auto it = m_loggers.find(name);
         if (it != m_loggers.end())
         {
@@ -32,7 +24,7 @@ namespace lim_webserver
         else
         {
             Logger::ptr logger = Logger::ptr(new Logger);
-            m_loggers["name"]=logger;
+            m_loggers["name"] = logger;
             return logger;
         }
     }
@@ -114,7 +106,7 @@ namespace lim_webserver
         {
             m_appenders.erase(it);
         }
-        for(auto &it:m_loggers)
+        for (auto &it : m_loggers)
         {
             it.second->detachAppender(name);
         }
@@ -135,7 +127,7 @@ namespace lim_webserver
             }
             else // 输出地没有变化，修改
             {
-                updateAppender(appender,lad);
+                updateAppender(appender, lad);
             }
         }
         else // 若输出地不存在
@@ -171,7 +163,21 @@ namespace lim_webserver
     {
         appender->setName(lad.name);
         appender->setLevel(lad.level);
-        appender->setFormatter(lad.formatter);
+    }
+
+    void LogManager::init()
+    {
+        ConsoleAppender::ptr appender = ConsoleAppender::ptr(new ConsoleAppender());
+        appender->setName("console");
+        appender->setLevel(LogLevel_DEBUG);
+        appender->setFormatter(DEFAULT_PATTERN);
+        m_appenders[appender->getName()]=appender;
+        appender->start();
+
+        LoggerDefine root_ld;
+        root_ld.name = "root";
+        root_ld.appender_refs.push_back("console");
+        m_root_logger = createLogger(root_ld);
     }
 
 } // namespace lim_webserver
