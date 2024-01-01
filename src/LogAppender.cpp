@@ -75,18 +75,6 @@ namespace lim_webserver
         return m_formatter;
     }
 
-    void OutputAppender::setSink(LogSink::ptr sink)
-    {
-        MutexType::Lock lock(m_mutex);
-        m_sink = sink;
-    }
-
-    void OutputAppender::delFormatter()
-    {
-        MutexType::Lock lock(m_mutex);
-        m_formatter = nullptr;
-    }
-
     void OutputAppender::start()
     {
         int errors = 0;
@@ -221,17 +209,16 @@ namespace lim_webserver
 
     void AsyncAppender::format(LogStream &logstream, LogMessage::ptr message)
     {
-        if(!isStarted())
+        if (!isStarted())
         {
             return;
         }
-        MutexType::Lock lock(m_mutex);
         m_appender->format(logstream, message);
     }
 
     void AsyncAppender::append(const char *logline, int len)
     {
-        if(!isStarted())
+        if (!isStarted())
         {
             return;
         }
@@ -310,7 +297,8 @@ namespace lim_webserver
         // 创建新缓存
         DoubleBuffer newBuffer;
 
-        while (m_started)
+        // 当停止时，如果前端缓存仍然有数据则将数据写入后再结束线程
+        while (m_started | !m_buffer.empty())
         {
             assert(newBuffer.buffer1 && newBuffer.buffer1->length() == 0);
             assert(newBuffer.buffer2 && newBuffer.buffer2->length() == 0);

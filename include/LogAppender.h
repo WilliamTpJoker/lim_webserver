@@ -132,13 +132,6 @@ namespace lim_webserver
          */
         const LogFormatter::ptr &getFormatter();
 
-        void setSink(LogSink::ptr sink);
-
-        /**
-         * @brief 删除格式器
-         */
-        void delFormatter();
-
         void start() override;
 
         void stop() override;
@@ -179,6 +172,7 @@ namespace lim_webserver
         using ptr = std::shared_ptr<FileAppender>;
 
     public:
+        FileAppender(){};
         FileAppender(const std::string &filename, bool append = true);
         FileAppender(const LogAppenderDefine &lad);
 
@@ -268,6 +262,11 @@ namespace lim_webserver
                 buffer_vec.reserve(16);
             }
 
+            bool empty()
+            {
+                return buffer_vec.empty();
+            }
+
             void reset()
             {
                 if (buffer_vec.size() > 2)
@@ -299,10 +298,10 @@ namespace lim_webserver
     class AppenderFactory
     {
     public:
-        using ptr = std::shared_ptr<AppenderFactory>;
-
-    public:
-        virtual ~AppenderFactory(){};
-        virtual LogAppender::ptr create(const LogAppenderDefine &lad) = 0;
+        template <class T>
+        static std::shared_ptr<T> Create()
+        {
+            return std::make_shared<T>();
+        }
     };
 } // namespace lim_webserver

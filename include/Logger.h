@@ -24,14 +24,13 @@ namespace lim_webserver
     class LogVisitor;
     class YamlVisitor;
 
-
     /**
      * @brief Logger构造单
-     * 
-     * @param name 
+     *
+     * @param name
      * @param level
      * @param appender_refs
-    */
+     */
     struct LoggerDefine
     {
         std::string name;
@@ -111,7 +110,7 @@ namespace lim_webserver
         void setName(const std::string &name) { m_name = name; }
 
     private:
-        std::string m_name = "root";             // 日志名称
+        std::string m_name;                      // 日志名称
         LogLevel m_level = LogLevel_DEBUG;       // 日志级别
         std::list<LogAppender::ptr> m_appenders; // Appender集合
         MutexType m_mutex;
