@@ -291,7 +291,6 @@ namespace lim_webserver
         {
             return;
         }
-        std::cout << "stop!" << std::endl;
         LogAppender::stop();
         {
             MutexType::Lock lock(m_mutex);
@@ -309,7 +308,6 @@ namespace lim_webserver
 
     void AsyncAppender::run()
     {
-        std::cout << "async worker start" << std::endl;
         // 创建新缓存
         DoubleBuffer newBuffer;
 
