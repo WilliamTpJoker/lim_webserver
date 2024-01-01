@@ -15,7 +15,6 @@
 #include "Util.h"
 #include "LogAppender.h"
 #include "LogFormatter.h"
-#include "AsyncLog.h"
 #include "Singleton.h"
 #include "LogMessage.h"
 

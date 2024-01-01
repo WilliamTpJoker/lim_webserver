@@ -20,7 +20,7 @@
 
 #include "LogLevel.h"
 #include "LogStream.h"
-#include "AsyncLog.h"
+
 #include "LogMessage.h"
 #include "LogFormatter.h"
 #include "LogAppender.h"

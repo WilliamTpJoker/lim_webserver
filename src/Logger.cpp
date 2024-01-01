@@ -1,7 +1,6 @@
 #include "Logger.h"
 #include "Config.h"
 #include "Fiber.h"
-#include "AsyncLog.h"
 #include "LogVisitor.h"
 #include "LogManager.h"
 #include "LogAppender.h"
