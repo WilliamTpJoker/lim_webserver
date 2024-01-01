@@ -18,9 +18,9 @@ void test_file_append()
     appender->setFormatter(DEFAULT_PATTERN);
     appender->setAppend(false);
     appender->start();
-    
+
     logger->addAppender(appender);
-    LOG_DEBUG(logger)<<"test file log: debug test";
+    LOG_DEBUG(logger) << "test file log: debug test";
     // appender->stop();
 }
 
@@ -44,8 +44,8 @@ void test_async_appender()
     asy_appender->start();
     logger->addAppender(asy_appender);
 
-    LOG_DEBUG(logger)<<"test async log: debug test";
-    LOG_DEBUG(logger)<<"test async log: debug test2";
+    LOG_DEBUG(logger) << "test async log: debug test";
+    LOG_DEBUG(logger) << "test async log: debug test2";
     sleep(3);
     asy_appender->stop();
 }
@@ -61,44 +61,43 @@ void stress_test(Logger::ptr &logger, bool longLog, int round, int kBatch)
         for (int i = 0; i < kBatch; ++i)
         {
             LOG_INFO(logger) << "Hello 123456789"
-                                 << " abcdefghijklmnopqrstuvwxyz " << (longLog ? longStr : empty) << cnt;
+                             << " abcdefghijklmnopqrstuvwxyz " << (longLog ? longStr : empty) << cnt;
             ++cnt;
         }
     }
     clock_t end = clock();
-    printf("%lf\n", (float)(end - start) * 1000 / CLOCKS_PER_SEC);
+    std::cout<<(float)(end - start) * 1000 / CLOCKS_PER_SEC<<std::endl;
 }
 
 void test_stress()
 {
-    LogManager* logManager = LogMgr::GetInstance();
-    LogAppenderDefine lad;
-    lad.name = "test";
-    lad.file = "/home/book/Webserver/log/stress_log.txt";
-    lad.append = false;
-    lad.level = LogLevel_DEBUG;
-    lad.type = 1;
-    lad.formatter = "%t %N%T%F%T[%c] [%p] %f:%l%T%m%n";
+    Logger::ptr logger = LOG_NAME("test");
 
-    logManager->createAppender(lad);
+    FileAppender::ptr fappender = FileAppender::ptr(new FileAppender("/home/book/Webserver/log/stress_log.txt"));
+    fappender->setName("file_test");
+    fappender->setFormatter("%t %N%T%F%T[%c] [%p] %f:%l%T%m%n");
+    fappender->setAppend(false);
+    fappender->start();
+    fappender->setLevel(LogLevel_DEBUG);
 
-    LoggerDefine ld;
-    ld.name = "test";
-    ld.appender_refs = {"test"};
-    Logger::ptr logger = logManager->createLogger(ld);;
-    YamlVisitor visitor;
-    std::cout<<logger->accept(visitor)<<std::endl;
-    stress_test(logger, false, 300, 1000);
-    stress_test(logger, true, 300, 1000);
+    AsyncAppender::ptr asy_appender = AsyncAppender::ptr(new AsyncAppender(fappender));
+    asy_appender->setInterval(2);
+    // asy_appender->start();
+
+    logger->addAppender(fappender);
+
+    stress_test(logger, false, 30, 1000);
+    stress_test(logger, true, 30, 1000);
+    // asy_appender->stop();
 }
 
 int main(int argc, char *argv[])
 {
     // test_logger();
     // test_file_append();
-    test_async_appender();
+    // test_async_appender();
     // test_new_logger();
-    // test_stress();
+    test_stress();
 
     return 0;
 }

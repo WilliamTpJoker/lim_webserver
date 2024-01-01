@@ -190,7 +190,6 @@ namespace lim_webserver
         int errors = 0;
         if (!m_filename.empty())
         {
-            std::cout << "File property is set to [" << m_filename << "]" << std::endl;
         }
         openFile();
         if (errors == 0)
