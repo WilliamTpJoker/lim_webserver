@@ -4,8 +4,8 @@ using namespace lim_webserver;
 
 void bench(Logger::ptr logger, size_t thr_num, size_t msg_num, size_t msg_len)
 {
-    std::cout<< "测试日志器:"<<logger->getName()<<std::endl;
-    std::cout << "测试日志：" << msg_num << "条，总大小：" << (msg_num * msg_len) / 1024 << "KB"<<std::endl;
+    std::cout << "测试日志器:" << logger->getName() << std::endl;
+    std::cout << "测试日志：" << msg_num << "条，总大小：" << (msg_num * msg_len) / 1024 << "KB" << std::endl;
     // 2.组织指定长度的日志消息
     std::string msg(msg_len - 1, 'w'); //-1是想要在每条日志消息最后填一个换行
     // 3.创建指定数量的线程
@@ -42,9 +42,9 @@ void bench(Logger::ptr logger, size_t thr_num, size_t msg_num, size_t msg_len)
     size_t msg_per_sec = msg_num / max_cost;                       // 每秒处理的日志消息数量
     size_t size_per_sec = (msg_num * msg_len) / (max_cost * 1024); // 每秒处理的日志总大小
     // 打印测试结果
-    std::cout << "每秒输出日志数量：" << msg_per_sec << "条"<<std::endl;
-    std::cout << "每秒输出日志大小：" << size_per_sec << "KB"<<std::endl;
-    std::cout<<std::endl;
+    std::cout << "每秒输出日志数量：" << msg_per_sec << "条" << std::endl;
+    std::cout << "每秒输出日志大小：" << size_per_sec << "KB" << std::endl;
+    std::cout << std::endl;
 }
 
 void sync_bench()
