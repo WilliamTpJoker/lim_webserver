@@ -74,7 +74,6 @@ namespace lim_webserver
         using MutexType = Spinlock;
         Logger() {}
         Logger(const std::string &name);
-        Logger(const std::string &name, LogLevel level);
 
         /**
          * @brief 输出日志

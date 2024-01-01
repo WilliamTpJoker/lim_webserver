@@ -32,7 +32,6 @@ namespace lim_webserver
         {
             return;
         }
-        
         if (message->getLevel() >= m_level)
         {
             m_formatter->format(logstream, message);
@@ -152,10 +151,10 @@ namespace lim_webserver
         m_filename = lad.file;
     }
 
-    void FileAppender::openFile(const std::string &filename)
+    void FileAppender::openFile()
     {
         MutexType::Lock lock(m_mutex);
-        m_sink = FileSink::ptr(new FileSink(filename.c_str()));
+        m_sink = FileSink::ptr(new FileSink(m_filename.c_str(), m_append));
     }
 
     void FileAppender::setFile(const std::string &filename)
@@ -193,6 +192,7 @@ namespace lim_webserver
         {
             std::cout << "File property is set to [" << m_filename << "]" << std::endl;
         }
+        openFile();
         if (errors == 0)
         {
             OutputAppender::start();
@@ -204,6 +204,16 @@ namespace lim_webserver
     {
     }
 
+    AsyncAppender::AsyncAppender()
+        : m_cond(m_mutex)
+    {
+    }
+
+    AsyncAppender::AsyncAppender(OutputAppender::ptr appender)
+        : m_appender(appender), m_cond(m_mutex)
+    {
+    }
+
     void AsyncAppender::setInterval(int interval)
     {
         MutexType::Lock lock(m_mutex);
@@ -212,30 +222,45 @@ namespace lim_webserver
 
     void AsyncAppender::format(LogStream &logstream, LogMessage::ptr message)
     {
+        if(!isStarted())
+        {
+            return;
+        }
+        MutexType::Lock lock(m_mutex);
         m_appender->format(logstream, message);
     }
 
     void AsyncAppender::append(const char *logline, int len)
     {
+        if(!isStarted())
+        {
+            return;
+        }
         MutexType::Lock lock(m_mutex);
-
         // 若当前缓冲区大小支持写入内容则写入
         if (m_buffer.buffer1->avail() > len)
+        {
             m_buffer.buffer1->append(logline, len);
+        }
         else // 若缓存区不支持写入，则寻找新的缓冲区
         {
-            m_buffer.buffer_vec.push_back(m_buffer.buffer1);
-            // 智能指针的reset，重新指向了新的对象
-            m_buffer.buffer1.reset();
-            // 若备用缓存区存在，则直接使用
-            if (m_buffer.buffer2)
-                m_buffer.buffer1 = std::move(m_buffer.buffer2);
-            else // 若不存在，则创建新的缓冲区
-                m_buffer.buffer1.reset(new Buffer);
+            submitBuffer();
             // 在缓冲区内写入内容并提醒后端线程开始写入
             m_buffer.buffer1->append(logline, len);
             m_cond.notify_one();
         }
+    }
+
+    void AsyncAppender::submitBuffer()
+    {
+        m_buffer.buffer_vec.push_back(m_buffer.buffer1);
+        // 智能指针的reset，重新指向了新的对象
+        m_buffer.buffer1.reset();
+        // 若备用缓存区存在，则直接使用
+        if (m_buffer.buffer2)
+            m_buffer.buffer1 = std::move(m_buffer.buffer2);
+        else // 若不存在，则创建新的缓冲区
+            m_buffer.buffer1.reset(new Buffer);
     }
 
     int AsyncAppender::getType()
@@ -266,7 +291,13 @@ namespace lim_webserver
         {
             return;
         }
+        std::cout << "stop!" << std::endl;
         LogAppender::stop();
+        {
+            MutexType::Lock lock(m_mutex);
+            submitBuffer();
+        }
+        m_cond.notify_one();
         m_thread->join();
     }
 
@@ -278,6 +309,7 @@ namespace lim_webserver
 
     void AsyncAppender::run()
     {
+        std::cout << "async worker start" << std::endl;
         // 创建新缓存
         DoubleBuffer newBuffer;
 

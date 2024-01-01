@@ -96,9 +96,9 @@ namespace lim_webserver
         bool isStarted() { return m_started; }
 
     protected:
-        std::string m_name;  // 名字
-        LogLevel m_level;    // 级别
-        MutexType m_mutex;   // 锁
+        std::string m_name; // 名字
+        LogLevel m_level;   // 级别
+        MutexType m_mutex;  // 锁
 
         bool m_started; // 启动标志位
     };
@@ -145,7 +145,7 @@ namespace lim_webserver
 
     protected:
         LogFormatter::ptr m_formatter; // 格式器
-        LogSink::ptr m_sink; // 落地器
+        LogSink::ptr m_sink;           // 落地器
         LogStream::Buffer m_buffer;    // 4k缓存
     };
 
@@ -182,7 +182,7 @@ namespace lim_webserver
         FileAppender(const std::string &filename, bool append = true);
         FileAppender(const LogAppenderDefine &lad);
 
-        void openFile(const std::string &filename);
+        void openFile();
 
         void setFile(const std::string &filename);
 
@@ -219,6 +219,13 @@ namespace lim_webserver
     class AsyncAppender : public LogAppender
     {
     public:
+        using ptr = std::shared_ptr<AsyncAppender>;
+        using MutexType = Mutex;
+
+    public:
+        AsyncAppender();
+        AsyncAppender(OutputAppender::ptr appender);
+
         void setInterval(int interval);
 
         void format(LogStream &logstream, LogMessage::ptr message) override;
@@ -245,6 +252,8 @@ namespace lim_webserver
          */
         void run();
 
+        void submitBuffer();
+
         struct DoubleBuffer
         {
             BufferPtr buffer1;    // 当前缓存
@@ -252,7 +261,7 @@ namespace lim_webserver
             BufferVec buffer_vec; // 满缓存存储区
 
             DoubleBuffer()
-                : buffer1(), buffer2(), buffer_vec()
+                : buffer1(new Buffer), buffer2(new Buffer), buffer_vec()
             {
                 buffer1->bzero();
                 buffer2->bzero();
@@ -294,6 +303,6 @@ namespace lim_webserver
 
     public:
         virtual ~AppenderFactory(){};
-        virtual LogAppender::ptr create(const LogAppenderDefine& lad)=0;
+        virtual LogAppender::ptr create(const LogAppenderDefine &lad) = 0;
     };
 } // namespace lim_webserver

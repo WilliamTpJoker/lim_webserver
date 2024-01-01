@@ -16,9 +16,6 @@ namespace lim_webserver
     Logger::Logger(const std::string &name)
         : m_name(name) {}
 
-    Logger::Logger(const std::string &name, LogLevel level)
-        : m_name(name), m_level(level) {}
-
     const char *Logger::accept(LogVisitor &visitor)
     {
         return visitor.visitLogger(*this);

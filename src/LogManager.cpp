@@ -23,7 +23,7 @@ namespace lim_webserver
         }
         else
         {
-            Logger::ptr logger = Logger::ptr(new Logger);
+            Logger::ptr logger = Logger::ptr(new Logger(name));
             m_loggers["name"] = logger;
             return logger;
         }

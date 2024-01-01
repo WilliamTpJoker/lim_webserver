@@ -45,7 +45,7 @@ namespace lim_webserver
         using ptr = std::shared_ptr<FileSink>;
 
     public:
-        FileSink(const char *filename);
+        FileSink(const char *filename, bool append);
     };
 
 } // namespace lim_webserver
