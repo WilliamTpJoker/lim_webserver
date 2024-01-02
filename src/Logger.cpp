@@ -1,7 +1,6 @@
 #include "Logger.h"
 #include "Config.h"
 #include "Fiber.h"
-#include "LogVisitor.h"
 #include "LogManager.h"
 #include "LogAppender.h"
 
@@ -14,11 +13,6 @@ namespace lim_webserver
 
     Logger::Logger(const std::string &name)
         : m_name(name) {}
-
-    const char *Logger::accept(LogVisitor &visitor)
-    {
-        return visitor.visitLogger(*this);
-    }
 
     void Logger::log(const LogMessage::ptr &message)
     {

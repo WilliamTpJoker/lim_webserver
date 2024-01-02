@@ -11,9 +11,9 @@ namespace lim_webserver
     Logger::ptr LogManager::getLogger(const std::string &name)
     {
         MutexType::Lock lock(m_mutex);
-        if(m_root_logger->getName()==name)
+        if(m_root->getName()==name)
         {
-            return m_root_logger;
+            return m_root;
         }
 
         auto it = m_loggers.find(name);
@@ -23,8 +23,9 @@ namespace lim_webserver
         }
         else
         {
-            Logger::ptr logger = Logger::ptr(new Logger(name));
-            m_loggers["name"] = logger;
+            Logger::ptr logger = Logger::Create();
+            logger->setName(name);
+            m_loggers[logger->getName()] = logger;
             return logger;
         }
     }
@@ -32,7 +33,7 @@ namespace lim_webserver
     Logger::ptr LogManager::getRoot()
     {
         MutexType::Lock lock(m_mutex);
-        return m_root_logger;
+        return m_root;
     }
 
     void LogManager::delLogger(const std::string &name)
@@ -167,17 +168,24 @@ namespace lim_webserver
 
     void LogManager::init()
     {
-        ConsoleAppender::ptr appender = ConsoleAppender::ptr(new ConsoleAppender());
+        ConsoleAppender::ptr appender = ConsoleAppender::Create();
         appender->setName("console");
         appender->setLevel(LogLevel_DEBUG);
         appender->setFormatter(DEFAULT_PATTERN);
-        m_appenders[appender->getName()]=appender;
         appender->start();
 
-        LoggerDefine root_ld;
-        root_ld.name = "root";
-        root_ld.appender_refs.push_back("console");
-        m_root_logger = createLogger(root_ld);
+        m_appenders[appender->getName()]=appender;
+
+        m_root = Logger::Create();
+        m_root->setName("root");
+        m_root->addAppender(m_appenders["console"]);
+
+        Logger::ptr sys_logger = Logger::Create();
+        sys_logger->setName("system");
+        sys_logger->addAppender(m_appenders["console"]);
+        
+        m_loggers[sys_logger->getName()]=sys_logger;
+
     }
 
 } // namespace lim_webserver

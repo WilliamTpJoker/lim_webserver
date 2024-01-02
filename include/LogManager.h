@@ -91,7 +91,7 @@ namespace lim_webserver
 
         std::unordered_map<std::string, LogAppender::ptr> m_appenders; // 系统全部输出地
         std::unordered_map<std::string, Logger::ptr> m_loggers;        // 系统全部日志器
-        Logger::ptr m_root_logger;                                     // 根日志
+        Logger::ptr m_root;                                            // 根日志
         MutexType m_mutex;                                             // 锁
     };
     using LogMgr = Singleton<LogManager>;

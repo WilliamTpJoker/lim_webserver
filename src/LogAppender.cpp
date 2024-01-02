@@ -1,5 +1,4 @@
 #include "LogAppender.h"
-#include "LogVisitor.h"
 #include "LogManager.h"
 #include "Config.h"
 
@@ -119,11 +118,6 @@ namespace lim_webserver
         return 0;
     }
 
-    const char *ConsoleAppender::accept(LogVisitor &visitor)
-    {
-        return visitor.visitConsoleAppender(*this);
-    }
-
     FileAppender::FileAppender(const std::string &filename, bool append)
         : m_filename(filename), m_append(append)
     {
@@ -138,7 +132,6 @@ namespace lim_webserver
 
     void FileAppender::openFile()
     {
-        MutexType::Lock lock(m_mutex);
         m_sink = FileSink::ptr(new FileSink(m_filename.c_str(), m_append));
     }
 
@@ -162,11 +155,6 @@ namespace lim_webserver
         return 1;
     }
 
-    const char *FileAppender::accept(LogVisitor &visitor)
-    {
-        return visitor.visitFileAppender(*this);
-    }
-
     void FileAppender::start()
     {
         int errors = 0;
@@ -180,18 +168,54 @@ namespace lim_webserver
         }
     }
 
-    RollingFileAppender::RollingFileAppender(const std::string &filename, RollingPolicy::ptr rollingPolicy)
-        : FileAppender(filename, true), m_rollingPolicy(rollingPolicy)
+    RollingFileAppender::RollingFileAppender(const std::string &filename, RollingPolicy::ptr rollingPolicy, TriggeringPolicy::ptr triggeringPolicy)
+        : FileAppender(filename, true), m_rollingPolicy(rollingPolicy), m_triggeringPolicy(triggeringPolicy)
+    {
+    }
+
+    void RollingFileAppender::setRollingPolicy(RollingPolicy::ptr rollingPolicy)
+    {
+        m_rollingPolicy = rollingPolicy;
+    }
+
+    void RollingFileAppender::setTriggeringPolicy(TriggeringPolicy::ptr triggeringPolicy)
+    {
+        m_triggeringPolicy = triggeringPolicy;
+    }
+
+    void RollingFileAppender::start()
+    {
+    }
+
+    void RollingFileAppender::format(LogStream &logstream, LogMessage::ptr message)
+    {
+        if (!isStarted())
+        {
+            return;
+        }
+        {
+            MutexType::Lock lock(m_trigger_mutex);
+            //判断是否触发了滚动
+            if (m_triggeringPolicy->isTriggeringMessage(std::dynamic_pointer_cast<FileSink>(m_sink),message))
+            {
+                //滚动
+                rollover();
+            }
+        }
+        FileAppender::format(logstream,message);
+    }
+
+    void RollingFileAppender::rollover()
     {
     }
 
     AsyncAppender::AsyncAppender()
-        : m_cond(m_mutex)
+        : m_cond(m_append_mutex)
     {
     }
 
     AsyncAppender::AsyncAppender(OutputAppender::ptr appender)
-        : m_appender(appender), m_cond(m_mutex)
+        : m_appender(appender), m_cond(m_append_mutex)
     {
     }
 
@@ -215,7 +239,7 @@ namespace lim_webserver
         {
             return;
         }
-        MutexType::Lock lock(m_mutex);
+        Mutex::Lock lock(m_append_mutex);
         // 若当前缓冲区大小支持写入内容则写入
         if (m_buffer.buffer1->avail() > len)
         {
@@ -272,7 +296,7 @@ namespace lim_webserver
         }
         LogAppender::stop();
         {
-            MutexType::Lock lock(m_mutex);
+            Mutex::Lock lock(m_append_mutex);
             submitBuffer();
         }
         m_cond.notify_one();
@@ -297,7 +321,7 @@ namespace lim_webserver
             assert(newBuffer.buffer_vec.empty());
             // 进入临界区
             {
-                MutexType::Lock lock(m_mutex);
+                Mutex::Lock lock(m_append_mutex);
                 // 若存储区内没有缓存，表明当前缓存没写满，则暂时解锁临界区并等待超时
                 // 此处条件变量的唤醒有两种情况：1.超时 2.前端写满并notify
                 if (m_buffer.buffer_vec.empty())

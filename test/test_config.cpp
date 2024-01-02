@@ -71,9 +71,6 @@ void test_visit()
                                      << " value=" << var->toString();
     };
     Config::Visit(f);
-
-    YamlVisitor visitor;
-    LOG_INFO(LOG_ROOT())<<LOG_ROOT()->accept(visitor);
 }
 
 int main(int argc, char **argv)

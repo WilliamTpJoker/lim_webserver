@@ -21,8 +21,6 @@
 namespace lim_webserver
 {
     class LogManager;
-    class LogVisitor;
-    class YamlVisitor;
 
     /**
      * @brief Logger构造单
@@ -63,10 +61,13 @@ namespace lim_webserver
      */
     class Logger
     {
-        friend YamlVisitor;
-
     public:
         using ptr = std::shared_ptr<Logger>;
+
+        static ptr Create()
+        {
+            return std::make_shared<Logger>();
+        }
 
     public:
         Logger() {}
@@ -76,8 +77,6 @@ namespace lim_webserver
          * @brief 输出日志
          */
         void log(const LogMessage::ptr &message);
-
-        const char *accept(LogVisitor &visitor);
 
         /**
          * @brief 添加日志输出地

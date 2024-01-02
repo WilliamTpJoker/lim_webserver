@@ -25,7 +25,6 @@
 #include "LogFormatter.h"
 #include "LogAppender.h"
 #include "Logger.h"
-#include "LogVisitor.h"
 
 #include "Timer.h"
 #include "FdManager.h"

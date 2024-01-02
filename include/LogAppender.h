@@ -46,8 +46,6 @@ namespace lim_webserver
         }
     };
 
-    class LogVisitor;
-    class YamlVisitor;
     /**
      * @brief 日志输出地
      */
@@ -55,70 +53,56 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<LogAppender>;
-        using MutexType = Spinlock;
 
     public:
         virtual ~LogAppender(){};
 
-        virtual const char *accept(LogVisitor &visitor) = 0;
-
-        void setName(const std::string &name) { m_name = name; }
-
-        const std::string &getName() { return m_name; }
         /**
-         * @brief 输出日志，必须重构
+         * @brief 落地日志接口，将message解包为字符串并进行落地
          */
         void doAppend(LogMessage::ptr message);
 
-        /**
-         * @brief 输出日志，必须重构
-         */
-        virtual void format(LogStream &logstream, LogMessage::ptr message) = 0;
-
-        virtual void append(const char *logline, int len) = 0;
-
         virtual int getType() = 0;
 
-        /**
-         * @brief 设置输出地级别
-         */
-        void setLevel(LogLevel level) { m_level = level; }
+        void setName(const std::string &name) { m_name = name; }
+        const std::string &getName() { return m_name; }
 
-        /**
-         * @brief 获得输出地级别
-         */
+        void setLevel(LogLevel level) { m_level = level; }
         LogLevel getLevel() const { return m_level; }
 
         virtual void start() { m_started = true; }
-
         virtual void stop() { m_started = false; }
-
         bool isStarted() { return m_started; }
 
     protected:
+        /**
+         * @brief 将message解包为字符串
+         */
+        virtual void format(LogStream &logstream, LogMessage::ptr message) = 0;
+        /**
+         * @brief 将字符串进行落地
+         */
+        virtual void append(const char *logline, int len) = 0;
+
         std::string m_name; // 名字
         LogLevel m_level;   // 级别
-        MutexType m_mutex;  // 锁
 
         bool m_started; // 启动标志位
     };
 
+    class AsyncAppender;
+
     class OutputAppender : public LogAppender
     {
+        friend AsyncAppender;
+
     public:
         using ptr = std::shared_ptr<OutputAppender>;
 
     public:
         OutputAppender(){};
         OutputAppender(const LogAppenderDefine &lad);
-
         virtual ~OutputAppender(){};
-        /**
-         * @brief 输出日志，必须重构
-         */
-        void format(LogStream &logstream, LogMessage::ptr message) override;
-
-        void append(const char *logline, int len) override;
 
         void flush();
 
@@ -127,16 +111,16 @@ namespace lim_webserver
          */
         void setFormatter(const std::string &pattern);
         void setFormatter(LogFormatter::ptr formatter);
-        /**
-         * @brief 获得格式器
-         */
+
         const LogFormatter::ptr &getFormatter();
 
         void start() override;
-
         void stop() override;
 
     protected:
+        void format(LogStream &logstream, LogMessage::ptr message) override;
+        void append(const char *logline, int len) override;
+
         LogFormatter::ptr m_formatter; // 格式器
         LogSink::ptr m_sink;           // 落地器
         LogStream::Buffer m_buffer;    // 4k缓存
@@ -147,18 +131,20 @@ namespace lim_webserver
      */
     class ConsoleAppender : public OutputAppender
     {
-        friend YamlVisitor;
+        friend AsyncAppender;
 
     public:
         using ptr = std::shared_ptr<ConsoleAppender>;
+        static ptr Create()
+        {
+            return std::make_shared<ConsoleAppender>();
+        }
 
     public:
         ConsoleAppender();
         ConsoleAppender(const LogAppenderDefine &lad);
 
         int getType() override;
-
-        const char *accept(LogVisitor &visitor) override;
     };
 
     /**
@@ -166,10 +152,15 @@ namespace lim_webserver
      */
     class FileAppender : public OutputAppender
     {
-        friend YamlVisitor;
+        friend AsyncAppender;
 
     public:
         using ptr = std::shared_ptr<FileAppender>;
+
+        static ptr Create()
+        {
+            return std::make_shared<FileAppender>();
+        }
 
     public:
         FileAppender(){};
@@ -177,16 +168,12 @@ namespace lim_webserver
         FileAppender(const LogAppenderDefine &lad);
 
         void openFile();
-
         void setFile(const std::string &filename);
 
         void setAppend(bool append);
-
         bool isAppend();
 
         int getType() override;
-
-        const char *accept(LogVisitor &visitor) override;
 
         void start() override;
 
@@ -197,14 +184,35 @@ namespace lim_webserver
 
     class RollingFileAppender : public FileAppender
     {
+        friend AsyncAppender;
+
     public:
         using ptr = std::shared_ptr<RollingFileAppender>;
+        using MutexType = Spinlock;
+
+        static ptr Create()
+        {
+            return std::make_shared<RollingFileAppender>();
+        }
 
     public:
-        RollingFileAppender(const std::string &filename, RollingPolicy::ptr rollingPolicy);
+        RollingFileAppender(){};
+        RollingFileAppender(const std::string &filename, RollingPolicy::ptr rollingPolicy, TriggeringPolicy::ptr triggeringPolicy);
+
+        void setRollingPolicy(RollingPolicy::ptr rollingPolicy);
+
+        void setTriggeringPolicy(TriggeringPolicy::ptr triggeringPolicy);
+
+        void start() override;
 
     private:
-        RollingPolicy::ptr m_rollingPolicy;
+        void format(LogStream &logstream, LogMessage::ptr message) override;
+
+        void rollover();
+
+        RollingPolicy::ptr m_rollingPolicy;       // 滚动策略
+        TriggeringPolicy::ptr m_triggeringPolicy; // 触发策略
+        MutexType m_trigger_mutex;                // 触发策略锁
     };
 
     /**
@@ -214,7 +222,11 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<AsyncAppender>;
-        using MutexType = Mutex;
+
+        static ptr Create()
+        {
+            return std::make_shared<AsyncAppender>();
+        }
 
     public:
         AsyncAppender();
@@ -222,21 +234,17 @@ namespace lim_webserver
 
         void setInterval(int interval);
 
-        void format(LogStream &logstream, LogMessage::ptr message) override;
-
-        void append(const char *logline, int len) override;
+        void bindAppender(OutputAppender::ptr appender);
 
         int getType() override;
 
-        const char *accept(LogVisitor &visitor) override { return ""; }
-
         void start() override;
-
         void stop() override;
 
-        void bindAppender(OutputAppender::ptr appender);
-
     private:
+        void format(LogStream &logstream, LogMessage::ptr message) override;
+        void append(const char *logline, int len) override;
+
         using Buffer = FixedBuffer<kLargeBuffer>;
         using BufferPtr = std::shared_ptr<Buffer>;
         using BufferVec = std::vector<BufferPtr>;
@@ -291,17 +299,7 @@ namespace lim_webserver
         OutputAppender::ptr m_appender; // 工作输出地
         int m_flushInterval;            // 写入间隔
         Thread::ptr m_thread;           // 工作线程
-        MutexType m_mutex;              // 互斥锁
+        Mutex m_append_mutex;           // 后台交换缓存锁
         ConditionVariable m_cond;       // 条件变量
-    };
-
-    class AppenderFactory
-    {
-    public:
-        template <class T>
-        static std::shared_ptr<T> Create()
-        {
-            return std::make_shared<T>();
-        }
     };
 } // namespace lim_webserver
