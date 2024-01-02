@@ -69,7 +69,6 @@ namespace lim_webserver
         using ptr = std::shared_ptr<Logger>;
 
     public:
-        using MutexType = Spinlock;
         Logger() {}
         Logger(const std::string &name);
 
@@ -113,7 +112,6 @@ namespace lim_webserver
         std::string m_name;                      // 日志名称
         LogLevel m_level = LogLevel_DEBUG;       // 日志级别
         std::list<LogAppender::ptr> m_appenders; // Appender集合
-        MutexType m_mutex;
     };
 
 }

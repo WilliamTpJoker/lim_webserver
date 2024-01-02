@@ -59,19 +59,16 @@ namespace lim_webserver
 
     void OutputAppender::setFormatter(const std::string &pattern)
     {
-        MutexType::Lock lock(m_mutex);
         m_formatter = LogFormatter::Create(pattern);
     }
 
     void OutputAppender::setFormatter(LogFormatter::ptr formatter)
     {
-        MutexType::Lock lock(m_mutex);
         m_formatter = formatter;
     }
 
     const LogFormatter::ptr &OutputAppender::getFormatter()
     {
-        MutexType::Lock lock(m_mutex);
         return m_formatter;
     }
 
@@ -147,19 +144,16 @@ namespace lim_webserver
 
     void FileAppender::setFile(const std::string &filename)
     {
-        MutexType::Lock lock(m_mutex);
         m_filename = filename;
     }
 
     void FileAppender::setAppend(bool append)
     {
-        MutexType::Lock lock(m_mutex);
         m_append = append;
     }
 
     bool FileAppender::isAppend()
     {
-        MutexType::Lock lock(m_mutex);
         return m_append;
     }
 
@@ -203,7 +197,6 @@ namespace lim_webserver
 
     void AsyncAppender::setInterval(int interval)
     {
-        MutexType::Lock lock(m_mutex);
         m_flushInterval = interval;
     }
 
@@ -288,7 +281,6 @@ namespace lim_webserver
 
     void AsyncAppender::bindAppender(OutputAppender::ptr appender)
     {
-        MutexType::Lock lock(m_mutex);
         m_appender = appender;
     }
 

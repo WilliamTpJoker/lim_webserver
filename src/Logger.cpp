@@ -24,7 +24,6 @@ namespace lim_webserver
     {
         if (message->getLevel() >= m_level)
         {
-            MutexType::Lock lock(m_mutex);
             // 若该日志没有指定输出地，则默认在root的输出地中进行输出
             if (!m_appenders.empty())
             {
@@ -42,14 +41,11 @@ namespace lim_webserver
 
     void Logger::addAppender(LogAppender::ptr appender)
     {
-        MutexType::Lock lock(m_mutex);
-
         m_appenders.emplace_back(appender);
     }
 
     bool Logger::detachAppender(const std::string &name)
     {
-        MutexType::Lock lock(m_mutex);
         // 查找并将目标移动到链表尾部
         auto it = std::remove_if(m_appenders.begin(), m_appenders.end(), [name](LogAppender::ptr appender)
                                  { return appender->getName() == name; });
@@ -60,7 +56,6 @@ namespace lim_webserver
 
     void Logger::clearAppender()
     {
-        MutexType::Lock lock(m_mutex);
         m_appenders.clear();
     }
 }

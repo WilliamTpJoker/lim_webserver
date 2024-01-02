@@ -62,7 +62,7 @@ void sync_bench()
     logger->addAppender(fappender);
 
     bench(logger, 1, 1000000, 100);
-    // bench(logger, 3, 1000000, 100);
+    bench(logger, 3, 1000000, 100);
     // bench(logger, 10, 1000000, 100);
     fappender->stop();
 }
@@ -85,8 +85,8 @@ void async_bench()
 
     logger->addAppender(asy_appender);
     bench(logger, 1, 1000000, 100);
-    // bench(logger, 3, 1000000, 100);
-    // bench(logger, 10, 1000000, 100);
+    bench(logger, 3, 1000000, 100);
+    bench(logger, 10, 1000000, 100);
     asy_appender->stop();
 }
 
