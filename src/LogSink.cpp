@@ -39,7 +39,8 @@ namespace lim_webserver
 
     FileSink::FileSink(const char *filename, bool append)
     {
-        m_ptr = fopen(filename, append ? "a+" : "w+");
+        const char* mode = append ? "a+" : "w+";
+        m_ptr = fopen(filename, mode);
         setbuffer(m_ptr, m_buffer, sizeof(m_buffer));
     }
 

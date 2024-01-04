@@ -16,8 +16,6 @@
 #include "IoManager.h"
 #include "Socket.h"
 
-#include "Policy.h"
-
 #include "LogLevel.h"
 #include "LogStream.h"
 
@@ -32,6 +30,7 @@
 #include "LogManager.h"
 #include "LogInitializer.h"
 
+#include "TimeStamp.h"
 #include "Macro.h"
 
 // extern lim_webserver::LogInitializer __log__init;

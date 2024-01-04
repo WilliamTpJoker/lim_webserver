@@ -1,0 +1,61 @@
+#pragma once
+
+#include <chrono>
+#include <string>
+#include <inttypes.h>
+
+namespace lim_webserver
+{
+    class TimeStamp
+    {
+    public:
+        static const int kMicroSecondsPerSecond = 1000 * 1000;
+
+        static TimeStamp now()
+        {
+            auto currentTimePoint = std::chrono::time_point_cast<std::chrono::microseconds>(
+                std::chrono::high_resolution_clock::now());
+            auto epoch = currentTimePoint.time_since_epoch();
+            return TimeStamp(epoch.count());
+        }
+
+    public:
+        TimeStamp() : m_time(0) {}
+
+        explicit TimeStamp(int64_t time) : m_time(time) {}
+
+        int64_t getTime() const {return m_time;}
+
+        std::string toString() const
+        {
+            char buf[32] = {0};
+            int64_t seconds = m_time / kMicroSecondsPerSecond;
+            int64_t microseconds = m_time % kMicroSecondsPerSecond;
+            snprintf(buf, sizeof(buf), "%" PRId64 ".%06" PRId64 "", seconds, microseconds);
+            return buf;
+        }
+
+        std::string toFormattedString(bool showMicroseconds) const
+        {
+            char buf[64] = {0};
+            time_t seconds = static_cast<time_t>(m_time / kMicroSecondsPerSecond);
+            struct tm tm_time;
+            // 使用 localtime_r 获取本地时间
+            localtime_r(&seconds, &tm_time);
+
+            // 定义格式化字符串
+            const char *format = showMicroseconds ? "%4d-%02d-%02d %02d:%02d:%02d.%06d" : "%4d-%02d-%02d %02d:%02d:%02d";
+
+            // 格式化时间字符串
+            int microseconds = showMicroseconds ? static_cast<int>(m_time % kMicroSecondsPerSecond) : 0;
+            snprintf(buf, sizeof(buf), format,
+                     tm_time.tm_year + 1900, tm_time.tm_mon + 1, tm_time.tm_mday,
+                     tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec,
+                     microseconds);
+            return buf;
+        }
+
+    private:
+        int64_t m_time;
+    };
+} // namespace lim_webserver

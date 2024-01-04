@@ -8,11 +8,11 @@ namespace lim_webserver
     class FileSize
     {
     public:
-        using ptr = std::unique_ptr<FileSize>;
+        using ptr = std::shared_ptr<FileSize>;
 
         static ptr Create(long size=0)
         {
-            return std::make_unique<FileSize>(size);
+            return std::make_shared<FileSize>(size);
         }
         
     public:

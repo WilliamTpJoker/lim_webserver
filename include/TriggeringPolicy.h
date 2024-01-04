@@ -57,6 +57,6 @@ namespace lim_webserver
 
     public:
         long getCurTime();
-        setCurTime(long time);
+        void setCurTime(long time);
     };
 } // namespace lim_webserver
