@@ -51,7 +51,7 @@ void sync_bench()
 {
     Logger::ptr logger = LOG_NAME("sync_logger");
 
-    FileAppender::ptr fappender = FileAppender::Create();
+    FileAppender::ptr fappender = AppenderFactory::newFileAppender();
     fappender->setFile("/home/book/Webserver/log/stress_log.txt");
     fappender->setName("file_test");
     fappender->setFormatter("%m%n");
@@ -70,7 +70,7 @@ void async_bench()
 {
     Logger::ptr logger = LOG_NAME("async_logger");
 
-    FileAppender::ptr fappender = FileAppender::Create();
+    FileAppender::ptr fappender = AppenderFactory::newFileAppender();
     fappender->setFile("/home/book/Webserver/log/stress_log.txt");
     fappender->setName("file_test");
     fappender->setFormatter("%m%n");
@@ -78,7 +78,7 @@ void async_bench()
     fappender->setLevel(LogLevel_DEBUG);
     fappender->start();
 
-    AsyncAppender::ptr asy_appender = AsyncAppender::Create();
+    AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
     asy_appender->bindAppender(fappender);
     asy_appender->setInterval(2);
     asy_appender->start();

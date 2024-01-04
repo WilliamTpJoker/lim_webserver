@@ -2,13 +2,15 @@
 
 #include <memory>
 #include <stdio.h>
+#include <string>
+#include <unordered_map>
 
 #include "Mutex.h"
 #include "Thread.h"
 #include "LogLevel.h"
 #include "LogMessage.h"
 #include "LogFormatter.h"
-#include "Policy.h"
+#include "RollingPolicy.h"
 #include "LogSink.h"
 
 namespace lim_webserver
@@ -135,10 +137,6 @@ namespace lim_webserver
 
     public:
         using ptr = std::shared_ptr<ConsoleAppender>;
-        static ptr Create()
-        {
-            return std::make_shared<ConsoleAppender>();
-        }
 
     public:
         ConsoleAppender();
@@ -157,11 +155,6 @@ namespace lim_webserver
     public:
         using ptr = std::shared_ptr<FileAppender>;
 
-        static ptr Create()
-        {
-            return std::make_shared<FileAppender>();
-        }
-
     public:
         FileAppender(){};
         FileAppender(const std::string &filename, bool append = true);
@@ -169,6 +162,7 @@ namespace lim_webserver
 
         void openFile();
         void setFile(const std::string &filename);
+        const std::string &rawFileProperty();
 
         void setAppend(bool append);
         bool isAppend();
@@ -189,11 +183,6 @@ namespace lim_webserver
     public:
         using ptr = std::shared_ptr<RollingFileAppender>;
         using MutexType = Spinlock;
-
-        static ptr Create()
-        {
-            return std::make_shared<RollingFileAppender>();
-        }
 
     public:
         RollingFileAppender(){};
@@ -218,15 +207,10 @@ namespace lim_webserver
     /**
      * @brief 异步Appender
      */
-    class AsyncAppender : public LogAppender
+    class AsyncAppender final: public LogAppender
     {
     public:
         using ptr = std::shared_ptr<AsyncAppender>;
-
-        static ptr Create()
-        {
-            return std::make_shared<AsyncAppender>();
-        }
 
     public:
         AsyncAppender();
@@ -301,5 +285,33 @@ namespace lim_webserver
         Thread::ptr m_thread;           // 工作线程
         Mutex m_append_mutex;           // 后台交换缓存锁
         ConditionVariable m_cond;       // 条件变量
+    };
+
+    class AppenderFactory
+    {
+    public:
+        static ConsoleAppender::ptr newConsoleAppender()
+        {
+            return std::make_shared<ConsoleAppender>();
+        }
+
+        static FileAppender::ptr newFileAppender()
+        {
+            return std::make_shared<FileAppender>();
+        }
+
+        static RollingFileAppender::ptr newRollingFileAppender()
+        {
+            return std::make_shared<RollingFileAppender>();
+        }
+
+        static AsyncAppender::ptr newAsyncAppender()
+        {
+            return std::make_shared<AsyncAppender>();
+        }
+    public:
+        
+    private:
+        std::unordered_map<std::string, LogAppender::ptr> m_appenders; // 系统全部输出地
     };
 } // namespace lim_webserver

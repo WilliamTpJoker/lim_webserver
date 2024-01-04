@@ -43,4 +43,16 @@ namespace lim_webserver
         setbuffer(m_ptr, m_buffer, sizeof(m_buffer));
     }
 
+    long FileSink::getFileSize()
+    {
+        return m_fileSize->getSize();
+    }
+
+    size_t FileSink::write(const char *logline, size_t len)
+    {
+        size_t rt = LogSink::write(logline,len);
+        m_fileSize->addSize(rt);
+        return rt;
+    }
+
 } // namespace lim_webserver

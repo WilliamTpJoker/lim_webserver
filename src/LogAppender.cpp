@@ -140,6 +140,11 @@ namespace lim_webserver
         m_filename = filename;
     }
 
+    const std::string &FileAppender::rawFileProperty()
+    {
+        return m_filename;
+    }
+
     void FileAppender::setAppend(bool append)
     {
         m_append = append;
@@ -176,11 +181,23 @@ namespace lim_webserver
     void RollingFileAppender::setRollingPolicy(RollingPolicy::ptr rollingPolicy)
     {
         m_rollingPolicy = rollingPolicy;
+        // 如果该策略同时继承了触发策略，则同时也设置触发策略
+        TriggeringPolicy::ptr rt = std::dynamic_pointer_cast<TriggeringPolicy>(rollingPolicy);
+        if (rt != nullptr)
+        {
+            m_triggeringPolicy = rt;
+        }
     }
 
     void RollingFileAppender::setTriggeringPolicy(TriggeringPolicy::ptr triggeringPolicy)
     {
         m_triggeringPolicy = triggeringPolicy;
+        // 如果该策略同时继承了滚动策略，则同时也设置滚动策略
+        RollingPolicy::ptr rt = std::dynamic_pointer_cast<RollingPolicy>(triggeringPolicy);
+        if (rt != nullptr)
+        {
+            m_rollingPolicy = rt;
+        }
     }
 
     void RollingFileAppender::start()
@@ -195,18 +212,19 @@ namespace lim_webserver
         }
         {
             MutexType::Lock lock(m_trigger_mutex);
-            //判断是否触发了滚动
-            if (m_triggeringPolicy->isTriggeringMessage(std::dynamic_pointer_cast<FileSink>(m_sink),message))
+            // 判断是否触发了滚动
+            if (m_triggeringPolicy->isTriggeringMessage(std::dynamic_pointer_cast<FileSink>(m_sink), message))
             {
-                //滚动
+                // 滚动
                 rollover();
             }
         }
-        FileAppender::format(logstream,message);
+        FileAppender::format(logstream, message);
     }
 
     void RollingFileAppender::rollover()
     {
+        m_rollingPolicy->rollover();
     }
 
     AsyncAppender::AsyncAppender()

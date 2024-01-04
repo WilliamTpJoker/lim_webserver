@@ -7,7 +7,7 @@ static lim_webserver::Logger::ptr g_logger = LOG_NAME("test");
 
 FileAppender::ptr build_fileAppender()
 {
-    FileAppender::ptr appender = FileAppender::Create();
+    FileAppender::ptr appender = AppenderFactory::newFileAppender();
     appender->setFile("/home/book/Webserver/log/test_log.txt");
     appender->setName("file_test");
     appender->setFormatter(DEFAULT_PATTERN);
@@ -18,7 +18,7 @@ FileAppender::ptr build_fileAppender()
 
 ConsoleAppender::ptr build_consoleAppender()
 {
-    ConsoleAppender::ptr appender = ConsoleAppender::Create();
+    ConsoleAppender::ptr appender = AppenderFactory::newConsoleAppender();
     appender->setName("console_test");
     appender->setFormatter("%m%n");
     appender->start();
@@ -27,7 +27,7 @@ ConsoleAppender::ptr build_consoleAppender()
 
 AsyncAppender::ptr build_asyncAppender(OutputAppender::ptr appender)
 {
-    AsyncAppender::ptr asy_appender = AsyncAppender::Create();
+    AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
     asy_appender->bindAppender(appender);
     asy_appender->setInterval(1);
     asy_appender->start();
