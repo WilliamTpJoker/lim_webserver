@@ -25,7 +25,7 @@ void run_in_fiber2()
 void test(int threads, bool use_caller, std::string name)
 {
     std::vector<std::function<void()>> f;
-    for (int i = 1; i < 500; ++i)
+    for (int i = 1; i < 1000; ++i)
     {
         f.push_back(&run_in_fiber);
     }

@@ -47,17 +47,23 @@ void bench(Logger::ptr logger, size_t thr_num, size_t msg_num, size_t msg_len)
     std::cout << std::endl;
 }
 
+FileAppender::ptr get_appender()
+{
+    FileAppender::ptr fappender = AppenderFactory::newFileAppender();
+    fappender->setFile("/home/book/Webserver/log/stress_log.txt");
+    fappender->setName("file_test");
+    fappender->setFormatter("%d %m%n");
+    fappender->setAppend(false);
+    fappender->setLevel(LogLevel_DEBUG);
+    fappender->start();
+    return fappender;
+}
+
 void sync_bench()
 {
     Logger::ptr logger = LOG_NAME("sync_logger");
 
-    FileAppender::ptr fappender = AppenderFactory::newFileAppender();
-    fappender->setFile("/home/book/Webserver/log/stress_log.txt");
-    fappender->setName("file_test");
-    fappender->setFormatter("%m%n");
-    fappender->setAppend(false);
-    fappender->setLevel(LogLevel_DEBUG);
-    fappender->start();
+    FileAppender::ptr fappender = get_appender();
 
     logger->addAppender(fappender);
 
@@ -70,13 +76,7 @@ void async_bench()
 {
     Logger::ptr logger = LOG_NAME("async_logger");
 
-    FileAppender::ptr fappender = AppenderFactory::newFileAppender();
-    fappender->setFile("/home/book/Webserver/log/stress_log.txt");
-    fappender->setName("file_test");
-    fappender->setFormatter("%m%n");
-    fappender->setAppend(false);
-    fappender->setLevel(LogLevel_DEBUG);
-    fappender->start();
+    FileAppender::ptr fappender = get_appender();
 
     AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
     asy_appender->bindAppender(fappender);

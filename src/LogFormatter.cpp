@@ -1,4 +1,5 @@
 #include "LogFormatter.h"
+#include "TimeStamp.h"
 
 #include <assert.h>
 #include <unordered_map>
@@ -85,11 +86,8 @@ namespace lim_webserver
             : m_format(format) {}
         void format(LogStream &stream, LogMessage::ptr event) override
         {
-            struct tm time_struct;              // 定义存储时间的结构体
             time_t time_l = event->getTime();   // 获取时间
-            localtime_r(&time_l, &time_struct); // 将时间数转换成当地时间格式
-            char buf[64]{0};
-            strftime(buf, sizeof(buf), m_format.c_str(), &time_struct); // 将时间输出成文本
+            std::string buf = TimeMgr::GetInstance()->getTimeString(time_l);
             stream << buf;
         }
 

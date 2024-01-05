@@ -20,7 +20,7 @@ ConsoleAppender::ptr build_consoleAppender()
 {
     ConsoleAppender::ptr appender = AppenderFactory::newConsoleAppender();
     appender->setName("console_test");
-    appender->setFormatter("%m%n");
+    appender->setFormatter("%d %m%n");
     appender->start();
     return appender;
 }
@@ -64,10 +64,14 @@ void test_async_appender()
 
     logger->addAppender(asy_appender);
 
-    for(int i=0;i<500;++i)
+    for (int i = 0; i < 500; ++i)
     {
-        LOG_DEBUG(logger) << "test async log: debug test "<<i;
+        LOG_DEBUG(logger) << "test async log: debug test " << i;
     }
+    sleep(1);
+
+    LOG_DEBUG(logger) << "test async log: debug test ";
+
     asy_appender->stop();
 }
 

@@ -1,8 +1,10 @@
 #pragma once
-
-#include <chrono>
 #include <string>
 #include <inttypes.h>
+#include <sys/time.h>
+
+#include "Mutex.h"
+#include "Singleton.h"
 
 namespace lim_webserver
 {
@@ -13,10 +15,10 @@ namespace lim_webserver
 
         static TimeStamp now()
         {
-            auto currentTimePoint = std::chrono::time_point_cast<std::chrono::microseconds>(
-                std::chrono::high_resolution_clock::now());
-            auto epoch = currentTimePoint.time_since_epoch();
-            return TimeStamp(epoch.count());
+            struct timeval tv;
+            gettimeofday(&tv, nullptr);
+            int64_t seconds = tv.tv_sec;
+            return TimeStamp(seconds * kMicroSecondsPerSecond + tv.tv_usec);
         }
 
     public:
@@ -24,7 +26,7 @@ namespace lim_webserver
 
         explicit TimeStamp(int64_t time) : m_time(time) {}
 
-        int64_t getTime() const {return m_time;}
+        int64_t getTime() const { return m_time; }
 
         std::string toString() const
         {
@@ -58,4 +60,55 @@ namespace lim_webserver
     private:
         int64_t m_time;
     };
+
+    class TimeManager
+    {
+        using MutexType = RWMutex;
+
+    public:
+        TimeManager()
+        {
+            formatString(time(0));
+        }
+
+        const std::string &getTimeString(time_t seconds)
+        {
+            if (!isNewestSecond(seconds))
+            {
+                formatString(seconds);
+            }
+            MutexType::ReadLock lock(m_mutex);
+            return m_lastTimeString;
+        }
+
+    private:
+        void formatString(time_t seconds)
+        {
+            MutexType::WriteLock lock(m_mutex);
+            if(seconds==m_lastSeconds)
+            {
+                return;
+            }
+            char buf[64]{0};
+            struct tm tm_time;
+            // 使用 localtime_r 获取本地时间
+            localtime_r(&seconds, &tm_time);
+            snprintf(buf, sizeof(buf), "%4d-%02d-%02d %02d:%02d:%02d",
+                     tm_time.tm_year + 1900, tm_time.tm_mon + 1, tm_time.tm_mday,
+                     tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
+            m_lastTimeString = buf;
+            m_lastSeconds = seconds;
+        }
+
+        bool isNewestSecond(time_t seconds)
+        {
+            MutexType::ReadLock lock(m_mutex);
+            return seconds == m_lastSeconds;
+        }
+
+        std::string m_lastTimeString; // 最后一次调用时的字符串
+        time_t m_lastSeconds;         // 最后一次调用时的时间
+        MutexType m_mutex;
+    };
+    using TimeMgr = Singleton<TimeManager>;
 } // namespace lim_webserver
