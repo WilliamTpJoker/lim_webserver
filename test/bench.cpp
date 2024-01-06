@@ -68,7 +68,9 @@ void sync_bench()
 
     logger->addAppender(fappender);
 
+    fappender->start();
     bench(logger, 1, 1000000, 100);
+    fappender->start();
     bench(logger, 3, 1000000, 100);
     // bench(logger, 10, 1000000, 100);
     fappender->stop();
@@ -81,19 +83,23 @@ void async_bench()
 
     AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
     asy_appender->bindAppender(fappender);
-    asy_appender->setInterval(1);
+    asy_appender->setInterval(2);
     asy_appender->start();
 
     logger->addAppender(asy_appender);
+
+    fappender->start();
     bench(logger, 1, 1000000, 100);
+    fappender->start();
     bench(logger, 3, 1000000, 100);
+    fappender->start();
     bench(logger, 10, 1000000, 100);
     asy_appender->stop();
 }
 
 int main()
 {
-    // sync_bench();
+    sync_bench();
     async_bench();
     return 0;
 }

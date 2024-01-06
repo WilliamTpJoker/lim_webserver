@@ -5,6 +5,7 @@ using namespace lim_webserver;
 
 static lim_webserver::Logger::ptr g_logger = LOG_NAME("test");
 static lim_webserver::Logger::ptr g_logger_async = LOG_NAME("test_async");
+static lim_webserver::Logger::ptr g_logger_async2 = LOG_NAME("test_async2");
 
 AsyncAppender::ptr build_asyncAppender(OutputAppender::ptr appender)
 {
@@ -33,9 +34,15 @@ void test_appender(Logger::ptr logger)
     {
         LOG_DEBUG(logger) << "test "<<logger->getName()<<": debug test " << i;
     }
-    sleep(1);
+}
 
-    LOG_DEBUG(logger) << "test "<<logger->getName()<<": end";
+void test_appender2()
+{
+    for (int i = 0; i < 500; ++i)
+    {
+        LOG_DEBUG(g_logger_async) << "test "<<g_logger_async->getName()<<": debug test " << i;
+        LOG_DEBUG(g_logger_async2) << "test "<<g_logger_async2->getName()<<": debug test " << i;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -54,11 +61,16 @@ int main(int argc, char *argv[])
     g_logger_async->addAppender(fappender);
     g_logger_async->addAppender(asy_appender);
 
+    g_logger_async2->addAppender(fappender);
+    g_logger_async2->addAppender(asy_appender);
+
     // test_logger();
     // test_file_append();
     test_appender(g_logger);
     test_appender(g_logger_async);
+    test_appender(g_logger_async2);
 
+    test_appender2();
     asy_appender->stop();
     return 0;
 }
