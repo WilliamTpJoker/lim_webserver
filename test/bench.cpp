@@ -54,7 +54,8 @@ FileAppender::ptr get_appender()
     fappender->setName("file_test");
     fappender->setFormatter("%d %m%n");
     fappender->setAppend(false);
-    fappender->setLevel(LogLevel_DEBUG);
+    fappender->setLevel
+    (LogLevel_DEBUG);
     fappender->start();
     return fappender;
 }
@@ -80,7 +81,7 @@ void async_bench()
 
     AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
     asy_appender->bindAppender(fappender);
-    asy_appender->setInterval(2);
+    asy_appender->setInterval(1);
     asy_appender->start();
 
     logger->addAppender(asy_appender);
@@ -92,7 +93,7 @@ void async_bench()
 
 int main()
 {
-    sync_bench();
+    // sync_bench();
     async_bench();
     return 0;
 }

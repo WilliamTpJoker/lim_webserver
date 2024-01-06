@@ -20,7 +20,7 @@ namespace lim_webserver
 
         void flush();
 
-        FILE *getPtr() { return m_ptr; }
+        FILE *getPtr() const { return m_ptr; }
 
     protected:
         /**

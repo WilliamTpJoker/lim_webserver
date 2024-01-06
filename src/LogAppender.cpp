@@ -43,6 +43,12 @@ namespace lim_webserver
         {
             return;
         }
+        MutexType::Lock lock(m_stream_mutex);
+        append_unlock(logline, len);
+    }
+
+    void OutputAppender::append_unlock(const char *logline, int len)
+    {
         m_sink->append(logline, len);
         m_sink->flush();
     }
@@ -66,7 +72,7 @@ namespace lim_webserver
         m_formatter = formatter;
     }
 
-    const LogFormatter::ptr &OutputAppender::getFormatter()
+    LogFormatter::ptr OutputAppender::getFormatter() const
     {
         return m_formatter;
     }
@@ -140,7 +146,7 @@ namespace lim_webserver
         m_filename = filename;
     }
 
-    const std::string &FileAppender::rawFileProperty()
+    const std::string &FileAppender::rawFileProperty() const
     {
         return m_filename;
     }
@@ -150,7 +156,7 @@ namespace lim_webserver
         m_append = append;
     }
 
-    bool FileAppender::isAppend()
+    bool FileAppender::isAppend() const
     {
         return m_append;
     }
@@ -316,8 +322,8 @@ namespace lim_webserver
         {
             Mutex::Lock lock(m_append_mutex);
             submitBuffer();
+            m_cond.notify_one();
         }
-        m_cond.notify_one();
         m_thread->join();
     }
 
@@ -343,7 +349,9 @@ namespace lim_webserver
                 // 若存储区内没有缓存，表明当前缓存没写满，则暂时解锁临界区并等待超时
                 // 此处条件变量的唤醒有两种情况：1.超时 2.前端写满并notify
                 if (m_buffer.buffer_vec.empty())
+                {
                     m_cond.waitForSeconds(m_flushInterval);
+                }
                 // 此时已经满足上述两条件之一，将缓存存入容器并重置智能指针
                 m_buffer.buffer_vec.push_back(m_buffer.buffer1);
                 m_buffer.buffer1.reset();
@@ -355,7 +363,9 @@ namespace lim_webserver
 
                 // 确保前端始终有备用缓存
                 if (!m_buffer.buffer2)
+                {
                     m_buffer.buffer2 = std::move(newBuffer.buffer2);
+                }
             }
             // 至此，含有日志信息的缓存已经不在临界区内，后续的落地操作则不存在线程安全问题
 
@@ -368,7 +378,7 @@ namespace lim_webserver
 
             // 落地
             for (size_t i = 0; i < newBuffer.buffer_vec.size(); ++i)
-                m_appender->append(newBuffer.buffer_vec[i]->data(), newBuffer.buffer_vec[i]->length());
+                m_appender->append_unlock(newBuffer.buffer_vec[i]->data(), newBuffer.buffer_vec[i]->length());
 
             // 重置容器与缓存
             newBuffer.reset();
@@ -378,6 +388,22 @@ namespace lim_webserver
         }
         // 后端退出前最后一次刷新
         m_appender->flush();
+    }
+
+    FileAppender::ptr AppenderFactory::defaultFileAppender()
+    {
+        FileAppender::ptr appender = newFileAppender();
+        appender->setName("default_file");
+        appender->setFormatter(DEFAULT_PATTERN);
+        return appender;
+    }
+
+    ConsoleAppender::ptr AppenderFactory::defaultConsoleAppender()
+    {
+        ConsoleAppender::ptr appender = newConsoleAppender();
+        appender->setName("default_console");
+        appender->setFormatter(DEFAULT_PATTERN);
+        return appender;
     }
 
 } // namespace lim_webserver

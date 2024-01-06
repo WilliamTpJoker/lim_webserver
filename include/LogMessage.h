@@ -71,7 +71,7 @@ namespace lim_webserver
          *
          * @return std::string 事件级别字符串。
          */
-        std::string getLevelString() { return LogLevelHandler::ToString(m_level); }
+        std::string getLevelString() const { return LogLevelHandler::ToString(m_level); }
         /**
          * @brief 获取用于向日志事件内容中追加文本的内容流。
          *

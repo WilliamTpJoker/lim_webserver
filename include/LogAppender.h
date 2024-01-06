@@ -12,6 +12,7 @@
 #include "LogFormatter.h"
 #include "RollingPolicy.h"
 #include "LogSink.h"
+#include "Singleton.h"
 
 namespace lim_webserver
 {
@@ -69,9 +70,6 @@ namespace lim_webserver
         void setName(const std::string &name) { m_name = name; }
         const std::string &getName() { return m_name; }
 
-        void setLevel(LogLevel level) { m_level = level; }
-        LogLevel getLevel() const { return m_level; }
-
         virtual void start() { m_started = true; }
         virtual void stop() { m_started = false; }
         bool isStarted() { return m_started; }
@@ -87,9 +85,7 @@ namespace lim_webserver
         virtual void append(const char *logline, int len) = 0;
 
         std::string m_name; // 名字
-        LogLevel m_level;   // 级别
-
-        bool m_started; // 启动标志位
+        bool m_started;     // 启动标志位
     };
 
     class AsyncAppender;
@@ -97,6 +93,7 @@ namespace lim_webserver
     class OutputAppender : public LogAppender
     {
         friend AsyncAppender;
+        using MutexType = Spinlock;
 
     public:
         using ptr = std::shared_ptr<OutputAppender>;
@@ -104,9 +101,12 @@ namespace lim_webserver
     public:
         OutputAppender(){};
         OutputAppender(const LogAppenderDefine &lad);
-        virtual ~OutputAppender(){};
+        ~OutputAppender(){stop();};
 
         void flush();
+
+        void setLevel(LogLevel level) { m_level = level; }
+        LogLevel getLevel() const { return m_level; }
 
         /**
          * @brief 设置格式器
@@ -114,7 +114,7 @@ namespace lim_webserver
         void setFormatter(const std::string &pattern);
         void setFormatter(LogFormatter::ptr formatter);
 
-        const LogFormatter::ptr &getFormatter();
+        LogFormatter::ptr getFormatter () const;
 
         void start() override;
         void stop() override;
@@ -122,10 +122,13 @@ namespace lim_webserver
     protected:
         void format(LogStream &logstream, LogMessage::ptr message) override;
         void append(const char *logline, int len) override;
+        void append_unlock(const char *logline, int len);
 
-        LogFormatter::ptr m_formatter; // 格式器
-        LogSink::ptr m_sink;           // 落地器
-        LogStream::Buffer m_buffer;    // 4k缓存
+        LogLevel m_level = LogLevel_DEBUG; // 级别
+        LogFormatter::ptr m_formatter;     // 格式器
+        LogSink::ptr m_sink;               // 落地器
+        LogStream::Buffer m_buffer;        // 4k缓存
+        MutexType m_stream_mutex;          // 写入锁，保证顺序性
     };
 
     /**
@@ -162,10 +165,10 @@ namespace lim_webserver
 
         void openFile();
         void setFile(const std::string &filename);
-        const std::string &rawFileProperty();
+        const std::string &rawFileProperty() const;
 
         void setAppend(bool append);
-        bool isAppend();
+        bool isAppend() const;
 
         int getType() override;
 
@@ -207,7 +210,7 @@ namespace lim_webserver
     /**
      * @brief 异步Appender
      */
-    class AsyncAppender final: public LogAppender
+    class AsyncAppender final : public LogAppender
     {
     public:
         using ptr = std::shared_ptr<AsyncAppender>;
@@ -309,9 +312,13 @@ namespace lim_webserver
         {
             return std::make_shared<AsyncAppender>();
         }
+
     public:
-        
+        FileAppender::ptr defaultFileAppender();
+        ConsoleAppender::ptr defaultConsoleAppender();
+
     private:
         std::unordered_map<std::string, LogAppender::ptr> m_appenders; // 系统全部输出地
     };
+    using AppenderFcty = Singleton<AppenderFactory>;
 } // namespace lim_webserver

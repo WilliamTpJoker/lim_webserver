@@ -77,6 +77,7 @@ namespace lim_webserver
             {
                 formatString(seconds);
             }
+            // 读锁返回当前时间的字符串
             MutexType::ReadLock lock(m_mutex);
             return m_lastTimeString;
         }
@@ -84,11 +85,15 @@ namespace lim_webserver
     private:
         void formatString(time_t seconds)
         {
+            // 写锁构造字符串
             MutexType::WriteLock lock(m_mutex);
+
+            // 堆积的尝试写线程，若已同步则直接退出
             if(seconds==m_lastSeconds)
             {
                 return;
             }
+
             char buf[64]{0};
             struct tm tm_time;
             // 使用 localtime_r 获取本地时间
@@ -102,6 +107,7 @@ namespace lim_webserver
 
         bool isNewestSecond(time_t seconds)
         {
+            // 读锁获取是否需要改变时间
             MutexType::ReadLock lock(m_mutex);
             return seconds == m_lastSeconds;
         }

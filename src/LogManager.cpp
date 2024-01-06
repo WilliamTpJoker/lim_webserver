@@ -163,7 +163,6 @@ namespace lim_webserver
     void LogManager::updateAppender(LogAppender::ptr appender, const LogAppenderDefine &lad)
     {
         appender->setName(lad.name);
-        appender->setLevel(lad.level);
     }
 
     void LogManager::init()

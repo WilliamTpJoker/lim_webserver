@@ -87,11 +87,7 @@ namespace lim_webserver
          */
         void lock()
         {
-            if (!m_locked)
-            {
-                m_mutex.lock();
-                m_locked = true;
-            }
+            m_mutex.lock();
         }
 
         /**
@@ -99,16 +95,12 @@ namespace lim_webserver
          */
         void unlock()
         {
-            if (m_locked)
-            {
-                m_mutex.unlock();
-                m_locked = false;
-            }
+
+            m_mutex.unlock();
         }
 
     private:
-        T &m_mutex;    // 互斥锁实例
-        bool m_locked; // 锁标志符
+        T &m_mutex; // 互斥锁实例
     };
 
     /**
@@ -136,11 +128,8 @@ namespace lim_webserver
          */
         void lock()
         {
-            if (!m_locked)
-            {
-                m_mutex.rdlock();
-                m_locked = true;
-            }
+
+            m_mutex.rdlock();
         }
 
         /**
@@ -148,16 +137,12 @@ namespace lim_webserver
          */
         void unlock()
         {
-            if (m_locked)
-            {
-                m_mutex.unlock();
-                m_locked = false;
-            }
+
+            m_mutex.unlock();
         }
 
     private:
-        T &m_mutex;    // 读写锁实例
-        bool m_locked; // 锁标志符
+        T &m_mutex; // 读写锁实例
     };
 
     /**
@@ -185,11 +170,8 @@ namespace lim_webserver
          */
         void lock()
         {
-            if (!m_locked)
-            {
-                m_mutex.wrlock();
-                m_locked = true;
-            }
+
+            m_mutex.wrlock();
         }
 
         /**
@@ -197,16 +179,11 @@ namespace lim_webserver
          */
         void unlock()
         {
-            if (m_locked)
-            {
-                m_mutex.unlock();
-                m_locked = false;
-            }
+            m_mutex.unlock();
         }
 
     private:
-        T &m_mutex;    // 读写锁实例
-        bool m_locked; // 锁标志符
+        T &m_mutex; // 读写锁实例
     };
 
     /**
@@ -214,6 +191,8 @@ namespace lim_webserver
      */
     class Mutex : Noncopyable
     {
+        friend class ConditionVariable;
+
     public:
         using Lock = ScopedLock<Mutex>;
 
@@ -229,16 +208,22 @@ namespace lim_webserver
         /**
          * @brief 加锁操作
          */
-        void lock() { pthread_mutex_lock(&m_mutex); }
+        void lock()
+        {
+
+            pthread_mutex_lock(&m_mutex);
+        }
         /**
          * @brief 解锁操作
          */
-        void unlock() { pthread_mutex_unlock(&m_mutex); }
+        void unlock()
+        {
+
+            pthread_mutex_unlock(&m_mutex);
+        }
 
     private:
         pthread_mutex_t m_mutex; // 互斥锁
-    private:
-        friend class ConditionVariable;
     };
 
     /**
@@ -376,6 +361,7 @@ namespace lim_webserver
             struct timespec abstime;
             clock_gettime(CLOCK_REALTIME, &abstime);
             abstime.tv_sec += static_cast<time_t>(seconds);
+            // m_mutex.m_locked=false;
             return ETIMEDOUT == pthread_cond_timedwait(&cond, &m_mutex.m_mutex, &abstime);
         }
 
@@ -391,7 +377,7 @@ namespace lim_webserver
 
     private:
         pthread_cond_t cond;
-        Mutex& m_mutex;
+        Mutex &m_mutex;
     };
 
 }

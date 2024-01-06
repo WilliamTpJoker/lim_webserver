@@ -4,32 +4,13 @@
 using namespace lim_webserver;
 
 static lim_webserver::Logger::ptr g_logger = LOG_NAME("test");
-
-FileAppender::ptr build_fileAppender()
-{
-    FileAppender::ptr appender = AppenderFactory::newFileAppender();
-    appender->setFile("/home/book/Webserver/log/test_log.txt");
-    appender->setName("file_test");
-    appender->setFormatter(DEFAULT_PATTERN);
-    appender->setAppend(false);
-    appender->start();
-    return appender;
-}
-
-ConsoleAppender::ptr build_consoleAppender()
-{
-    ConsoleAppender::ptr appender = AppenderFactory::newConsoleAppender();
-    appender->setName("console_test");
-    appender->setFormatter("%d %m%n");
-    appender->start();
-    return appender;
-}
+static lim_webserver::Logger::ptr g_logger_async = LOG_NAME("test_async");
 
 AsyncAppender::ptr build_asyncAppender(OutputAppender::ptr appender)
 {
     AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
     asy_appender->bindAppender(appender);
-    asy_appender->setInterval(1);
+    asy_appender->setInterval(2);
     asy_appender->start();
     return asy_appender;
 }
@@ -43,43 +24,41 @@ void test_logger()
 
 void test_file_append()
 {
-    Logger::ptr logger = LOG_NAME("test");
-    FileAppender::ptr appender = build_fileAppender();
-
-    logger->addAppender(appender);
-    LOG_DEBUG(logger) << "test file log: debug test";
-    // appender->stop();
+    LOG_DEBUG(g_logger) << "test file log: debug test";
 }
 
-void test_async_appender()
+void test_appender(Logger::ptr logger)
 {
-    Logger::ptr logger = LOG_NAME("test");
-    ConsoleAppender::ptr appender = build_consoleAppender();
-
-    FileAppender::ptr fappender = build_fileAppender();
-
-    logger->addAppender(fappender);
-
-    AsyncAppender::ptr asy_appender = build_asyncAppender(appender);
-
-    logger->addAppender(asy_appender);
-
     for (int i = 0; i < 500; ++i)
     {
-        LOG_DEBUG(logger) << "test async log: debug test " << i;
+        LOG_DEBUG(logger) << "test "<<logger->getName()<<": debug test " << i;
     }
     sleep(1);
 
-    LOG_DEBUG(logger) << "test async log: debug test ";
-
-    asy_appender->stop();
+    LOG_DEBUG(logger) << "test "<<logger->getName()<<": end";
 }
 
 int main(int argc, char *argv[])
 {
+    ConsoleAppender::ptr appender =AppenderFcty::GetInstance()->defaultConsoleAppender();
+
+    FileAppender::ptr fappender =AppenderFcty::GetInstance()->defaultFileAppender();
+    fappender->setFile("/home/book/Webserver/log/test_log.txt");
+    fappender->setAppend(false);
+
+    AsyncAppender::ptr asy_appender = build_asyncAppender(appender);
+
+    g_logger->addAppender(appender);
+    g_logger->addAppender(fappender);
+
+    g_logger_async->addAppender(fappender);
+    g_logger_async->addAppender(asy_appender);
+
     // test_logger();
     // test_file_append();
-    test_async_appender();
+    test_appender(g_logger);
+    test_appender(g_logger_async);
 
+    asy_appender->stop();
     return 0;
 }

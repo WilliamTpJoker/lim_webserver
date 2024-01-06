@@ -18,7 +18,7 @@ namespace lim_webserver
     public:
         FileSize(long size) : m_size(size) {}
 
-        long getSize(){return m_size;}
+        long getSize() const {return m_size;}
 
         void addSize(long size){m_size+=size;}
 

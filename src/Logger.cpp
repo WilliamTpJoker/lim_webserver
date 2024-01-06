@@ -35,6 +35,10 @@ namespace lim_webserver
 
     void Logger::addAppender(LogAppender::ptr appender)
     {
+        if(!appender->isStarted())
+        {
+            appender->start();
+        }
         m_appenders.emplace_back(appender);
     }
 

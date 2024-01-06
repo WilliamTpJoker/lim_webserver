@@ -1,7 +1,8 @@
 #include "SpikeLog.h"
 
-lim_webserver::Logger::ptr g_logger = LOG_ROOT();
-lim_webserver::Logger::ptr g_l = LOG_NAME("system");
+using namespace lim_webserver;
+
+Logger::ptr g_logger = LOG_NAME("test");
 
 static int s_count1 = 500;
 
@@ -25,7 +26,7 @@ void run_in_fiber2()
 void test(int threads, bool use_caller, std::string name)
 {
     std::vector<std::function<void()>> f;
-    for (int i = 1; i < 1000; ++i)
+    for (int i = 1; i < 500; ++i)
     {
         f.push_back(&run_in_fiber);
     }
@@ -52,8 +53,10 @@ void test2(int threads, bool use_caller, std::string name)
 
 int main(int argc, char *argv[])
 {
+    ConsoleAppender::ptr appender =AppenderFcty::GetInstance()->defaultConsoleAppender();
+    g_logger->addAppender(appender);
     // g_l->setLevel(LogLevel_INFO);
     // test(3, true, "test");
-    test(2, true, "test");
+    test(2, false, "test");
     return 0;
 }
