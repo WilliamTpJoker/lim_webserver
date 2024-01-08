@@ -88,6 +88,13 @@ namespace lim_webserver
          */
         bool detachAppender(const std::string &name);
         /**
+         * @brief Get the Appender object
+         * 
+         * @param name Name of the Appender
+         * @return LogAppender::ptr 
+         */
+        LogAppender::ptr getAppender(const std::string &name);
+        /**
          * @brief 清空日志输出地
          */
         void clearAppender();

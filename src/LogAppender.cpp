@@ -138,6 +138,7 @@ namespace lim_webserver
 
     void FileAppender::openFile()
     {
+        MutexType::Lock lock(m_stream_mutex);
         m_sink = FileSink::ptr(new FileSink(m_filename.c_str(), m_append));
     }
 

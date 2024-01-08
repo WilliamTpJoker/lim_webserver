@@ -93,9 +93,9 @@ namespace lim_webserver
     class OutputAppender : public LogAppender
     {
         friend AsyncAppender;
-        using MutexType = Spinlock;
 
     public:
+        using MutexType = Spinlock;
         using ptr = std::shared_ptr<OutputAppender>;
 
     public:

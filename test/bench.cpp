@@ -2,8 +2,23 @@
 
 using namespace lim_webserver;
 
+FileAppender::ptr get_appender()
+{
+    FileAppender::ptr fappender = AppenderFactory::newFileAppender();
+    fappender->setFile("/home/book/Webserver/log/stress_log.txt");
+    fappender->setName("file_test");
+    fappender->setFormatter("%m%n");
+    fappender->setAppend(false);
+    fappender->setLevel(LogLevel_DEBUG);
+    fappender->start();
+    return fappender;
+}
+
+static FileAppender::ptr g_fileappender = get_appender();
+
 void bench(Logger::ptr logger, size_t thr_num, size_t msg_num, size_t msg_len)
 {
+    g_fileappender->openFile();
     std::cout << "测试日志器:" << logger->getName() << std::endl;
     std::cout << "测试日志：" << msg_num << "条，总大小：" << (msg_num * msg_len) / 1024 << "KB" << std::endl;
     // 2.组织指定长度的日志消息
@@ -45,54 +60,32 @@ void bench(Logger::ptr logger, size_t thr_num, size_t msg_num, size_t msg_len)
     std::cout << "每秒输出日志数量：" << msg_per_sec << "条" << std::endl;
     std::cout << "每秒输出日志大小：" << size_per_sec << "KB" << std::endl;
     std::cout << std::endl;
-}
-
-FileAppender::ptr get_appender()
-{
-    FileAppender::ptr fappender = AppenderFactory::newFileAppender();
-    fappender->setFile("/home/book/Webserver/log/stress_log.txt");
-    fappender->setName("file_test");
-    fappender->setFormatter("%d %m%n");
-    fappender->setAppend(false);
-    fappender->setLevel
-    (LogLevel_DEBUG);
-    fappender->start();
-    return fappender;
+    sleep(2);
 }
 
 void sync_bench()
 {
     Logger::ptr logger = LOG_NAME("sync_logger");
 
-    FileAppender::ptr fappender = get_appender();
+    logger->addAppender(g_fileappender);
 
-    logger->addAppender(fappender);
-
-    fappender->start();
     bench(logger, 1, 1000000, 100);
-    fappender->start();
     bench(logger, 3, 1000000, 100);
     // bench(logger, 10, 1000000, 100);
-    fappender->stop();
 }
 void async_bench()
 {
     Logger::ptr logger = LOG_NAME("async_logger");
 
-    FileAppender::ptr fappender = get_appender();
-
     AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
-    asy_appender->bindAppender(fappender);
+    asy_appender->bindAppender(g_fileappender);
     asy_appender->setInterval(2);
     asy_appender->start();
 
     logger->addAppender(asy_appender);
 
-    fappender->start();
     bench(logger, 1, 1000000, 100);
-    fappender->start();
     bench(logger, 3, 1000000, 100);
-    fappender->start();
     bench(logger, 10, 1000000, 100);
     asy_appender->stop();
 }

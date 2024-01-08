@@ -35,7 +35,7 @@ namespace lim_webserver
 
     void Logger::addAppender(LogAppender::ptr appender)
     {
-        if(!appender->isStarted())
+        if (!appender->isStarted())
         {
             appender->start();
         }
@@ -50,6 +50,18 @@ namespace lim_webserver
         // 删除链表尾部
         m_appenders.erase(it, m_appenders.end());
         return it != m_appenders.end();
+    }
+
+    LogAppender::ptr Logger::getAppender(const std::string &name)
+    {
+        for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it)
+        {
+            if (it->get()->getName() == name)
+            {
+                return *it;
+            }
+        }
+        return nullptr;
     }
 
     void Logger::clearAppender()
