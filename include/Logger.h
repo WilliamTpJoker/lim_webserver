@@ -75,25 +75,35 @@ namespace lim_webserver
 
         /**
          * @brief 输出日志
+         * 
+         * @param message 日志消息
          */
         void log(const LogMessage::ptr &message);
 
         /**
          * @brief 添加日志输出地
+         * 
+         * @param appender Appender共享指针
          */
         void addAppender(LogAppender::ptr appender);
+        
         /**
          * @brief 删除日志输出地
-         * @return 是否存在并删除 true:删除成功
+         * 
+         * @param name Appender名
+         * @return true 删除成功
+         * @return false 删除失败
          */
         bool detachAppender(const std::string &name);
+
         /**
-         * @brief Get the Appender object
-         * 
-         * @param name Name of the Appender
-         * @return LogAppender::ptr 
+         * @brief 获取日志输出地
+         *
+         * @param name Appender名
+         * @return LogAppender::ptr Appender共享指针
          */
         LogAppender::ptr getAppender(const std::string &name);
+
         /**
          * @brief 清空日志输出地
          */
@@ -101,18 +111,31 @@ namespace lim_webserver
 
         /**
          * @brief 获取日志的默认级别
+         * 
+         * @return LogLevel 日志级别
          */
-        LogLevel getLevel() const { return m_level; }
+        inline LogLevel getLevel() const { return m_level; }
+
         /**
          * @brief 设置日志的默认级别
+         *
+         * @param level 日志级别
          */
-        void setLevel(LogLevel val) { m_level = val; }
+        inline void setLevel(LogLevel level) { m_level = level; }
+
         /**
          * @brief 获取日志的名称
+         * 
+         * @return const std::string& 日志名
          */
-        const std::string &getName() const { return m_name; }
+        inline const std::string &getName() const { return m_name; }
 
-        void setName(const std::string &name) { m_name = name; }
+        /**
+         * @brief 设置日志的名称
+         *
+         * @param name 日志名
+         */
+        inline void setName(const std::string &name) { m_name = name; }
 
     private:
         std::string m_name;                      // 日志名称

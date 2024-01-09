@@ -67,12 +67,30 @@ namespace lim_webserver
 
         virtual int getType() = 0;
 
-        void setName(const std::string &name) { m_name = name; }
-        const std::string &getName() { return m_name; }
+        /**
+         * @brief 设置Appender名
+         *
+         * @param name Appender名
+         */
+        inline void setName(const std::string &name) { m_name = name; }
+
+        /**
+         * @brief 获得Appender名
+         *
+         * @return const std::string& Appender名
+         */
+        inline const std::string &getName() const { return m_name; }
 
         virtual void start() { m_started = true; }
         virtual void stop() { m_started = false; }
-        bool isStarted() { return m_started; }
+
+        /**
+         * @brief 获取Appender是否启动
+         *
+         * @return true 启动态
+         * @return false 关闭态
+         */
+        inline bool isStarted() const { return m_started; }
 
     protected:
         /**
@@ -101,20 +119,44 @@ namespace lim_webserver
     public:
         OutputAppender(){};
         OutputAppender(const LogAppenderDefine &lad);
-        ~OutputAppender(){stop();};
+        ~OutputAppender() { stop(); };
 
         void flush();
 
-        void setLevel(LogLevel level) { m_level = level; }
-        LogLevel getLevel() const { return m_level; }
+        /**
+         * @brief 设置过滤级别
+         *
+         * @param level 过滤级别
+         */
+        inline void setLevel(LogLevel level) { m_level = level; }
+
+        /**
+         * @brief 获取过滤级别
+         *
+         * @return LogLevel 过滤级别
+         */
+        inline LogLevel getLevel() const { return m_level; }
 
         /**
          * @brief 设置格式器
+         *
+         * @param pattern 格式字符串
          */
-        void setFormatter(const std::string &pattern);
-        void setFormatter(LogFormatter::ptr formatter);
+        inline void setFormatter(const std::string &pattern) { m_formatter = LogFormatter::Create(pattern); }
 
-        LogFormatter::ptr getFormatter () const;
+        /**
+         * @brief 设置格式器
+         *
+         * @param formatter 格式器
+         */
+        inline void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
+
+        /**
+         * @brief 获得格式器
+         *
+         * @return LogFormatter::ptr 格式器
+         */
+        inline LogFormatter::ptr getFormatter() const { return m_formatter; }
 
         void start() override;
         void stop() override;
@@ -145,7 +187,7 @@ namespace lim_webserver
         ConsoleAppender();
         ConsoleAppender(const LogAppenderDefine &lad);
 
-        int getType() override;
+        int getType() override { return 0; }
     };
 
     /**
@@ -164,13 +206,37 @@ namespace lim_webserver
         FileAppender(const LogAppenderDefine &lad);
 
         void openFile();
-        void setFile(const std::string &filename);
-        const std::string &rawFileProperty() const;
 
-        void setAppend(bool append);
-        bool isAppend() const;
+        /**
+         * @brief 设置原始文件名
+         *
+         * @param filename 原始文件名
+         */
+        inline void setFile(const std::string &filename) { m_filename = filename; }
 
-        int getType() override;
+        /**
+         * @brief 获得原始文件名
+         *
+         * @return const std::string& 原始文件名
+         */
+        inline const std::string &rawFileProperty() const { return m_filename; }
+
+        /**
+         * @brief 设置添加模式
+         *
+         * @param append 添加模式
+         */
+        inline void setAppend(bool append) { m_append = append; }
+
+        /**
+         * @brief 判断是否为添加模式
+         *
+         * @return true 添加模式
+         * @return false 重写模式
+         */
+        inline bool isAppend() const { return m_append; }
+
+        int getType() override { return 1; }
 
         void start() override;
 
@@ -223,7 +289,7 @@ namespace lim_webserver
 
         void bindAppender(OutputAppender::ptr appender);
 
-        int getType() override;
+        int getType() override { return 3; }
 
         void start() override;
         void stop() override;

@@ -62,21 +62,6 @@ namespace lim_webserver
         m_sink->flush();
     }
 
-    void OutputAppender::setFormatter(const std::string &pattern)
-    {
-        m_formatter = LogFormatter::Create(pattern);
-    }
-
-    void OutputAppender::setFormatter(LogFormatter::ptr formatter)
-    {
-        m_formatter = formatter;
-    }
-
-    LogFormatter::ptr OutputAppender::getFormatter() const
-    {
-        return m_formatter;
-    }
-
     void OutputAppender::start()
     {
         int errors = 0;
@@ -119,11 +104,6 @@ namespace lim_webserver
         m_sink = ConsoleSink::ptr(new ConsoleSink());
     }
 
-    int ConsoleAppender::getType()
-    {
-        return 0;
-    }
-
     FileAppender::FileAppender(const std::string &filename, bool append)
         : m_filename(filename), m_append(append)
     {
@@ -140,31 +120,6 @@ namespace lim_webserver
     {
         MutexType::Lock lock(m_stream_mutex);
         m_sink = FileSink::ptr(new FileSink(m_filename.c_str(), m_append));
-    }
-
-    void FileAppender::setFile(const std::string &filename)
-    {
-        m_filename = filename;
-    }
-
-    const std::string &FileAppender::rawFileProperty() const
-    {
-        return m_filename;
-    }
-
-    void FileAppender::setAppend(bool append)
-    {
-        m_append = append;
-    }
-
-    bool FileAppender::isAppend() const
-    {
-        return m_append;
-    }
-
-    int FileAppender::getType()
-    {
-        return 1;
     }
 
     void FileAppender::start()
@@ -289,11 +244,6 @@ namespace lim_webserver
             m_buffer.buffer1 = std::move(m_buffer.buffer2);
         else // 若不存在，则创建新的缓冲区
             m_buffer.buffer1.reset(new Buffer);
-    }
-
-    int AsyncAppender::getType()
-    {
-        return 3;
     }
 
     void AsyncAppender::start()
