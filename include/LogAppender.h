@@ -164,13 +164,11 @@ namespace lim_webserver
     protected:
         void format(LogStream &logstream, LogMessage::ptr message) override;
         void append(const char *logline, int len) override;
-        void append_unlock(const char *logline, int len);
 
         LogLevel m_level = LogLevel_DEBUG; // 级别
         LogFormatter::ptr m_formatter;     // 格式器
         LogSink::ptr m_sink;               // 落地器
         LogStream::Buffer m_buffer;        // 4k缓存
-        MutexType m_stream_mutex;          // 写入锁，保证顺序性
     };
 
     /**
@@ -201,11 +199,18 @@ namespace lim_webserver
         using ptr = std::shared_ptr<FileAppender>;
 
     public:
-        FileAppender(){};
+        FileAppender();
         FileAppender(const std::string &filename, bool append = true);
         FileAppender(const LogAppenderDefine &lad);
 
-        void openFile();
+        /**
+         * @brief 打开文件
+         *
+         */
+        inline void openFile()
+        {
+            return std::dynamic_pointer_cast<FileSink>(m_sink)->open(m_filename.c_str(), m_append);
+        }
 
         /**
          * @brief 设置原始文件名

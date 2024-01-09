@@ -3,7 +3,8 @@
 namespace lim_webserver
 {
     void LogSink::append(const char *logline, const size_t len)
-    {
+    {   
+        MutexType::Lock lock(m_mutex);
         size_t n = write(logline, len);
         size_t remain = len - n;
         while (remain > 0)
@@ -21,11 +22,6 @@ namespace lim_webserver
         }
     }
 
-    void LogSink::flush()
-    {
-        fflush(m_ptr);
-    }
-
     size_t LogSink::write(const char *logline, size_t len)
     {
         return fwrite_unlocked(logline, 1, len, m_ptr);
@@ -37,8 +33,13 @@ namespace lim_webserver
         setbuffer(m_ptr, m_buffer, sizeof(m_buffer));
     }
 
-    FileSink::FileSink(const char *filename, bool append)
+    void FileSink::open(const char *filename, bool append)
     {
+        MutexType::Lock lock(m_mutex);
+        if(m_ptr)
+        {
+            fclose(m_ptr);
+        }
         const char* mode = append ? "a+" : "w+";
         m_ptr = fopen(filename, mode);
         setbuffer(m_ptr, m_buffer, sizeof(m_buffer));

@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
     g_logger_async2->addAppender(fappender);
     g_logger_async2->addAppender(asy_appender);
 
-    // test_logger();
-    // test_file_append();
+    test_logger();
+    test_file_append();
     test_appender(g_logger);
     test_appender(g_logger_async);
     test_appender(g_logger_async2);

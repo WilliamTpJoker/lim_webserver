@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FileSize.h"
+#include "Mutex.h"
 
 #include <memory>
 #include <stdio.h>
@@ -12,13 +13,17 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<LogSink>;
+        using MutexType = Spinlock;
 
     public:
         virtual ~LogSink(){};
 
         void append(const char *logline, const size_t len);
 
-        void flush();
+        inline void flush()
+        {
+            fflush(m_ptr);
+        }
 
         FILE *getPtr() const { return m_ptr; }
 
@@ -30,6 +35,7 @@ namespace lim_webserver
 
         FILE *m_ptr = nullptr; // 文件流
         char m_buffer[64 * 1024];
+        MutexType m_mutex;
     };
 
     class ConsoleSink : public LogSink
@@ -47,15 +53,14 @@ namespace lim_webserver
         using ptr = std::shared_ptr<FileSink>;
 
     public:
-        FileSink(const char *filename, bool append);
+        void open(const char *filename, bool append);
 
         long getFileSize();
 
     private:
         size_t write(const char *logline, size_t len) override;
 
-        FileSize::ptr m_fileSize=FileSize::Create();    // 当前已存储的数据量
+        FileSize::ptr m_fileSize = FileSize::Create(); // 当前已存储的数据量
     };
 
 } // namespace lim_webserver
-

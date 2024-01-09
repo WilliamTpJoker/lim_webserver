@@ -43,12 +43,6 @@ namespace lim_webserver
         {
             return;
         }
-        MutexType::Lock lock(m_stream_mutex);
-        append_unlock(logline, len);
-    }
-
-    void OutputAppender::append_unlock(const char *logline, int len)
-    {
         m_sink->append(logline, len);
         m_sink->flush();
     }
@@ -104,9 +98,15 @@ namespace lim_webserver
         m_sink = ConsoleSink::ptr(new ConsoleSink());
     }
 
+    FileAppender::FileAppender()
+    {
+        m_sink = FileSink::ptr(new FileSink());
+    }
+
     FileAppender::FileAppender(const std::string &filename, bool append)
         : m_filename(filename), m_append(append)
     {
+        m_sink = FileSink::ptr(new FileSink());
     }
 
     FileAppender::FileAppender(const LogAppenderDefine &lad)
@@ -114,12 +114,7 @@ namespace lim_webserver
     {
         m_append = lad.append;
         m_filename = lad.file;
-    }
-
-    void FileAppender::openFile()
-    {
-        MutexType::Lock lock(m_stream_mutex);
-        m_sink = FileSink::ptr(new FileSink(m_filename.c_str(), m_append));
+        m_sink = FileSink::ptr(new FileSink());
     }
 
     void FileAppender::start()
@@ -329,7 +324,7 @@ namespace lim_webserver
 
             // 落地
             for (size_t i = 0; i < newBuffer.buffer_vec.size(); ++i)
-                m_appender->append_unlock(newBuffer.buffer_vec[i]->data(), newBuffer.buffer_vec[i]->length());
+                m_appender->append(newBuffer.buffer_vec[i]->data(), newBuffer.buffer_vec[i]->length());
 
             // 重置容器与缓存
             newBuffer.reset();
