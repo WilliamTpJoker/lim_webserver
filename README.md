@@ -1,5 +1,10 @@
 # 开发更新日志
 
+## 2024/01/10
+
+**TODO**: 完成Scheduler,Processor的简单实现，编译通过，运行不通过，问题为context封装有误，待修改
+**TODO**: 多Processor的支持，包括task-steal，负载均衡等
+
 ## 2024/01/09
 
 完成LogSink优化
