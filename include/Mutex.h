@@ -342,8 +342,7 @@ namespace lim_webserver
         /**
          * @brief 当条件不成立时，则会将该线程置于等待状态
          */
-        void wait(const std::function<bool()> condition = []
-                  { return false; })
+        void wait(const std::function<bool()> condition)
         {
             while (!condition())
             {

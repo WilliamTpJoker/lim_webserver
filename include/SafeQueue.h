@@ -6,58 +6,58 @@
 
 namespace lim_webserver
 {
-    template<class T>
+    template <class T>
     class SafeQueue
     {
-        public:
-            using MutexType = Spinlock;
-        public:
-            inline T& front()
-            {
-                MutexType::Lock lock(m_mutex);
-                return m_queue.front();
-            }
+        using MutexType = Spinlock;
 
-            inline void pop()
-            {
-                MutexType::Lock lock(m_mutex);
-                m_queue.pop();
-            }
-            
-            inline void push(T& item)
-            {
-                MutexType::Lock lock(m_mutex);
-                m_queue.push(std::move(item));
-            }
-            
-            inline bool empty()
-            {
-                MutexType::Lock lock(m_mutex);
-                return m_queue.empty();
-            }
+    public:
+        T &front()
+        {
+            MutexType::Lock lock(m_mutex);
+            return m_queue.front();
+        }
 
-            inline void swap(SafeQueue<T> &other)
-            {
-                MutexType::Lock lock(m_mutex);
-                MutexType::Lock lock2(other.m_mutex);
-                m_queue.swap(other.m_queue);
-            }
+        void pop()
+        {
+            MutexType::Lock lock(m_mutex);
+            m_queue.pop();
+        }
 
-            inline void clear()
-            {
-                MutexType::Lock lock(m_mutex);
-                std::queue<T> newQueue;
-                m_queue.swap(newQueue);
-            }
+        void push(T &item)
+        {
+            MutexType::Lock lock(m_mutex);
+            m_queue.push(std::move(item));
+        }
 
-            inline size_t size()
-            {
-                MutexType::Lock lock(m_mutex);
-                return m_queue.size();
-            }
+        bool empty()
+        {
+            MutexType::Lock lock(m_mutex);
+            return m_queue.empty();
+        }
 
-        private:
-            std::queue<T> m_queue;
-            MutexType m_mutex;
+        void swap(SafeQueue<T> &other)
+        {
+            MutexType::Lock lock(m_mutex);
+            MutexType::Lock lock2(other.m_mutex);
+            m_queue.swap(other.m_queue);
+        }
+
+        void clear()
+        {
+            MutexType::Lock lock(m_mutex);
+            std::queue<T> newQueue;
+            m_queue.swap(newQueue);
+        }
+
+        size_t size()
+        {
+            MutexType::Lock lock(m_mutex);
+            return m_queue.size();
+        }
+
+    private:
+        std::queue<T> m_queue;
+        MutexType m_mutex;
     };
 } // namespace lim_webserver

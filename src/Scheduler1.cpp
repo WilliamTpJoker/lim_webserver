@@ -1,13 +1,33 @@
 #include "Scheduler1.h"
 
+#include <memory>
+#include <iostream>
+
 namespace lim_webserver
 {
+    Scheduler1 *Scheduler1::Create()
+    {
+        return new Scheduler1();
+    }
+
+    void Scheduler1::createTask(FuncType const &func)
+    {
+        if (!m_started)
+        {
+            std::cout << "Scheduler not started" << std::endl;
+            return;
+        }
+        std::unique_ptr<Task> tk = std::make_unique<Task>(func, 128 * 1024);
+        addTask(tk);
+    }
+
     void Scheduler1::start(int num_threads)
     {
         if (m_started)
         {
             return;
         }
+        MutexType::Lock lock(m_mutex);
         m_threadCounts = num_threads;
 
         // 创建主处理器
@@ -26,7 +46,7 @@ namespace lim_webserver
                                   { this->run(); },
                                   "Scheduler");
 
-        // 开始处理器                          
+        // 开始处理器
         m_mainProcessor->start();
     }
 
@@ -36,9 +56,17 @@ namespace lim_webserver
         {
             return;
         }
-        m_started = false;
-        // TODO: 关闭所有处理器
-        // TODO: 关闭调度线程
+        {
+            MutexType::Lock lock(m_mutex);
+            m_started = false;
+        }
+        // 关闭所有处理器
+        for (auto &processor : m_processors)
+        {
+            processor->tickle();
+        }
+        // 关闭调度线程
+        m_thread->join();
     }
 
     Scheduler1::~Scheduler1()
@@ -46,17 +74,52 @@ namespace lim_webserver
         stop();
     }
 
+    void Scheduler1::addTask(Task::ptr &task)
+    {
+        // 如果任务指定了处理器则直接调度
+        Processor *processor = task->getProcessor();
+        if (processor)
+        {
+            processor->addTask(task);
+            return;
+        }
+
+        // 没有则为当前协程分发任务
+        processor = Processor::GetCurrentProcessor();
+        if (processor && processor->getScheduler() == this)
+        {
+            processor->addTask(task);
+            return;
+        }
+
+        std::size_t num_processors = m_processors.size();
+        std::size_t idx = m_lastActiveIdx;
+
+        for (std::size_t i = 0; i < num_processors; ++i, ++idx)
+        {
+            idx = idx % num_processors;
+            processor = m_processors[idx];
+
+            // 找到第一个处于活动状态的进程后，将任务添加到该进程
+            if (processor)
+            {
+                break;
+            }
+        }
+        processor->addTask(task);
+    }
+
     void Scheduler1::run()
     {
         while (m_started)
         {
-            
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
     }
 
     void Scheduler1::newPoccessorThread()
     {
-        Processor *p = new Processor(this, m_processors.size());
+        auto p = new Processor(this, m_processors.size());
         p->start();
         m_processors.push_back(p);
     }

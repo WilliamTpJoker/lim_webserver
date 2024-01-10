@@ -1,7 +1,7 @@
 #include "Processor.h"
 #include "Scheduler1.h"
 
-#include <assert.h>
+#include <iostream>
 
 namespace lim_webserver
 {
@@ -11,22 +11,37 @@ namespace lim_webserver
         return proc;
     }
 
+    Task *Processor::GetCurrentTask()
+    {
+        auto proc = GetCurrentProcessor();
+        return proc ? proc->m_curTask.get() : nullptr;
+    }
+
+    void Processor::CoYield()
+    {
+        auto proc = GetCurrentProcessor();
+        proc->coYield();
+    }
+
+    void Processor::coYield()
+    {
+        Task *task = GetCurrentTask();
+        assert(task);
+        task->swapOut();
+    }
+
     Processor::Processor(Scheduler1 *scheduler, int id)
-        : m_scheduler(scheduler), m_id(id),m_cond(m_mutex)
+        : m_scheduler(scheduler), m_id(id), m_cond(m_mutex)
     {
     }
 
-    inline void Processor::addNewTask()
+    void Processor::addTask(Task::ptr &task)
     {
-        if (m_addNewRemain>0)
-        {
-            m_runableQueue.swap(m_newQueue);
-            --m_addNewRemain;
-            assert(m_newQueue.empty());
-        }
+        m_newQueue.push(task);
+        tickle();
     }
 
-    bool Processor::getNextTask()
+    bool Processor::getNextTask(bool flag)
     {
         // 有任务则取任务
         if (!m_runableQueue.empty())
@@ -37,7 +52,16 @@ namespace lim_webserver
         else
         {
             // 没任务则尝试添加新任务
-            addNewTask();
+            if (flag || (m_addNewRemain > 0))
+            {
+                addNewTask();
+
+                if (!flag)
+                {
+                    --m_addNewRemain;
+                }
+            }
+
             // 添加成功则取任务
             if (!m_runableQueue.empty())
             {
@@ -70,17 +94,34 @@ namespace lim_webserver
                                   "Processor" + m_id);
     }
 
+    void Processor::tickle()
+    {
+        MutexType::Lock lock(m_mutex);
+        std::cout<<"tickle"<<std::endl;
+        m_cond.notify_one();
+    }
+
+    void Processor::idle()
+    {
+        garbageCollection();
+        m_cond.wait();
+    }
+
     void Processor::run()
     {
         GetCurrentProcessor() = this;
         while (m_scheduler->m_started)
         {
-            m_addNewRemain = 2;
-            if (!getNextTask()) // 获取任务失败则等待新任务的分配
+            if (!getNextTask(true)) // 获取任务失败则表示当前处理器空闲
             {
-                // TODO:
+                // 执行空闲任务
+                idle();
+                // 回到了工作状态，说明调度了新任务到队列中
+                std::cout<<"back"<<std::endl;
+                addNewTask();
+                continue;
             }
-
+            m_addNewRemain = 1;
             // 每轮环形协程调度后都重置
             while (m_curTask && m_scheduler->m_started)
             {

@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "Noncopyable.h"
 #include "Context.h"
 
 namespace lim_webserver
@@ -26,7 +27,7 @@ namespace lim_webserver
 
     class Processor;
 
-    class Task : public std::enable_shared_from_this<Task>
+    class Task : public std::enable_shared_from_this<Task>, public Noncopyable
     {
         friend Processor;
 
@@ -34,28 +35,45 @@ namespace lim_webserver
         using ptr = std::unique_ptr<Task>;
 
     public:
+        Task(FuncType func, size_t size);
+        ~Task();
+
         inline uint64_t getId() const { return m_id; }
-        inline ptrdiff_t getCap() const { return m_cap; }
-        inline ptrdiff_t getSize() const { return m_size; }
+        // inline ptrdiff_t getCap() const { return m_cap; }
+        // inline ptrdiff_t getSize() const { return m_size; }
         inline TaskState getState() const { return m_state; }
         inline Context *getContext() { return &m_context; }
+        inline Processor *getProcessor() const { return m_processor; }
 
-        inline void setCap(ptrdiff_t cap) { m_cap = cap; }
-        inline void setSize(ptrdiff_t size) { m_size = size; }
+        // inline void setCap(ptrdiff_t cap) { m_cap = cap; }
+        // inline void setSize(ptrdiff_t size) { m_size = size; }
         inline void setState(TaskState state) { m_state = state; }
-        inline void setProcessor(Processor* processor) {m_processor = processor;}
+        inline void setProcessor(Processor *processor) { m_processor = processor; }
 
+        inline void swapIn()
+        {
+            m_context.swapIn();
+        }
 
-        void yeild();
-        void swapIn();
-        void swapOut();
+        inline void swapOut()
+        {
+            m_context.swapOut();
+        }
 
     private:
-        uint64_t m_id = 0;                   // 协程ID
-        ptrdiff_t m_cap;                     // 协程已用内存空间
-        ptrdiff_t m_size;                    // 协程总内存空间
+        /**
+         * @brief 工作函数
+         *
+         */
+        void run();
+
+    private:
+        uint64_t m_id;                       // 协程ID
+        // ptrdiff_t m_cap;                     // 协程已用内存空间
+        // ptrdiff_t m_size;                    // 协程总内存空间
         TaskState m_state = TaskState::INIT; // 协程状态
         Context m_context;                   // 协程上下文
         Processor *m_processor;              // 对应的执行器
+        FuncType m_callback;                 // 回调函数
     };
 } // namespace lim_webserver

@@ -24,7 +24,7 @@ namespace lim_webserver
         }
 
     public:
-        Context(FuncType callback, size_t stacksize);
+        Context(size_t stacksize);
 
         ~Context();
 
@@ -38,6 +38,5 @@ namespace lim_webserver
         void *m_stack = nullptr; // 栈
         ucontext_t m_context;    // 上下文
         size_t m_stacksize;      // 栈大小
-        FuncType m_callback;     // 回调函数
     };
 } // namespace lim_webserver
