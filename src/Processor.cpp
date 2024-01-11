@@ -91,7 +91,7 @@ namespace lim_webserver
         m_started = true;
         m_thread = Thread::Create([this]()
                                   { this->run(); },
-                                  "Processor" + m_id);
+                                  "Proc" + m_id);
     }
 
     void Processor::tickle()

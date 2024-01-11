@@ -1,5 +1,6 @@
 #include "LogFormatter.h"
 #include "TimeStamp.h"
+#include "Processor.h"
 
 #include <assert.h>
 #include <unordered_map>
@@ -76,6 +77,16 @@ namespace lim_webserver
         void format(LogStream &stream, LogMessage::ptr event) override
         {
             stream << Fiber::GetFiberId();
+        }
+    };
+
+    class CoIdFormatItem : public LogFormatter::FormatItem
+    {
+    public:
+        CoIdFormatItem(const std::string &str = "") {}
+        void format(LogStream &stream, LogMessage::ptr event) override
+        {
+            stream << Processor::GetCurrentTask()->getId();
         }
     };
 
@@ -164,7 +175,8 @@ namespace lim_webserver
      * %d 输出日志时间
      * %t 输出线程号
      * %N 输出线程名
-     * %F 输出协程号
+     * %F 输出纤程号
+     * %C 输出协程号
      * %m 输出日志消息
      * %n 输出换行
      * %% 输出百分号
@@ -183,6 +195,7 @@ namespace lim_webserver
         FN('t', ThreadIdFormatItem),
         FN('N', ThreadNameFormatItem),
         FN('F', FiberIdFormatItem),
+        FN('C', CoIdFormatItem),
         FN('m', MessageFormatItem),
         FN('n', NewLineFormatItem),
         FN('%', PercentSignFormatItem),

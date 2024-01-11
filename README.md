@@ -1,8 +1,41 @@
 # 开发更新日志
 
+## 2024/01/11
+
+完善context封装，测试单处理器功能完成，后续继续支持多处理器
+
+``` bash
+tickle
+tickle
+tickle
+tickle
+tickle
+tickle
+tickle
+tickle
+tickle
+tickle
+back
+2024-01-12 00:49:22     81060 Proc      1       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      2       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      3       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      4       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      5       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      6       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      7       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      8       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      9       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      10      [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+tickle
+back
+```
+
+> 实验结果可以看到，协程任务可以很好的进行执行，并配置正确的协程号
+
 ## 2024/01/10
 
 **TODO**: 完成Scheduler,Processor的简单实现，编译通过，运行不通过，问题为context封装有误，待修改
+**于2024/01/11优化完成:没有使用getcontext导致上下文没有初始化**
 **TODO**: 多Processor的支持，包括task-steal，负载均衡等
 
 ## 2024/01/09

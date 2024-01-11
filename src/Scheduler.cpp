@@ -44,7 +44,7 @@ namespace lim_webserver
         // 创建调度线程
         m_thread = Thread::Create([this]()
                                   { this->run(); },
-                                  "Scheduler");
+                                  "Sched");
 
         // 开始处理器
         m_mainProcessor->start();
