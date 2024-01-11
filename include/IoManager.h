@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Scheduler.h"
+#include "Sched.h"
 #include "Timer.h"
 
 namespace lim_webserver
 {
 
-    class IoManager : public Scheduler, public TimerManager
+    class IoManager : public Sched, public TimerManager
     {
     public:
         using RWMutexType = RWMutex;
@@ -37,7 +37,7 @@ namespace lim_webserver
             using MutexType = Mutex;
             struct EventContext
             {
-                Scheduler *scheduler = nullptr; // 目标调度器
+                Sched *scheduler = nullptr; // 目标调度器
                 Fiber::ptr fiber;        // 事件协程
                 std::function<void()> callback; // 事件回调函数
             };

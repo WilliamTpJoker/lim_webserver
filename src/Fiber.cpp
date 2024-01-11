@@ -3,7 +3,7 @@
 #include "Fiber.h"
 #include "Config.h"
 #include "Macro.h"
-#include "Scheduler.h"
+#include "Sched.h"
 #include "Mutex.h"
 #include "LogManager.h"
 
@@ -146,7 +146,7 @@ namespace lim_webserver
         m_state = FiberState::EXEC;
 
         // 使用 swapcontext 切换到新协程的上下文
-        if (swapcontext(&Scheduler::GetMainFiber()->m_context, &m_context))
+        if (swapcontext(&Sched::GetMainFiber()->m_context, &m_context))
         {
             ASSERT(false, "swapcontext");
         }
@@ -155,10 +155,10 @@ namespace lim_webserver
     void Fiber::swapOut()
     {
         // 切换到主协程
-        SetThis(Scheduler::GetMainFiber());
+        SetThis(Sched::GetMainFiber());
 
         // 使用 swapcontext 切换回主协程的上下文
-        if (swapcontext(&m_context, &Scheduler::GetMainFiber()->m_context))
+        if (swapcontext(&m_context, &Sched::GetMainFiber()->m_context))
         {
             ASSERT(false, "swapcontext");
         }

@@ -45,7 +45,7 @@ namespace lim_webserver
          * @brief 创建Fiber对象智能指针。
          * @param callback  协程执行函数。
          * @param stacksize 协程栈大小，默认为0，表示使用系统默认大小。
-         * @param use_caller  是否使用 Scheduler 实例化所在的线程（Scheduler 所在线程也工作）
+         * @param use_caller  是否使用 Sched 实例化所在的线程（Sched 所在线程也工作）
          */
         static ptr Create(std::function<void()> callback, size_t stacksize = 0, bool use_caller = false)
         {
@@ -63,7 +63,7 @@ namespace lim_webserver
          * @brief 构造函数，用于创建Fiber对象。
          * @param callback  协程执行函数。
          * @param stacksize 协程栈大小，默认为0，表示使用系统默认大小。
-         * @param use_caller  是否使用 Scheduler 实例化所在的线程（Scheduler 所在线程也工作）
+         * @param use_caller  是否使用 Sched 实例化所在的线程（Sched 所在线程也工作）
          */
         Fiber(std::function<void()> callback, size_t stacksize = 0, bool use_caller = false);
         /**

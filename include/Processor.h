@@ -10,28 +10,52 @@
 
 namespace lim_webserver
 {
-    class Scheduler1;
+    class Scheduler;
 
     class Processor : public Noncopyable
     {
-        friend Scheduler1;
+        friend Scheduler;
         friend std::unique_ptr<Processor>;
     public:
         using MutexType = Mutex;
+
+        /**
+         * @brief 获得当前Processor对象
+         * 
+         * @return Processor*& 
+         */
         static Processor *&GetCurrentProcessor();
 
+        /**
+         * @brief 获得当前Task对象
+         * 
+         * @return Task* 
+         */
         static Task *GetCurrentTask();
 
+        /**
+         * @brief 当前Task主动退出
+         * 
+         */
         static void CoYield();
 
     public:
-        inline Scheduler1 *getScheduler(){return m_scheduler;}
+        /**
+         * @brief 获得该Processor的调度器
+         * 
+         * @return Scheduler* 
+         */
+        inline Scheduler *getScheduler(){return m_scheduler;}
 
+        /**
+         * @brief 当前Processor的task主动退出
+         * 
+         */
         void coYield();
         
     private:
         Processor();
-        explicit Processor(Scheduler1 *scheduler, int id);
+        explicit Processor(Scheduler *scheduler, int id);
 
         /**
          * @brief 从新任务队列获取任务
@@ -43,6 +67,11 @@ namespace lim_webserver
             assert(m_newQueue.empty());
         }
 
+        /**
+         * @brief 添加任务到newQueue
+         * 
+         * @param task 
+         */
         void addTask(Task::ptr& task);
 
         /**
@@ -91,7 +120,7 @@ namespace lim_webserver
         TaskQueue m_waitQueue;               // 等待队列
         TaskQueue m_runableQueue;            // 可工作队列
         TaskQueue m_garbageQueue;            // 待回收队列
-        Scheduler1 *m_scheduler;             // 调度者
+        Scheduler *m_scheduler;             // 调度者
         int m_id;                            // 编号
         bool m_started;                      // 开始标志位
         Thread::ptr m_thread;                // 绑定线程

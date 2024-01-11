@@ -19,7 +19,7 @@ void run_in_fiber2()
     sleep(1);
     if (--s_count2 >= 0)
     {
-        lim_webserver::Scheduler::GetThis()->schedule(&run_in_fiber2);
+        lim_webserver::Sched::GetThis()->schedule(&run_in_fiber2);
     }
 }
 
@@ -31,7 +31,7 @@ void test(int threads, bool use_caller, std::string name)
         f.push_back(&run_in_fiber);
     }
     LOG_INFO(g_logger) << " main";
-    lim_webserver::Scheduler sc(threads, use_caller, name);
+    lim_webserver::Sched sc(threads, use_caller, name);
     sc.start();
     LOG_INFO(g_logger) << " schedule";
     sc.schedule(f.begin(), f.end());
@@ -43,7 +43,7 @@ void test2(int threads, bool use_caller, std::string name)
 {
 
     LOG_INFO(g_logger) << " main";
-    lim_webserver::Scheduler sc(threads, use_caller, name);
+    lim_webserver::Sched sc(threads, use_caller, name);
     sc.start();
     LOG_INFO(g_logger) << " schedule";
     sc.schedule(&run_in_fiber2);

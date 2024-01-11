@@ -3,11 +3,14 @@
 #include <ucontext.h>
 #include <functional>
 
+#include <iostream>
 #include "Allocator.h"
 
 namespace lim_webserver
 {
-    using FuncType = std::function<void()>;
+    using TaskFunc = std::function<void()>;
+
+    using ContextFunc = void (*)();
 
     class Context
     {
@@ -24,7 +27,7 @@ namespace lim_webserver
         }
 
     public:
-        Context(size_t stacksize);
+        Context(ContextFunc func, uintptr_t ptr, size_t stacksize);
 
         ~Context();
 

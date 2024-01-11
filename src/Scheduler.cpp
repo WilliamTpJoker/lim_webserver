@@ -1,250 +1,127 @@
 #include "Scheduler.h"
-#include "Hook.h"
-#include "LogManager.h"
+
+#include <memory>
+#include <iostream>
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LOG_NAME("system");
-
-    static thread_local Scheduler *t_scheduler = nullptr;
-    static thread_local Fiber *t_fiber = nullptr;
-
-    Scheduler::Scheduler(size_t threads, bool use_caller, const std::string &name)
-        : m_name(name)
+    Scheduler *Scheduler::Create()
     {
-        ASSERT(threads > 0);
-        if (use_caller)
-        {
-            Fiber::GetThis();
-            --threads;
-            ASSERT(GetThis() == nullptr);
-            t_scheduler = this;
-            m_rootFiber = Fiber::Create([this]()
-                                        { this->run(); },
-                                        0, true);
-            Thread::SetName(m_name);
-
-            t_fiber = m_rootFiber.get();
-            m_rootThread = Thread::GetThreadId();
-            m_threadIds.emplace_back(m_rootThread);
-        }
-        else
-        {
-            m_rootThread = -1;
-        }
-        m_threadCount = threads;
+        return new Scheduler();
     }
 
-    Scheduler::~Scheduler()
+    void Scheduler::createTask(TaskFunc const &func)
     {
-        ASSERT(m_stopping);
-        if (GetThis() == this)
+        if (!m_started)
         {
-            t_scheduler = nullptr;
+            std::cout << "Scheduler not started" << std::endl;
+            return;
         }
+        Task::ptr tk = Task::Create(func, 128 * 1024);
+        addTask(tk);
     }
 
-    void Scheduler::start()
+    void Scheduler::start(int num_threads)
     {
-        MutexType::Lock lock(m_mutex);
-        if (!m_stopping)
+        if (m_started)
         {
             return;
         }
-        m_stopping = false;
-        ASSERT(m_thread_list.empty());
+        MutexType::Lock lock(m_mutex);
+        m_threadCounts = num_threads;
 
-        m_thread_list.resize(m_threadCount);
-        for (size_t i = 0; i < m_threadCount; ++i)
+        // 创建主处理器
+        m_mainProcessor = new Processor(this, 0);
+        m_processors.push_back(m_mainProcessor);
+
+        // 创建从处理器
+        for (int i = 0; i < num_threads - 1; ++i)
         {
-            m_thread_list[i] = Thread::Create([this]()
-                                              { this->run(); },
-                                              m_name + "_" + std::to_string(i));
-            m_threadIds.emplace_back(m_thread_list[i]->getId());
+            newPoccessorThread();
         }
+        m_started = true;
+
+        // 创建调度线程
+        m_thread = Thread::Create([this]()
+                                  { this->run(); },
+                                  "Scheduler");
+
+        // 开始处理器
+        m_mainProcessor->start();
     }
 
     void Scheduler::stop()
     {
-        LOG_INFO(g_logger) << this << " stopping";
-        {
-            MutexType::Lock lock(m_mutex);
-            m_autoStop = true;
-            m_stopping = true;
-        }
-
-        // 实例化调度器时的参数 use_caller 为 true, 并且指定线程数量为 1 时,说明只有当前一条主线程在执行，简单等待执行结束即可
-        if (m_rootFiber && m_threadCount == 0 && (m_rootFiber->getState() == FiberState::TERM || m_rootFiber->getState() == FiberState::INIT))
-        {
-            if (onStop())
-            {
-                return;
-            }
-        }
-        if (m_rootThread != -1)
-        {
-            ASSERT(GetThis() == this);
-        }
-        else
-        {
-            ASSERT(GetThis() != this);
-        }
-
-        for (size_t i = 0; i < m_threadCount; ++i)
-        {
-            tickle();
-        }
-        // 调用者线程析构
-        if (m_rootFiber)
-        {
-            tickle();
-            if (!onStop())
-            {
-                m_rootFiber->call();
-            }
-        }
-        // 非调用者线程析构
-        std::vector<Thread::ptr> thread_list;
-        {
-            MutexType::Lock lock(m_mutex);
-            thread_list.swap(m_thread_list);
-        }
-        for (auto &i : thread_list)
-        {
-            i->join();
-        }
-        LOG_INFO(g_logger) << this << " stopped";
-    }
-
-    void Scheduler::tickle()
-    {
-        if (!hasIdleThreads())
+        if (!m_started)
         {
             return;
         }
-        LOG_DEBUG(g_logger) << "on tickle";
+        {
+            MutexType::Lock lock(m_mutex);
+            m_started = false;
+        }
+        // 关闭所有处理器
+        for (auto &processor : m_processors)
+        {
+            processor->tickle();
+        }
+        // 关闭调度线程
+        m_thread->join();
     }
 
-    void Scheduler::onIdle()
+    Scheduler::~Scheduler()
     {
-        LOG_DEBUG(g_logger) << "on idle";
-        while (!onStop())
+        stop();
+    }
+
+    void Scheduler::addTask(Task::ptr &task)
+    {
+        // 如果任务指定了处理器则直接调度
+        Processor *processor = task->getProcessor();
+        if (processor)
         {
-            Fiber::YieldToHold();
+            processor->addTask(task);
+            return;
         }
+
+        // 没有则为当前协程分发任务
+        processor = Processor::GetCurrentProcessor();
+        if (processor && processor->getScheduler() == this)
+        {
+            processor->addTask(task);
+            return;
+        }
+
+        std::size_t num_processors = m_processors.size();
+        std::size_t idx = m_lastActiveIdx;
+
+        for (std::size_t i = 0; i < num_processors; ++i, ++idx)
+        {
+            idx = idx % num_processors;
+            processor = m_processors[idx];
+
+            // 找到第一个处于活动状态的进程后，将任务添加到该进程
+            if (processor)
+            {
+                break;
+            }
+        }
+        processor->addTask(task);
     }
 
     void Scheduler::run()
     {
-        LOG_DEBUG(g_logger) << m_name << " run";
-        set_hook_enable(true);
-        t_scheduler = this;
-        if (Thread::GetThreadId() != m_rootThread)
+        while (m_started)
         {
-            t_fiber = Fiber::GetThis().get();
-        }
-        Fiber::ptr idle_fiber = Fiber::Create([this]()
-                                              { this->onIdle(); });
-        Fiber::ptr cb_fiber;
-
-        FiberAndThread ft;
-        while (true)
-        {
-            ft.reset();
-            bool tickle_me = false;
-            {
-                MutexType::Lock lock(m_mutex);
-                if (!m_task_queue.empty())
-                {
-                    ft = m_task_queue.front();
-                    m_task_queue.pop();
-                    ASSERT(ft.fiber || ft.callback);
-                    tickle_me = true;
-                    ++m_activeThreadCount;
-                }
-            }
-            if (tickle_me)
-            {
-                tickle();
-            }
-            // 如果是 callback 任务，则在专门的callback_fiber运行
-            if (ft.fiber && (ft.fiber->getState() != FiberState::TERM && ft.fiber->getState() != FiberState::EXCEPT))
-            {
-                ft.fiber->swapIn();
-                --m_activeThreadCount;
-
-                if (ft.fiber->getState() == FiberState::READY)
-                {
-                    schedule(ft.fiber);
-                }
-                else if (ft.fiber->getState() != FiberState::TERM && ft.fiber->getState() != FiberState::EXCEPT)
-                {
-                    ft.fiber->setState(FiberState::HOLD);
-                }
-                ft.reset();
-            }
-            else if (ft.callback)
-            {
-                if (cb_fiber)
-                {
-                    cb_fiber->reset(ft.callback);
-                }
-                else
-                {
-                    cb_fiber = Fiber::Create(ft.callback);
-                }
-                ft.reset();
-                cb_fiber->swapIn();
-                --m_activeThreadCount;
-                if (cb_fiber->getState() == FiberState::READY)
-                {
-                    // 如果状态为READY，表明该回调协程通过YeildToReady返回scheduler，将其重新规划入队列，回调协程则指定为新的协程
-                    schedule(cb_fiber);
-                    cb_fiber.reset();
-                }
-                else if (cb_fiber->getState() == FiberState::EXCEPT || cb_fiber->getState() == FiberState::TERM)
-                {
-                    // 如果状态为结束或者异常，表明该回调已经结束，保留该协程的指针，释放该协程的资源
-                    cb_fiber->reset(nullptr);
-                }
-                else
-                {
-                    // 如果状态为其他，则表明该回调运行中断，设置状态为挂起
-                    cb_fiber->setState(FiberState::HOLD);
-                    cb_fiber.reset();
-                }
-            }
-            else
-            {
-                if (idle_fiber->getState() == FiberState::TERM)
-                {
-                    LOG_INFO(g_logger) << "idle fiber term";
-                    break;
-                }
-                ++m_idleThreadCount;
-                idle_fiber->swapIn();
-                --m_idleThreadCount;
-                if (idle_fiber->getState() != FiberState::TERM && idle_fiber->getState() != FiberState::EXCEPT)
-                {
-                    idle_fiber->setState(FiberState::HOLD);
-                }
-            }
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
     }
 
-    bool Scheduler::onStop()
+    void Scheduler::newPoccessorThread()
     {
-        MutexType::Lock lock(m_mutex);
-        return m_autoStop && m_stopping && m_task_queue.empty() && m_activeThreadCount == 0;
+        auto p = new Processor(this, m_processors.size());
+        p->start();
+        m_processors.push_back(p);
     }
 
-    Scheduler *Scheduler::GetThis()
-    {
-        return t_scheduler;
-    }
-
-    Fiber *Scheduler::GetMainFiber()
-    {
-        return t_fiber;
-    }
-}
+} // namespace lim_webserver

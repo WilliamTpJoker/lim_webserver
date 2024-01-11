@@ -33,9 +33,13 @@ namespace lim_webserver
 
     public:
         using ptr = std::unique_ptr<Task>;
+        static ptr Create(TaskFunc func, size_t size)
+        {
+            return std::make_unique<Task>(func, size);
+        }
 
     public:
-        Task(FuncType func, size_t size);
+        Task(TaskFunc func, size_t size);
         ~Task();
 
         inline uint64_t getId() const { return m_id; }
@@ -67,13 +71,15 @@ namespace lim_webserver
          */
         void run();
 
+        static void StaticRun(uint32_t low32, uint32_t high32);
+
     private:
-        uint64_t m_id;                       // 协程ID
         // ptrdiff_t m_cap;                     // 协程已用内存空间
         // ptrdiff_t m_size;                    // 协程总内存空间
+        uint64_t m_id;                       // 协程ID
         TaskState m_state = TaskState::INIT; // 协程状态
         Context m_context;                   // 协程上下文
         Processor *m_processor;              // 对应的执行器
-        FuncType m_callback;                 // 回调函数
+        TaskFunc m_callback;                 // 回调函数
     };
 } // namespace lim_webserver

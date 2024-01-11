@@ -1,5 +1,5 @@
 #include "Processor.h"
-#include "Scheduler1.h"
+#include "Scheduler.h"
 
 #include <iostream>
 
@@ -30,7 +30,7 @@ namespace lim_webserver
         task->swapOut();
     }
 
-    Processor::Processor(Scheduler1 *scheduler, int id)
+    Processor::Processor(Scheduler *scheduler, int id)
         : m_scheduler(scheduler), m_id(id), m_cond(m_mutex)
     {
     }
@@ -127,7 +127,6 @@ namespace lim_webserver
             {
                 m_curTask->m_state = TaskState::EXEC;
                 m_curTask->m_processor = this;
-
                 ++m_switchCount;
                 m_curTask->swapIn();
 

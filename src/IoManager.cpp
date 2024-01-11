@@ -11,7 +11,7 @@ namespace lim_webserver
     static Logger::ptr g_logger = LOG_NAME("system");
 
     IoManager::IoManager(size_t threads, bool use_caller, const std::string &name)
-        : Scheduler(threads, use_caller, name)
+        : Sched(threads, use_caller, name)
     {
         m_epollFd = epoll_create(5000);
         ASSERT(m_epollFd > 0);
@@ -105,7 +105,7 @@ namespace lim_webserver
         FdContext::EventContext &ev_context = fd_context->getContext(event);
         ASSERT(!ev_context.scheduler && !ev_context.fiber && !ev_context.callback);
 
-        ev_context.scheduler = Scheduler::GetThis();
+        ev_context.scheduler = Sched::GetThis();
         // 更新事件所要执行的任务，若指定回调，则直接交换；若未指定，则将该协程添加进去
         if (callback)
         {
@@ -257,7 +257,7 @@ namespace lim_webserver
 
     IoManager *IoManager::GetThis()
     {
-        return dynamic_cast<IoManager *>(Scheduler::GetThis());
+        return dynamic_cast<IoManager *>(Sched::GetThis());
     }
 
     IoManager::FdContext::EventContext &IoManager::FdContext::getContext(IoManager::IoEvent event)
@@ -318,7 +318,7 @@ namespace lim_webserver
     bool IoManager::onStop(uint64_t &timeout)
     {
         timeout = getNextTimer();
-        return timeout == ~0ull && m_pendingEventCount == 0 && Scheduler::onStop();
+        return timeout == ~0ull && m_pendingEventCount == 0 && Sched::onStop();
     }
 
     void IoManager::onIdle()

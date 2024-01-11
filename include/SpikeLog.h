@@ -12,7 +12,7 @@
 #include "Thread.h"
 #include "Fiber.h"
 
-#include "Scheduler.h"
+#include "Sched.h"
 #include "IoManager.h"
 #include "Socket.h"
 
