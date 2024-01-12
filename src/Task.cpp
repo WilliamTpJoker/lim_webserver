@@ -22,6 +22,7 @@ namespace lim_webserver
     {
         auto callback = [this]()
         {
+            m_state = TaskState::EXEC;
             m_callback();
             m_callback = TaskFunc();
             m_state = TaskState::TERM;

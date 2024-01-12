@@ -91,7 +91,7 @@ void test_cond()
 
 int main(int argc, char **argv)
 {
-    // Config::LoadFromYaml("./config/test.yaml");
+    // Configer::LoadFromYaml("./config/test.yaml");
     // test_log_thread();
     test_cond();
     return 0;

@@ -13,10 +13,10 @@
 
 namespace lim_webserver
 {
-    class ConfigVarBase
+    class ConfigerVarBase
     {
     public:
-        using ptr = std::shared_ptr<ConfigVarBase>;
+        using ptr = std::shared_ptr<ConfigerVarBase>;
 
     public:
         /**
@@ -24,9 +24,9 @@ namespace lim_webserver
          * @param name 配置参数名称
          * @param description 配置参数描述
          */
-        ConfigVarBase(const std::string &name, const std::string &description = "")
+        ConfigerVarBase(const std::string &name, const std::string &description = "")
             : m_name(name), m_description(description) {}
-        virtual ~ConfigVarBase() {}
+        virtual ~ConfigerVarBase() {}
 
         /**
          * @brief 获得配置参数名称
@@ -262,26 +262,26 @@ namespace lim_webserver
      *      FromStringFN    {functor<T(const std::string&)>} 将 std::string 转换为配置项的值
      */
     template <class T, class ToStringFN = LexicalCast<T, std::string>, class FromStringFN = LexicalCast<std::string, T>>
-    class ConfigVar : public ConfigVarBase
+    class ConfigerVar : public ConfigerVarBase
     {
     public:
-        using ptr = std::shared_ptr<ConfigVar>;
+        using ptr = std::shared_ptr<ConfigerVar>;
         using RWMutexType = RWMutex;
         using onChangeCallBack = std::function<void(const T &old_val, const T &new_val)>;
         static ptr Create(const std::string &name, const T &default_val, const std::string &description = "")
         {
-            return std::make_shared<ConfigVar>(name, default_val, description);
+            return std::make_shared<ConfigerVar>(name, default_val, description);
         }
 
     public:
         /**
-         * @brief 通过参数名,参数值,描述构造ConfigVar
+         * @brief 通过参数名,参数值,描述构造ConfigerVar
          * @param name 参数名称
          * @param default_value 参数的默认值
          * @param description 参数的描述
          */
-        ConfigVar(const std::string &name, const T &default_val, const std::string &description = "")
-            : ConfigVarBase(name, description), m_val(default_val) {}
+        ConfigerVar(const std::string &name, const T &default_val, const std::string &description = "")
+            : ConfigerVarBase(name, description), m_val(default_val) {}
 
         /**
          * @brief 获取当前参数的值
@@ -326,7 +326,7 @@ namespace lim_webserver
             }
             catch (const std::exception &e)
             {
-                std::cerr << "ConfigVar::toString exception" << e.what() << " convert:" << typeid(getValue()).name() << "to string"<<std::endl;
+                std::cerr << "ConfigerVar::toString exception" << e.what() << " convert:" << typeid(getValue()).name() << "to string"<<std::endl;
             }
             return "";
         }
@@ -344,7 +344,7 @@ namespace lim_webserver
             }
             catch (const std::exception &e)
             {
-                std::cerr << "ConfigVar::fromString exception" << e.what() << " convert:string to" << typeid(getValue()).name()<<std::endl;
+                std::cerr << "ConfigerVar::fromString exception" << e.what() << " convert:string to" << typeid(getValue()).name()<<std::endl;
             }
             return false;
         }
@@ -397,13 +397,13 @@ namespace lim_webserver
     };
 
     /**
-     * @brief ConfigVar的管理类
-     * @details 提供便捷的方法创建/访问ConfigVar
+     * @brief ConfigerVar的管理类
+     * @details 提供便捷的方法创建/访问ConfigerVar
      */
-    class Config
+    class Configer
     {
     public:
-        using ConfigVarMap = std::unordered_map<std::string, ConfigVarBase::ptr>;
+        using ConfigerVarMap = std::unordered_map<std::string, ConfigerVarBase::ptr>;
         using RWMutexType = RWMutex;
 
         /**
@@ -417,7 +417,7 @@ namespace lim_webserver
          * @exception 如果参数名包含非法字符 抛出异常 std::invalid_argument
          */
         template <class T>
-        static typename ConfigVar<T>::ptr Lookup(const std::string &name, const T &default_value, const std::string &description = "")
+        static typename ConfigerVar<T>::ptr Lookup(const std::string &name, const T &default_value, const std::string &description = "")
         {
             auto tmp = Lookup<T>(name);
             if (tmp)
@@ -429,8 +429,8 @@ namespace lim_webserver
             std::regex pattern("^[\\w.].*|");
             if (std::regex_match(name, pattern))
             {
-                typename ConfigVar<T>::ptr v = ConfigVar<T>::Create(name, default_value, description);
-                AddConfigVar<T>(name, v);
+                typename ConfigerVar<T>::ptr v = ConfigerVar<T>::Create(name, default_value, description);
+                AddConfigerVar<T>(name, v);
                 return v;
             }
             else
@@ -446,15 +446,15 @@ namespace lim_webserver
          * @return 返回配置参数名为name的配置参数
          */
         template <class T>
-        static typename ConfigVar<T>::ptr Lookup(const std::string &name)
+        static typename ConfigerVar<T>::ptr Lookup(const std::string &name)
         {
             RWMutexType::ReadLock lock(GetMutex());
-            auto it = GetConfigs().find(name);
-            if (it == GetConfigs().end())
+            auto it = GetConfigers().find(name);
+            if (it == GetConfigers().end())
             {
                 return nullptr;
             }
-            return std::dynamic_pointer_cast<ConfigVar<T>>(it->second); // 将基类指针转换
+            return std::dynamic_pointer_cast<ConfigerVar<T>>(it->second); // 将基类指针转换
         }
 
         /**
@@ -470,31 +470,31 @@ namespace lim_webserver
          * @brief 查找配置参数,返回配置参数的基类
          * @param name 配置参数名称
          */
-        static ConfigVarBase::ptr LookupBase(const std::string &name);
+        static ConfigerVarBase::ptr LookupBase(const std::string &name);
 
         /**
          * @brief 遍历配置模块里面所有配置项
          * @param callback 配置项回调函数
          */
-        static void Visit(std::function<void(ConfigVarBase::ptr)> callback);
+        static void Visit(std::function<void(ConfigerVarBase::ptr)> callback);
 
     private:
         /**
          * @brief 添加配置
          */
         template <class T>
-        static void AddConfigVar(const std::string &name, typename ConfigVar<T>::ptr &v)
+        static void AddConfigerVar(const std::string &name, typename ConfigerVar<T>::ptr &v)
         {
             RWMutexType::WriteLock lock(GetMutex());
-            GetConfigs()[name] = v;
+            GetConfigers()[name] = v;
         }
 
         /**
          * @brief 返回所有的配置项
          */
-        static ConfigVarMap &GetConfigs()
+        static ConfigerVarMap &GetConfigers()
         {
-            static ConfigVarMap s_configs;
+            static ConfigerVarMap s_configs;
             return s_configs;
         }
 

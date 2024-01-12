@@ -1,7 +1,7 @@
 #include <atomic>
 
 #include "Fiber.h"
-#include "Config.h"
+#include "Configer.h"
 #include "Macro.h"
 #include "Sched.h"
 #include "Mutex.h"
@@ -17,7 +17,7 @@ namespace lim_webserver
     static thread_local Fiber *t_fiber = nullptr;
     static thread_local Fiber::ptr t_threadFiber = nullptr;
 
-    static ConfigVar<uint32_t>::ptr s_fiber_stack_size = Config::Lookup<uint32_t>("fiber.stack_size", 128 * 1024, "fiber stack size");
+    static ConfigerVar<uint32_t>::ptr s_fiber_stack_size = Configer::Lookup<uint32_t>("fiber.stack_size", 128 * 1024, "fiber stack size");
 
     class MallocStackAllocator
     {

@@ -1,5 +1,4 @@
 #include "LogManager.h"
-#include "Config.h"
 
 namespace lim_webserver
 {

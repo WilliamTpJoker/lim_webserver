@@ -1,9 +1,9 @@
 #include "Context.h"
-#include "Config.h"
+#include "Configer.h"
 
 namespace lim_webserver
 {
-    static ConfigVar<uint32_t>::ptr s_Task_stack_size = Config::Lookup<uint32_t>("Task.stack_size", 128 * 1024, "Task stack size");
+    static ConfigerVar<uint32_t>::ptr s_Task_stack_size = Configer::Lookup<uint32_t>("Task.stack_size", 128 * 1024, "Task stack size");
 
     Context::Context(ContextFunc func, uintptr_t ptr, size_t stacksize)
         : m_stacksize(stacksize)

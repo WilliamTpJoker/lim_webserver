@@ -25,6 +25,8 @@ namespace lim_webserver
         TERM    // 终止状态，协程已执行完成并结束
     };
 
+    using TaskFunc = std::function<void()>;
+
     class Processor;
 
     class Task : public std::enable_shared_from_this<Task>, public Noncopyable

@@ -3,11 +3,11 @@
 
 using namespace lim_webserver;
 
-typename ConfigVar<int>::ptr g_int_value_config = Config::Lookup("system.port", (int)8080, "system port");
+typename ConfigerVar<int>::ptr g_int_value_config = Configer::Lookup("system.port", (int)8080, "system port");
 
-typename ConfigVar<std::vector<int>>::ptr g_int_vec_value_config = Config::Lookup("system.inc_vec", std::vector<int>{1, 2}, "system port");
+typename ConfigerVar<std::vector<int>>::ptr g_int_vec_value_config = Configer::Lookup("system.inc_vec", std::vector<int>{1, 2}, "system port");
 
-// typename ConfigVar<LogConfigDefine>::ptr g_defines = Config::Lookup("logconfig", LogConfigDefine(), "logs config");
+// typename ConfigerVar<LogConfigerDefine>::ptr g_defines = Configer::Lookup("logconfig", LogConfigerDefine(), "logs config");
 
 
 void test_yaml()
@@ -29,9 +29,9 @@ void test_config()
     // LOG_INFO(LOG_ROOT()) << g_int_value_config->getValue();
 
     YAML::Node r = YAML::LoadFile("home/book/Webserver/config/log.yaml");
-    Config::LoadFromYaml(r);
-    Config::LoadFromYaml("./config/test.yaml");
-    Config::Visit([](ConfigVarBase::ptr var){
+    Configer::LoadFromYaml(r);
+    Configer::LoadFromYaml("./config/test.yaml");
+    Configer::Visit([](ConfigerVarBase::ptr var){
         std::cout<< "name=" << var->getName()
                                      << " description=" << var->getDescription()
                                      << " value=" << var->toString()<<std::endl;
@@ -55,22 +55,22 @@ void test_change_callback()
     LOG_INFO(LOG_ROOT()) << g_int_value_config->getValue();
 
     YAML::Node r = YAML::LoadFile("./config/test.yaml");
-    Config::LoadFromYaml(r);
+    Configer::LoadFromYaml(r);
 
     LOG_INFO(LOG_ROOT()) << g_int_value_config->getValue();
 }
 
 void test_visit()
 {
-    Config::LoadFromYaml("/home/book/Webserver/config/log.yaml");
+    Configer::LoadFromYaml("/home/book/Webserver/config/log.yaml");
 
-    auto f = [](ConfigVarBase::ptr var)
+    auto f = [](ConfigerVarBase::ptr var)
     {
         LOG_INFO(LOG_ROOT()) << "name=" << var->getName()
                                      << " description=" << var->getDescription()
                                      << " value=" << var->toString();
     };
-    Config::Visit(f);
+    Configer::Visit(f);
 }
 
 int main(int argc, char **argv)

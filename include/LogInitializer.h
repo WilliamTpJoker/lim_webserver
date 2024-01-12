@@ -6,32 +6,32 @@
 #include <vector>
 
 #include "LogManager.h"
-#include "Config.h"
+#include "Configer.h"
 
 namespace lim_webserver
 {
-    struct LogConfigDefine
+    struct LogConfigerDefine
     {
         std::vector<LoggerDefine> loggers;
         std::vector<LogAppenderDefine> appenders;
 
-        bool operator==(const LogConfigDefine &oth) const
+        bool operator==(const LogConfigerDefine &oth) const
         {
             return appenders == oth.appenders && loggers == oth.loggers;
         }
     };
 
     template <>
-    class LexicalCast<std::string, LogConfigDefine>
+    class LexicalCast<std::string, LogConfigerDefine>
     {
     public:
-        LogConfigDefine operator()(const std::string &v)
+        LogConfigerDefine operator()(const std::string &v)
         {
-            YAML::Node logConfigNode = YAML::Load(v);
-            LogConfigDefine lcd;
-            if (logConfigNode["appenders"].IsDefined())
+            YAML::Node logConfigerNode = YAML::Load(v);
+            LogConfigerDefine lcd;
+            if (logConfigerNode["appenders"].IsDefined())
             {
-                for (auto appenderNode : logConfigNode["appenders"])
+                for (auto appenderNode : logConfigerNode["appenders"])
                 {
                     if (!appenderNode["type"].IsDefined())
                     {
@@ -91,9 +91,9 @@ namespace lim_webserver
                     lcd.appenders.push_back(lad);
                 }
             }
-            if (logConfigNode["loggers"].IsDefined())
+            if (logConfigerNode["loggers"].IsDefined())
             {
-                for (auto logNode : logConfigNode["loggers"])
+                for (auto logNode : logConfigerNode["loggers"])
                 {
                     LoggerDefine ld;
                     if (!logNode["name"].IsDefined())
@@ -116,12 +116,12 @@ namespace lim_webserver
     };
 
     template <>
-    class LexicalCast<LogConfigDefine, std::string>
+    class LexicalCast<LogConfigerDefine, std::string>
     {
     public:
-        std::string operator()(const LogConfigDefine &lcd)
+        std::string operator()(const LogConfigerDefine &lcd)
         {
-            YAML::Node logConfigNode;
+            YAML::Node logConfigerNode;
             for (auto &lad : lcd.appenders)
             {
                 YAML::Node appenderNode;
@@ -149,7 +149,7 @@ namespace lim_webserver
                     appenderNode["name"] = lad.name;
                 }
 
-                logConfigNode["appenders"].push_back(appenderNode);
+                logConfigerNode["appenders"].push_back(appenderNode);
             }
             for (auto &ld : lcd.loggers)
             {
@@ -166,24 +166,24 @@ namespace lim_webserver
                         logNode["appender-ref"].push_back(appender_ref);
                     }
                 }
-                logConfigNode["loggers"].push_back(logNode);
+                logConfigerNode["loggers"].push_back(logNode);
             }
 
             std::stringstream ss;
-            ss << logConfigNode;
+            ss << logConfigerNode;
             return ss.str();
         }
     };
 
     // 读取配置
-    typename ConfigVar<LogConfigDefine>::ptr g_log_defines = Config::Lookup("logconfig", LogConfigDefine(), "logs config");
+    typename ConfigerVar<LogConfigerDefine>::ptr g_log_defines = Configer::Lookup("logconfig", LogConfigerDefine(), "logs config");
 
     class LogInitializer
     {
     public:
         LogInitializer()
         {
-            auto log_listener_func = [](const LogConfigDefine &old_val, const LogConfigDefine &new_val)
+            auto log_listener_func = [](const LogConfigerDefine &old_val, const LogConfigerDefine &new_val)
             {
                 auto logManager = LogMgr::GetInstance();
                 std::vector<LogAppenderDefine> new_appenders = new_val.appenders;

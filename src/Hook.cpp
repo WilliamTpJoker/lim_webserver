@@ -1,6 +1,6 @@
 #include <dlfcn.h>
 
-#include "Config.h"
+#include "Configer.h"
 #include "Hook.h"
 #include "Fiber.h"
 #include "Thread.h"
@@ -15,7 +15,7 @@ static lim_webserver::Logger::ptr g_logger = LOG_NAME("system");
 namespace lim_webserver
 {
     static thread_local bool t_hook_enable = false;
-    static ConfigVar<int>::ptr g_tcp_connect_timeout = Config::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
+    static ConfigerVar<int>::ptr g_tcp_connect_timeout = Configer::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
 
 #define HOOK_FUN(F) \
     F(sleep)        \

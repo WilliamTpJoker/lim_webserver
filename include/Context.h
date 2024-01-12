@@ -8,7 +8,6 @@
 
 namespace lim_webserver
 {
-    using TaskFunc = std::function<void()>;
 
     using ContextFunc = void (*)();
 

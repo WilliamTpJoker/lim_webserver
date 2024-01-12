@@ -1,8 +1,7 @@
 #include "LogAppender.h"
-#include "LogManager.h"
-#include "Config.h"
 
 #include <iostream>
+#include <assert.h>
 
 namespace lim_webserver
 {

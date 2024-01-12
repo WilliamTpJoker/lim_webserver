@@ -1,14 +1,14 @@
-#include "Config.h"
+#include "Configer.h"
 
 namespace lim_webserver
 {
-    void Config::analysisYaml(const std::string &prefix, const YAML::Node &node, std::list<std::pair<std::string, const YAML::Node>> &output)
+    void Configer::analysisYaml(const std::string &prefix, const YAML::Node &node, std::list<std::pair<std::string, const YAML::Node>> &output)
     {
         std::regex pattern("^[\\w.].*|");
         recursiveAnalysis(pattern, prefix, node, output);
     }
 
-    void Config::recursiveAnalysis(const std::regex &pattern,
+    void Configer::recursiveAnalysis(const std::regex &pattern,
                                    const std::string &prefix,
                                    const YAML::Node &node,
                                    std::list<std::pair<std::string, const YAML::Node>> &output)
@@ -33,7 +33,7 @@ namespace lim_webserver
         }
     }
 
-    void Config::LoadFromYaml(const YAML::Node &root)
+    void Configer::LoadFromYaml(const YAML::Node &root)
     {
         std::list<std::pair<std::string, const YAML::Node>> all_nodes;
         analysisYaml("", root, all_nodes);
@@ -46,7 +46,7 @@ namespace lim_webserver
                 continue;
             }
 
-            ConfigVarBase::ptr var = LookupBase(key);
+            ConfigerVarBase::ptr var = LookupBase(key);
             if (var)
             {
                 // 判定为标量则转化
@@ -64,24 +64,24 @@ namespace lim_webserver
         }
     }
 
-    void Config::LoadFromYaml(const std::string &file)
+    void Configer::LoadFromYaml(const std::string &file)
     {
         std::cout << "Load yaml config from " << file << std::endl;
         YAML::Node r = YAML::LoadFile(file);
-        Config::LoadFromYaml(r);
+        Configer::LoadFromYaml(r);
     }
 
-    ConfigVarBase::ptr Config::LookupBase(const std::string &name)
+    ConfigerVarBase::ptr Configer::LookupBase(const std::string &name)
     {
         RWMutexType::ReadLock lock(GetMutex());
-        auto it = GetConfigs().find(name);
-        return it == GetConfigs().end() ? nullptr : it->second;
+        auto it = GetConfigers().find(name);
+        return it == GetConfigers().end() ? nullptr : it->second;
     }
 
-    void Config::Visit(std::function<void(ConfigVarBase::ptr)> callback)
+    void Configer::Visit(std::function<void(ConfigerVarBase::ptr)> callback)
     {
         RWMutexType::ReadLock lock(GetMutex());
-        ConfigVarMap &m = GetConfigs();
+        ConfigerVarMap &m = GetConfigers();
         for (auto it = m.begin(); it != m.end(); ++it)
         {
             callback(it->second);
