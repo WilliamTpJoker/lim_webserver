@@ -7,7 +7,6 @@
 using namespace lim_webserver;
 
 static Logger::ptr g_logger = LOG_NAME("test_co");
-auto appender = AppenderFcty::GetInstance()->defaultConsoleAppender();
 
 void run_in_co()
 {
@@ -26,6 +25,7 @@ void test_schduler()
 
 int main()
 {   
+    auto appender = AppenderFcty::GetInstance()->defaultConsoleAppender();
     appender->setFormatter("%d%T%t %N%T%C%T[%c] [%p] %f:%l%T%m%n");
     g_logger->addAppender(appender);
     test_schduler();

@@ -77,8 +77,9 @@ namespace lim_webserver
     void Scheduler::addTask(Task::ptr &task)
     {
         // 如果任务指定了处理器则直接调度
-        Processor *processor = task->getProcessor();
-        if (processor)
+        Processor *processor = task->m_processor;
+        // 若处在激活态则可以调度
+        if (processor && processor->m_activated)
         {
             processor->addTask(task);
             return;
@@ -86,7 +87,7 @@ namespace lim_webserver
 
         // 没有则为当前协程分发任务
         processor = Processor::GetCurrentProcessor();
-        if (processor && processor->getScheduler() == this)
+        if (processor && processor->m_activated && processor->getScheduler() == this)
         {
             processor->addTask(task);
             return;
@@ -101,7 +102,7 @@ namespace lim_webserver
             processor = m_processors[idx];
 
             // 找到第一个处于活动状态的进程后，将任务添加到该进程
-            if (processor)
+            if (processor && processor->m_activated)
             {
                 break;
             }
@@ -114,6 +115,8 @@ namespace lim_webserver
         while (m_started)
         {
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
+
+            
         }
     }
 

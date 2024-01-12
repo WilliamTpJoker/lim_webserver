@@ -16,43 +16,44 @@ namespace lim_webserver
     {
         friend Scheduler;
         friend std::unique_ptr<Processor>;
+
     public:
         using MutexType = Mutex;
 
         /**
          * @brief 获得当前Processor对象
-         * 
-         * @return Processor*& 
+         *
+         * @return Processor*&
          */
         static Processor *&GetCurrentProcessor();
 
         /**
          * @brief 获得当前Task对象
-         * 
-         * @return Task* 
+         *
+         * @return Task*
          */
         static Task *GetCurrentTask();
 
         /**
          * @brief 当前Task主动退出
-         * 
+         *
          */
         static void CoYield();
 
     public:
         /**
          * @brief 获得该Processor的调度器
-         * 
-         * @return Scheduler* 
+         *
+         * @return Scheduler*
          */
-        inline Scheduler *getScheduler(){return m_scheduler;}
+        inline Scheduler *getScheduler() { return m_scheduler; }
 
         /**
          * @brief 当前Processor的task主动退出
-         * 
+         *
          */
         void coYield();
-        
+
     private:
         Processor();
         explicit Processor(Scheduler *scheduler, int id);
@@ -69,10 +70,10 @@ namespace lim_webserver
 
         /**
          * @brief 添加任务到newQueue
-         * 
-         * @param task 
+         *
+         * @param task
          */
-        void addTask(Task::ptr& task);
+        void addTask(Task::ptr &task);
 
         /**
          * @brief 调度下一个任务
@@ -97,7 +98,7 @@ namespace lim_webserver
 
         /**
          * @brief 唤醒
-         * 
+         *
          */
         void tickle();
 
@@ -120,9 +121,10 @@ namespace lim_webserver
         TaskQueue m_waitQueue;               // 等待队列
         TaskQueue m_runableQueue;            // 可工作队列
         TaskQueue m_garbageQueue;            // 待回收队列
-        Scheduler *m_scheduler;             // 调度者
+        Scheduler *m_scheduler;              // 调度者
         int m_id;                            // 编号
         bool m_started;                      // 开始标志位
+        volatile bool m_activated = true;    // 激活标志位
         Thread::ptr m_thread;                // 绑定线程
         volatile uint64_t m_switchCount = 0; // 调度次数
         int m_addNewRemain;                  // 每轮调度可添加新任务次数
