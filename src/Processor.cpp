@@ -88,23 +88,53 @@ namespace lim_webserver
         {
             return;
         }
+        MutexType::Lock lock(m_mutex);
         m_started = true;
         m_thread = Thread::Create([this]()
                                   { this->run(); },
-                                  "Proc" + m_id);
+                                  "Proc_" + std::to_string(m_id));
     }
 
     void Processor::tickle()
     {
         MutexType::Lock lock(m_mutex);
-        std::cout<<"tickle"<<std::endl;
-        m_cond.notify_one();
+        // 若处于休眠态，则唤醒
+        if (m_idled)
+        {
+            std::cout << "tickle" << std::endl;
+            m_cond.notify_one();
+        }
+        // 若处于工作态，则尝试通知
+        else
+        {
+            // 若已被通知，则不通知
+            if (!m_notified)
+            {
+                std::cout << "notify" << std::endl;
+                m_notified = true;
+            }
+        }
     }
 
     void Processor::idle()
     {
         garbageCollection();
+
+        MutexType::Lock lock(m_mutex);
+
+        // 若在企图休眠前接受到了调度器的通知，则不休眠
+        if (m_notified)
+        {
+            m_notified = false;
+            return;
+        }
+
+        // 进入等待状态
+        m_idled = true;
+        std::cout << "condition wait" << std::endl;
         m_cond.wait();
+        std::cout << "condition back" << std::endl;
+        m_idled = false;
     }
 
     void Processor::run()
@@ -117,7 +147,7 @@ namespace lim_webserver
                 // 执行空闲任务
                 idle();
                 // 回到了工作状态，说明调度了新任务到队列中
-                std::cout<<"back"<<std::endl;
+                std::cout << "back" << std::endl;
                 addNewTask();
                 continue;
             }

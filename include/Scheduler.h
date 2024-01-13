@@ -17,42 +17,42 @@ namespace lim_webserver
         friend Singleton<Scheduler>;
 
     public:
-        using MutexType = Spinlock;
+        using MutexType = Mutex;
 
-        static Scheduler* Create();
+        static Scheduler *Create();
 
     public:
         /**
          * @brief 创建新协程任务
-         * 
-         * @param func 
+         *
+         * @param func
          */
         void createTask(TaskFunc const &func);
 
         /**
          * @brief 开始调度任务
-         * 
+         *
          * @param num_threads 工作线程数
          */
         void start(int num_threads);
 
         /**
          * @brief 关闭调度
-         * 
+         *
          */
         void stop();
 
     private:
-        Scheduler() {}
+        Scheduler();
         ~Scheduler();
 
         /**
          * @brief 添加任务
-         * 
+         *
          * @param task 任务
          */
         void addTask(Task::ptr &task);
-        
+
         /**
          * @brief 线程工作函数，负责为处理器线程分发协程任务
          *
@@ -74,6 +74,7 @@ namespace lim_webserver
         bool m_started;                        // 开始标志位
         Thread::ptr m_thread;                  // 绑定线程
         MutexType m_mutex;                     // 锁
+        ConditionVariable m_cond;              // 条件变量
     };
 
 #define g_Scheduler Singleton<Scheduler>::GetInstance()

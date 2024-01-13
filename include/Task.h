@@ -29,7 +29,7 @@ namespace lim_webserver
 
     class Processor;
     class Scheduler;
-    
+
     class Task : public std::enable_shared_from_this<Task>, public Noncopyable
     {
         friend Processor;
@@ -71,7 +71,7 @@ namespace lim_webserver
         const uint64_t m_id;                 // 协程ID
         TaskState m_state = TaskState::INIT; // 协程状态
         Context m_context;                   // 协程上下文
-        Processor *m_processor;              // 对应的执行器
+        Processor *m_processor = nullptr;    // 对应的执行器
         TaskFunc m_callback;                 // 回调函数
     };
 } // namespace lim_webserver

@@ -31,7 +31,7 @@ namespace lim_webserver
         m_threadCounts = num_threads;
 
         // 创建主处理器
-        m_mainProcessor = new Processor(this, 0);
+
         m_processors.push_back(m_mainProcessor);
 
         // 创建从处理器
@@ -46,7 +46,6 @@ namespace lim_webserver
                                   { this->run(); },
                                   "Sched");
 
-        // 开始处理器
         m_mainProcessor->start();
     }
 
@@ -67,6 +66,12 @@ namespace lim_webserver
         }
         // 关闭调度线程
         m_thread->join();
+    }
+
+    Scheduler::Scheduler()
+        : m_cond(m_mutex)
+    {
+        m_mainProcessor = new Processor(this, 0);
     }
 
     Scheduler::~Scheduler()
@@ -114,9 +119,23 @@ namespace lim_webserver
     {
         while (m_started)
         {
-            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+            // 每一秒调度一次
+            m_cond.waitForSeconds(1);
 
-            
+            for (auto &processor : m_processors)
+            {
+                if (!processor->m_activated)
+                {
+                    if (processor->isIdled())
+                    {
+                        processor->m_activated = true;
+                    }
+                }
+                if (processor->isIdled())
+                {
+                    processor->tickle();
+                }
+            }
         }
     }
 
@@ -124,6 +143,7 @@ namespace lim_webserver
     {
         auto p = new Processor(this, m_processors.size());
         p->start();
+        // m_semaphore.wait();
         m_processors.push_back(p);
     }
 

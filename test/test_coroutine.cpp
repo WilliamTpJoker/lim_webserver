@@ -15,8 +15,8 @@ void run_in_co()
 
 void test_schduler()
 {
-    g_Scheduler->start(1);
-    for(int i=0;i<10;++i)
+    g_Scheduler->start(2);
+    for(int i=0;i<10000;++i)
     {
         g_Scheduler->createTask(&run_in_co);
     }

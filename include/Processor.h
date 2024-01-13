@@ -7,6 +7,7 @@
 #include "Mutex.h"
 
 #include <assert.h>
+#include <atomic>
 
 namespace lim_webserver
 {
@@ -57,6 +58,14 @@ namespace lim_webserver
     private:
         Processor();
         explicit Processor(Scheduler *scheduler, int id);
+
+        /**
+         * @brief 确认是否处在空闲态
+         *
+         * @return true 空闲
+         * @return false 工作
+         */
+        inline bool isIdled() { return m_idled; }
 
         /**
          * @brief 从新任务队列获取任务
@@ -125,6 +134,8 @@ namespace lim_webserver
         int m_id;                            // 编号
         bool m_started;                      // 开始标志位
         volatile bool m_activated = true;    // 激活标志位
+        volatile bool m_notified = false;    // 通知标志位
+        std::atomic_bool m_idled{false};     // 空闲标志位
         Thread::ptr m_thread;                // 绑定线程
         volatile uint64_t m_switchCount = 0; // 调度次数
         int m_addNewRemain;                  // 每轮调度可添加新任务次数
