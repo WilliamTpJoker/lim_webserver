@@ -61,7 +61,7 @@ namespace lim_webserver
         int64_t m_time;
     };
 
-    class TimeManager
+    class TimeManager: public Singleton<TimeManager>
     {
         using MutexType = RWMutex;
 
@@ -116,5 +116,4 @@ namespace lim_webserver
         time_t m_lastSeconds;         // 最后一次调用时的时间
         MutexType m_mutex;
     };
-    using TimeMgr = Singleton<TimeManager>;
 } // namespace lim_webserver

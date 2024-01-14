@@ -290,8 +290,18 @@ namespace lim_webserver
         AsyncAppender();
         AsyncAppender(OutputAppender::ptr appender);
 
+        /**
+         * @brief 设置写入间隔
+         *
+         * @param interval 单位：毫秒
+         */
         void setInterval(int interval);
 
+        /**
+         * @brief 绑定Appender
+         *
+         * @param appender
+         */
         void bindAppender(OutputAppender::ptr appender);
 
         int getType() override { return 3; }
@@ -355,13 +365,13 @@ namespace lim_webserver
 
         DoubleBuffer m_buffer;          // 双缓冲
         OutputAppender::ptr m_appender; // 工作输出地
-        int m_flushInterval;            // 写入间隔
+        int m_flushInterval = 2000;     // 写入间隔
         Thread::ptr m_thread;           // 工作线程
         Mutex m_append_mutex;           // 后台交换缓存锁
         ConditionVariable m_cond;       // 条件变量
     };
 
-    class AppenderFactory
+    class AppenderFactory : public Singleton<AppenderFactory>
     {
     public:
         static ConsoleAppender::ptr newConsoleAppender()
@@ -391,5 +401,4 @@ namespace lim_webserver
     private:
         std::unordered_map<std::string, LogAppender::ptr> m_appenders; // 系统全部输出地
     };
-    using AppenderFcty = Singleton<AppenderFactory>;
 } // namespace lim_webserver

@@ -355,12 +355,19 @@ namespace lim_webserver
             pthread_cond_wait(&cond, &m_mutex.m_mutex);
         }
 
-        bool waitForSeconds(int seconds)
+        bool waitTime(int millisecond)
         {
             struct timespec abstime;
             clock_gettime(CLOCK_REALTIME, &abstime);
-            abstime.tv_sec += static_cast<time_t>(seconds);
-            // m_mutex.m_locked=false;
+            abstime.tv_sec += millisecond / 1000;
+            abstime.tv_nsec += (millisecond % 1000) * 1000000;
+
+            // 处理纳秒溢出
+            if (abstime.tv_nsec >= 1000000000)
+            {
+                abstime.tv_sec += 1;
+                abstime.tv_nsec -= 1000000000;
+            }
             return ETIMEDOUT == pthread_cond_timedwait(&cond, &m_mutex.m_mutex, &abstime);
         }
 

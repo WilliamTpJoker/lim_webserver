@@ -79,7 +79,7 @@ void async_bench()
 
     AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
     asy_appender->bindAppender(g_fileappender);
-    asy_appender->setInterval(2);
+    asy_appender->setInterval(2000);
     asy_appender->start();
 
     logger->addAppender(asy_appender);

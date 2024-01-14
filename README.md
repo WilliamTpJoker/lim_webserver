@@ -1,5 +1,53 @@
 # 开发更新日志
 
+## 2024/01/14
+
+完成定时器模块
+
+```bash
+2024-01-14 21:38:33     34236 main      [test] [INFO] /home/book/Webserver/test/test_timer.cpp:20       start
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+```
+
+采用独立线程来处理定时任务
+
+已知问题：对于循环打印的计时器任务，存在一定问题
+
+```bash
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+```
+
+> 对于以上实验现象，推测可能的原因为 程序结束时析构顺序混乱导致
+> **TODO:** 需要实现优雅退出，来管理各个组件的析构顺序
+
 ## 2024/01/13
 
 修复Text中processor指针没有正确初始化的bug

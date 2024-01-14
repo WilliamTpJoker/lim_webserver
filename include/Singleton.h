@@ -8,7 +8,7 @@ namespace lim_webserver
      * @brief 单例包装类 返回原生类指针 
      */
     template <class T, int N = 0>
-    class Singleton final
+    class Singleton
     {
     public:
         static T *GetInstance()
@@ -21,7 +21,7 @@ namespace lim_webserver
      *  @brief 单例包装类 返回类智能指针
      */
     template <class T, int N = 0>
-    class SingletonPtr final
+    class SingletonPtr
     {
     public:
         static std::shared_ptr<T> GetInstance()

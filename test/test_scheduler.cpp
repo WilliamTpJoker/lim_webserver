@@ -4,7 +4,7 @@ using namespace lim_webserver;
 
 Logger::ptr g_logger = LOG_NAME("test");
 
-static int s_count1 = 500;
+static int s_count1 = 10000;
 
 static int s_count2 = 5;
 void run_in_fiber()
@@ -26,7 +26,7 @@ void run_in_fiber2()
 void test(int threads, bool use_caller, std::string name)
 {
     std::vector<std::function<void()>> f;
-    for (int i = 1; i < 500; ++i)
+    for (int i = 1; i < 10000; ++i)
     {
         f.push_back(&run_in_fiber);
     }
@@ -53,10 +53,11 @@ void test2(int threads, bool use_caller, std::string name)
 
 int main(int argc, char *argv[])
 {
-    ConsoleAppender::ptr appender =AppenderFcty::GetInstance()->defaultConsoleAppender();
+    ConsoleAppender::ptr appender =AppenderFactory::GetInstance()->defaultConsoleAppender();
     g_logger->addAppender(appender);
     // g_l->setLevel(LogLevel_INFO);
     // test(3, true, "test");
-    test(2, false, "test");
+    test(1, false, "test");
+
     return 0;
 }

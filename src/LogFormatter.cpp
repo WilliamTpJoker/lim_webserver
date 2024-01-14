@@ -98,7 +98,7 @@ namespace lim_webserver
         void format(LogStream &stream, LogMessage::ptr event) override
         {
             time_t time_l = event->getTime();   // 获取时间
-            std::string buf = TimeMgr::GetInstance()->getTimeString(time_l);
+            std::string buf = TimeManager::GetInstance()->getTimeString(time_l);
             stream << buf;
         }
 

@@ -295,7 +295,7 @@ namespace lim_webserver
                 // 此处条件变量的唤醒有两种情况：1.超时 2.前端写满并notify
                 if (m_buffer.buffer_vec.empty())
                 {
-                    m_cond.waitForSeconds(m_flushInterval);
+                    m_cond.waitTime(m_flushInterval);
                 }
                 // 此时已经满足上述两条件之一，将缓存存入容器并重置智能指针
                 m_buffer.buffer_vec.push_back(m_buffer.buffer1);

@@ -11,7 +11,7 @@ AsyncAppender::ptr build_asyncAppender(OutputAppender::ptr appender)
 {
     AsyncAppender::ptr asy_appender = AppenderFactory::newAsyncAppender();
     asy_appender->bindAppender(appender);
-    asy_appender->setInterval(2);
+    asy_appender->setInterval(2000);
     asy_appender->start();
     return asy_appender;
 }
@@ -47,9 +47,9 @@ void test_appender2()
 
 int main(int argc, char *argv[])
 {
-    ConsoleAppender::ptr appender =AppenderFcty::GetInstance()->defaultConsoleAppender();
+    ConsoleAppender::ptr appender =AppenderFactory::GetInstance()->defaultConsoleAppender();
 
-    FileAppender::ptr fappender =AppenderFcty::GetInstance()->defaultFileAppender();
+    FileAppender::ptr fappender =AppenderFactory::GetInstance()->defaultFileAppender();
     fappender->setFile("/home/book/Webserver/log/test_log.txt");
     fappender->setAppend(false);
 

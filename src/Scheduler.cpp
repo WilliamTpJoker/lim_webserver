@@ -120,7 +120,7 @@ namespace lim_webserver
         while (m_started)
         {
             // 每一秒调度一次
-            m_cond.waitForSeconds(1);
+            m_cond.waitTime(1000);
 
             for (auto &processor : m_processors)
             {
@@ -143,7 +143,6 @@ namespace lim_webserver
     {
         auto p = new Processor(this, m_processors.size());
         p->start();
-        // m_semaphore.wait();
         m_processors.push_back(p);
     }
 

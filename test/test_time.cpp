@@ -123,7 +123,7 @@ void test_formatString()
     // 测试经过 TimeManager 处理的效率
     for (int i = 0; i < iterations; ++i)
     {
-        result = lim_webserver::TimeMgr::GetInstance()->getTimeString(time(0));
+        result = lim_webserver::TimeManager::GetInstance()->getTimeString(time(0));
     }
 
     auto end2 = std::chrono::high_resolution_clock::now();

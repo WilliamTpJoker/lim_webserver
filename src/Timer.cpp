@@ -38,7 +38,6 @@ namespace lim_webserver
         if (it != m_manager->m_timer_set.end())
         {
             m_next = GetCurrentMS() + m_ms;
-            // TODO: 可能可以通过对m_timer_set的数据结构进行优化，来优化这段操作
             m_manager->m_timer_set.erase(it);
             m_manager->m_timer_set.insert(shared_from_this());
             return true;
