@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Thread.h"
 #include "Mutex.h"
 #include "Noncopyable.h"
 #include "FdContext.h"
@@ -51,14 +50,16 @@ namespace lim_webserver
          */
         inline void handleFunction(FuncType &cb) { m_funcHandler->handle(cb); }
 
-    private:
+        /**
+         * @brief 运行
+         *
+         */
         void run();
 
     private:
         bool m_started = true;          // 开始标志符
         Poller::ptr m_poller;           // IO模块
         FuncHandler::ptr m_funcHandler; // 函数处理器
-        Thread::ptr m_thread;           // 工作线程
         MutexType m_mutex;
     };
 } // namespace lim_webserver

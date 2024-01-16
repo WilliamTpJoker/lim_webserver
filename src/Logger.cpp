@@ -1,5 +1,4 @@
 #include "Logger.h"
-#include "Fiber.h"
 #include "LogManager.h"
 #include "LogAppender.h"
 

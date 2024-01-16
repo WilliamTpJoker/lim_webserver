@@ -6,7 +6,6 @@
 #include "LogStream.h"
 #include "LogMessage.h"
 #include "Thread.h"
-#include "Fiber.h"
 
 /**
  * %p 输出日志等级
@@ -15,7 +14,7 @@
  * %d 输出日志时间
  * %t 输出线程号
  * %N 输出线程名
- * %F 输出协程号
+ * %C 输出协程号
  * %m 输出日志消息
  * %n 输出换行
  * %% 输出百分号
@@ -23,7 +22,7 @@
  * %r 输出自启动到现在的时间
  * %c 输出日志信息所属的类目
  * */
-#define DEFAULT_PATTERN "%d%T%t %N%T%F%T[%c] [%p] %f:%l%T%m%n"
+#define DEFAULT_PATTERN "%d%T%t %N%T%C%T[%c] [%p] %f:%l%T%m%n"
 
 namespace lim_webserver
 {

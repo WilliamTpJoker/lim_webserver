@@ -7,11 +7,8 @@
 namespace lim_webserver
 {
     EventLoop::EventLoop()
-    : m_poller(new EpollPoller(this)), m_funcHandler(new CoHandler(g_Scheduler))
+        : m_poller(new EpollPoller(this)), m_funcHandler(new CoHandler(g_Scheduler))
     {
-        m_thread = Thread::Create([this]
-                                  { this->run(); },
-                                  "EventLoop");
     }
 
     EventLoop::~EventLoop()
@@ -27,16 +24,13 @@ namespace lim_webserver
         }
         MutexType::Lock lock(m_mutex);
         m_started = false;
-        m_thread->join();
     }
-
-
 
     void EventLoop::run()
     {
-        while (true)
+        while (m_started)
         {
-
+            m_poller->poll(10000);
         }
     }
 

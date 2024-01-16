@@ -20,7 +20,7 @@ namespace lim_webserver
 
     public:
         Poller(EventLoop *loop) : m_loop(loop) {}
-        virtual ~Poller() = 0;
+        virtual ~Poller(){}
 
         /**
          * @brief 更新Context

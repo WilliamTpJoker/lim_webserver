@@ -176,7 +176,7 @@ namespace lim_webserver
     };
 
     // 读取配置
-    typename ConfigerVar<LogConfigerDefine>::ptr g_log_defines = Configer::Lookup("logconfig", LogConfigerDefine(), "logs config");
+    static typename ConfigerVar<LogConfigerDefine>::ptr g_log_defines = Configer::Lookup("logconfig", LogConfigerDefine(), "logs config");
 
     class LogInitializer
     {

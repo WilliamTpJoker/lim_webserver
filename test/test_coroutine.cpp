@@ -27,7 +27,6 @@ void test_schduler()
 int main()
 {   
     auto appender = AppenderFactory::GetInstance()->defaultConsoleAppender();
-    appender->setFormatter("%d%T%t %N%T%C%T[%c] [%p] %f:%l%T%m%n");
     g_logger->addAppender(appender);
     test_schduler();
     return 0;

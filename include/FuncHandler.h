@@ -15,7 +15,7 @@ namespace lim_webserver
 
     public:
         FuncHandler() {}
-        virtual ~FuncHandler() = 0;
+        virtual ~FuncHandler(){}
 
         virtual void handle(FuncType &func) = 0;
     };
@@ -30,6 +30,9 @@ namespace lim_webserver
         using ptr = std::unique_ptr<SysHandler>;
 
     public:
+        SysHandler() {}
+        ~SysHandler() {}
+
         void handle(FuncType &func) override
         {
             try
@@ -53,6 +56,7 @@ namespace lim_webserver
 
     public:
         CoHandler(Scheduler *scheduler) : m_scheduler(scheduler) {}
+        ~CoHandler() {}
 
         void handle(FuncType &func) override
         {
