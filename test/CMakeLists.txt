@@ -1,4 +1,4 @@
-include_directories(../src)
+include_directories(../spike)
 
 file(GLOB CPP_SRC_LIST *.cpp)
 
@@ -14,6 +14,6 @@ foreach(CPP_FILE ${CPP_SRC_LIST})
     # 设置可执行文件的输出路径
     set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 
-    # 链接 libconet
-    target_link_libraries(${target_name} libconet)
+    # 链接 libspnet
+    target_link_libraries(${target_name} libspnet)
 endforeach()

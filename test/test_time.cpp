@@ -2,7 +2,8 @@
 #include <chrono>
 #include <sys/time.h>
 
-#include "SpikeLog.h"
+#include "splog/splog.h"
+#include "base/TimeStamp.h"
 
 using namespace lim_webserver;
 

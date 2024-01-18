@@ -1,5 +1,5 @@
-#include "SpikeLog.h"
-#include "LogInitializer.h"
+#include "splog/splog.h"
+#include "splog/LogInitializer.h"
 
 using namespace lim_webserver;
 

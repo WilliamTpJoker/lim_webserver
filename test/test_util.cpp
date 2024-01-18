@@ -1,4 +1,4 @@
-#include "SpikeLog.h"
+#include "splog/splog.h"
 
 lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 

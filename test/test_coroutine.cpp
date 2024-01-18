@@ -1,5 +1,5 @@
-#include "Scheduler.h"
-#include "SpikeLog.h"
+#include "coroutine/Scheduler.h"
+#include "splog/splog.h"
 
 #include <iostream>
 #include <unistd.h>

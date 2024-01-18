@@ -1,4 +1,4 @@
-#include "SpikeLog.h"
+#include "splog/splog.h"
 
 #include <unistd.h>
 
