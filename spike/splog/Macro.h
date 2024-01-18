@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include "splog/Util.h"
+#include "base/BackTrace.h"
 #include "splog/LogManager.h"
 
 #if defined __GNUC__ || defined __llvm__

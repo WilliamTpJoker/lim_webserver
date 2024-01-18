@@ -12,10 +12,7 @@
 #include <assert.h>
 #include <unordered_map>
 
-#include "base/Singleton.h"
-#include "splog/Util.h"
 #include "splog/LogAppender.h"
-#include "splog/LogFormatter.h"
 #include "splog/LogMessage.h"
 
 namespace lim_webserver

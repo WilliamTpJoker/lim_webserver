@@ -1,12 +1,12 @@
 #include "coroutine/CoTimer.h"
-#include "splog/Util.h"
+#include "base/TimeStamp.h"
 
 namespace lim_webserver
 {
     CoTimer::CoTimer(uint64_t time, std::function<void()> callback, bool recurring, CoTimerManager *manager)
         : m_recurring(recurring), m_ms(time), m_callback(callback), m_manager(manager)
     {
-        m_next = GetCurrentMS() + m_ms;
+        m_next = TimeStamp::now()->ms() + m_ms;
     }
 
     CoTimer::CoTimer(uint64_t next)
@@ -37,7 +37,7 @@ namespace lim_webserver
         auto it = m_manager->m_timer_set.find(shared_from_this());
         if (it != m_manager->m_timer_set.end())
         {
-            m_next = GetCurrentMS() + m_ms;
+            m_next = TimeStamp::now()->ms() + m_ms;
             m_manager->m_timer_set.erase(it);
             m_manager->m_timer_set.insert(shared_from_this());
             return true;
@@ -64,7 +64,7 @@ namespace lim_webserver
             uint64_t start = 0;
             if (from_now)
             {
-                start = GetCurrentMS();
+                start = TimeStamp::now()->ms();
             }
             else
             {
@@ -137,7 +137,7 @@ namespace lim_webserver
 
         // 获取最近超时点
         const CoTimer::ptr &next = *m_timer_set.begin();
-        uint64_t now_ms = GetCurrentMS();
+        uint64_t now_ms = TimeStamp::now()->ms();
 
         // 已超时则返回0
         if (now_ms >= next->m_next)
@@ -173,7 +173,7 @@ namespace lim_webserver
         }
 
         // 检测系统时间
-        uint64_t now_ms = GetCurrentMS();
+        uint64_t now_ms = TimeStamp::now()->ms();
         bool rollover = detectClockRollover(now_ms);
         if (!rollover && ((*m_timer_set.begin())->m_next > now_ms))
         {

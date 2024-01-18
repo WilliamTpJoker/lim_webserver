@@ -1,26 +1,12 @@
 #include <execinfo.h>
 
-#include "Util.h"
+#include "BackTrace.h"
 #include "splog/splog.h"
 
 namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_NAME("system");
-
-    uint64_t GetCurrentMS()
-    {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        return tv.tv_sec * 1000ul + tv.tv_usec / 1000;
-    }
-
-    uint64_t GetCurrentUS()
-    {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        return tv.tv_sec * 1000 * 1000ul + tv.tv_usec;
-    }
-
+    
     void BackTrace(std::vector<std::string> &bt, int maxFrames, int skip)
     {
         // 使用 malloc 分配一段内存来存储调用栈信息

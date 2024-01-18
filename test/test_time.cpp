@@ -94,9 +94,9 @@ void test_time()
 
 void test_curTime()
 {
-    TimeStamp ts = TimeStamp::now();
-    std::cout << ts.toString() << std::endl;
-    std::cout << ts.toFormattedString(true) << std::endl;
+    TimeStamp::ptr ts = TimeStamp::now();
+    std::cout << ts->toString() << std::endl;
+    std::cout << ts->toFormattedString(true) << std::endl;
 }
 
 void test_formatString()
@@ -110,8 +110,8 @@ void test_formatString()
     // 测试直接调用构造的效率
     for (int i = 0; i < iterations; ++i)
     {
-        lim_webserver::TimeStamp ts = lim_webserver::TimeStamp::now();
-        result = ts.toFormattedString(false);
+        TimeStamp::ptr ts = lim_webserver::TimeStamp::now();
+        result = ts->toFormattedString(false);
     }
 
     auto end1 = std::chrono::high_resolution_clock::now();

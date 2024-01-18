@@ -2,6 +2,7 @@
 #include <string>
 #include <inttypes.h>
 #include <sys/time.h>
+#include <memory>
 
 #include "Mutex.h"
 #include "Singleton.h"
@@ -11,14 +12,20 @@ namespace lim_webserver
     class TimeStamp
     {
     public:
+        using ptr = std::shared_ptr<TimeStamp>;
         static const int kMicroSecondsPerSecond = 1000 * 1000;
 
-        static TimeStamp now()
+        /**
+         * @brief 获得当前时间
+         *
+         * @return TimeStamp
+         */
+        static TimeStamp::ptr now()
         {
             struct timeval tv;
             gettimeofday(&tv, nullptr);
             int64_t seconds = tv.tv_sec;
-            return TimeStamp(seconds * kMicroSecondsPerSecond + tv.tv_usec);
+            return std::make_shared<TimeStamp>(seconds * kMicroSecondsPerSecond + tv.tv_usec);
         }
 
     public:
@@ -26,8 +33,25 @@ namespace lim_webserver
 
         explicit TimeStamp(int64_t time) : m_time(time) {}
 
-        int64_t getTime() const { return m_time; }
+        /**
+         * @brief 返回微秒
+         *
+         * @return int64_t
+         */
+        int64_t us() const { return m_time; }
 
+        /**
+         * @brief 返回毫秒
+         *
+         * @return int64_t
+         */
+        int64_t ms() const { return m_time / 1000; }
+
+        /**
+         * @brief 获得字符串
+         * 
+         * @return std::string 
+         */
         std::string toString() const
         {
             char buf[32] = {0};
@@ -37,6 +61,12 @@ namespace lim_webserver
             return buf;
         }
 
+        /**
+         * @brief 获得格式化字符串
+         * 
+         * @param showMicroseconds 
+         * @return std::string 
+         */
         std::string toFormattedString(bool showMicroseconds) const
         {
             char buf[64] = {0};
@@ -61,7 +91,7 @@ namespace lim_webserver
         int64_t m_time;
     };
 
-    class TimeManager: public Singleton<TimeManager>
+    class TimeManager : public Singleton<TimeManager>
     {
         using MutexType = RWMutex;
 
@@ -89,7 +119,7 @@ namespace lim_webserver
             MutexType::WriteLock lock(m_mutex);
 
             // 堆积的尝试写线程，若已同步则直接退出
-            if(seconds==m_lastSeconds)
+            if (seconds == m_lastSeconds)
             {
                 return;
             }
