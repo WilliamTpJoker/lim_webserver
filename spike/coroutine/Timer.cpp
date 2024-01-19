@@ -1,5 +1,6 @@
 #include "coroutine/Timer.h"
 #include "base/TimeStamp.h"
+#include "Timer.h"
 
 namespace lim_webserver
 {
@@ -16,66 +17,17 @@ namespace lim_webserver
 
     bool Timer::cancel()
     {
-        TimerManager::MutexType::Lock lock(m_manager->m_mutex);
-        if (m_callback)
-        {
-            m_callback = nullptr;
-            auto it = m_manager->m_timer_set.find(shared_from_this());
-            m_manager->m_timer_set.erase(it);
-            return true;
-        }
-        return false;
+        return m_manager->cancelTimer(shared_from_this());
     }
 
     bool Timer::refresh()
     {
-        TimerManager::MutexType::Lock lock(m_manager->m_mutex);
-        if (!m_callback)
-        {
-            return false;
-        }
-        auto it = m_manager->m_timer_set.find(shared_from_this());
-        if (it != m_manager->m_timer_set.end())
-        {
-            m_next = TimeStamp::now()->ms() + m_ms;
-            m_manager->m_timer_set.erase(it);
-            m_manager->m_timer_set.insert(shared_from_this());
-            return true;
-        }
-        return false;
+        return m_manager->refreshTimer(shared_from_this());
     }
 
     bool Timer::reset(uint64_t ms, bool from_now)
     {
-        if (ms == m_ms && !from_now)
-        {
-            return true;
-        }
-        TimerManager::MutexType::Lock lock(m_manager->m_mutex);
-        if (!m_callback)
-        {
-            return false;
-        }
-        auto it = m_manager->m_timer_set.find(shared_from_this());
-        if (it != m_manager->m_timer_set.end())
-        {
-            m_manager->m_timer_set.erase(it);
-
-            uint64_t start = 0;
-            if (from_now)
-            {
-                start = TimeStamp::now()->ms();
-            }
-            else
-            {
-                start = m_next - m_ms;
-            }
-            m_ms = ms;
-            m_next = start + m_ms;
-            m_manager->addTimer(shared_from_this(), lock);
-            return true;
-        }
-        return false;
+        return m_manager->resetTimer(shared_from_this(), ms, from_now);
     }
 
     bool Timer::Comparator::operator()(const Timer::ptr &lhs, const Timer::ptr &rhs) const
@@ -107,8 +59,7 @@ namespace lim_webserver
     Timer::ptr TimerManager::addTimer(uint64_t ms, std::function<void()> callback, bool recurring)
     {
         Timer::ptr timer(new Timer(ms, callback, recurring, this));
-        MutexType::Lock lock(m_mutex);
-        addTimer(timer, lock);
+        addTimer(timer);
         return timer;
     }
 
@@ -150,7 +101,78 @@ namespace lim_webserver
         }
     }
 
+    bool TimerManager::cancelTimer(Timer::ptr timer)
+    {
+        if (!timer->m_callback)
+        {
+            return false;
+        }
+        MutexType::Lock lock(m_mutex);
+        timer->m_callback = nullptr;
+        auto it = m_timer_set.find(timer);
+        m_timer_set.erase(it);
+        return true;
+    }
+
+    bool TimerManager::refreshTimer(Timer::ptr timer)
+    {
+        if (!timer->m_callback)
+        {
+            return false;
+        }
+        {
+            MutexType::Lock lock(m_mutex);
+            auto it = m_timer_set.find(timer);
+            if (it == m_timer_set.end())
+            {
+                return false;
+            }
+            m_timer_set.erase(it);
+        }
+        timer->m_next = TimeStamp::now()->ms() + timer->m_ms;
+        {
+            MutexType::Lock lock(m_mutex);
+            m_timer_set.insert(timer);
+        }
+        return true;
+    }
+
+    bool TimerManager::resetTimer(Timer::ptr timer, uint64_t ms, bool from_now)
+    {
+        if (ms == timer->m_ms && !from_now)
+        {
+            return true;
+        }
+        if (!timer->m_callback)
+        {
+            return false;
+        }
+        {
+            MutexType::Lock lock(m_mutex);
+            auto it = m_timer_set.find(timer);
+            if (it == m_timer_set.end())
+            {
+                return false;
+            }
+            m_timer_set.erase(it);
+        }
+        uint64_t start = 0;
+        if (from_now)
+        {
+            start = TimeStamp::now()->ms();
+        }
+        else
+        {
+            start = timer->m_next - timer->m_ms;
+        }
+        timer->m_ms = ms;
+        timer->m_next = start + ms;
+        addTimer(timer);
+        return true;
+    }
+
     void TimerManager::stop()
+
     {
         if (!m_started)
         {
@@ -212,15 +234,17 @@ namespace lim_webserver
         }
     }
 
-    void TimerManager::addTimer(Timer::ptr timer, MutexType::Lock &lock)
+    void TimerManager::addTimer(Timer::ptr timer)
     {
-        // Timer入队
-        auto it = m_timer_set.insert(timer).first;
+        auto it = m_timer_set.end();
+        {
+            MutexType::Lock lock(m_mutex);
+            it = m_timer_set.insert(timer).first;
+        }
 
         // 如果加入了队首则需要重新设置Cond等待时间
         if (it == m_timer_set.begin())
         {
-            lock.unlock();
             tickle();
         }
     }

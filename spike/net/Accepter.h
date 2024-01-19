@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Socket.h"
-#include "FdContext.h"
+#include "IoChannel.h"
 
 namespace lim_webserver
 {
@@ -21,6 +21,6 @@ namespace lim_webserver
         EventLoop *m_loop;
         bool m_listening = false; // 监听标志位
         Socket::ptr m_socket;
-        FdContext m_fdcontext;
+        IoChannel m_channel;
     };
 } // namespace lim_webserver

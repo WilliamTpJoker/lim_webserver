@@ -38,7 +38,6 @@ void test_timer()
 int main()
 {
     auto appender = AppenderFactory::GetInstance()->defaultConsoleAppender();
-    appender->setFormatter("%d%T%t %N%T[%c] [%p] %f:%l%T%m%n");
     g_logger->addAppender(appender);
 
     LOG_INFO(g_logger) << "start";

@@ -2,8 +2,7 @@
 
 #include "LogManager.h"
 #include "LogInitializer.h"
-
-#include "Macro.h"
+#include "base/BackTrace.h"
 
 /**
  * @brief 使用流式方式将设定的日志级别的日志事件写入到logger
@@ -20,5 +19,28 @@
 
 #define LOG_ROOT() lim_webserver::LogManager::GetInstance()->getRoot()
 #define LOG_NAME(name) lim_webserver::LogManager::GetInstance()->getLogger(name)
+
+#if defined __GNUC__ || defined __llvm__
+#   define LIKELY(x) __builtin_expect(!!(x), 1)
+#   define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#   define LIKELY(x) (x)
+#   define UNLIKELY(x) (x)
+#endif
+
+/**
+ * @brief 断言宏封装
+ */
+#define ASSERT(condition, ...)                                                  \
+    do                                                                              \
+    {                                                                               \
+        if (!(condition))                                                           \
+        {                                                                           \
+            LOG_ERROR(LOG_ROOT()) << "\nASSERTION: " << #condition << "\t"  \
+                                          << #__VA_ARGS__ << "\nbacktrace:"         \
+                                          << lim_webserver::BackTraceToString(100); \
+            assert(condition);                                                      \
+        }                                                                           \
+    } while (false)
 
 // extern lim_webserver::LogInitializer __log__init;

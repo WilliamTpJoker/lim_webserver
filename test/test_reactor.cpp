@@ -31,7 +31,6 @@ void test_reactor()
     else if (errno == EINPROGRESS)
     {
         LOG_INFO(g_logger)<<"!";
-        
     }
 
     eventloop->run();
@@ -40,7 +39,6 @@ void test_reactor()
 int main()
 {
     auto appender = AppenderFactory::GetInstance()->defaultConsoleAppender();
-    appender->setFormatter("%d%T%t %N%T[%c] [%p] %f:%l%T%m%n");
     g_logger->addAppender(appender);
 
     test_reactor();

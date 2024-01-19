@@ -2,7 +2,7 @@
 
 #include "base/Mutex.h"
 #include "base/Noncopyable.h"
-#include "net/FdContext.h"
+#include "net/IoChannel.h"
 #include "net/Poller.h"
 #include "net/FuncHandler.h"
 
@@ -21,27 +21,27 @@ namespace lim_webserver
         void stop();
 
         /**
-         * @brief 更新Context
+         * @brief 更新Channel
          *
-         * @param context
+         * @param channel
          */
-        inline void updateContext(FdContext *context) { m_poller->updateContext(context); }
+        inline void updateChannel(IoChannel *channel) { m_poller->updateChannel(channel); }
 
         /**
-         * @brief 移除Context
+         * @brief 移除Channel
          *
-         * @param context
+         * @param channel
          */
-        inline void removeContext(FdContext *context) { m_poller->removeContext(context); }
+        inline void removeChannel(IoChannel *channel) { m_poller->removeChannel(channel); }
 
         /**
-         * @brief 确认是否存在Context
+         * @brief 确认是否存在Channel
          *
-         * @param context
+         * @param channel
          * @return true
          * @return false
          */
-        inline bool hasContext(FdContext *context) { return m_poller->hasContext(context); }
+        inline bool hasChannel(IoChannel *channel) { return m_poller->hasChannel(channel); }
 
         /**
          * @brief 处理回调

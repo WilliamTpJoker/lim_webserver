@@ -1,30 +1,30 @@
-#include "FdContext.h"
+#include "IoChannel.h"
 #include "EventLoop.h"
 
 #include <sys/epoll.h>
 
 namespace lim_webserver
 {
-    FdContext::FdContext(EventLoop *loop, int fd)
+    IoChannel::IoChannel(EventLoop *loop, int fd)
         : m_loop(loop), m_fd(fd)
     {
     }
 
-    FdContext::~FdContext()
+    IoChannel::~IoChannel()
     {
     }
 
-    void FdContext::update()
+    void IoChannel::update()
     {
-        m_loop->updateContext(this);
+        m_loop->updateChannel(this);
     }
 
-    void FdContext::remove()
+    void IoChannel::remove()
     {
-        m_loop->removeContext(this);
+        m_loop->removeChannel(this);
     }
 
-    void FdContext::trigger(uint32_t op)
+    void IoChannel::trigger(uint32_t op)
     {
         // 发生挂起事件
         if ((op & EPOLLHUP) && !(op & EPOLLIN))
@@ -60,7 +60,7 @@ namespace lim_webserver
         }
     }
 
-    FdContext::EventCallback &FdContext::getCallback(IoEvent event)
+    IoChannel::EventCallback &IoChannel::getCallback(IoEvent event)
     {
         if (event == IoEvent::READ)
         {

@@ -26,7 +26,7 @@ namespace lim_webserver
          * @brief 取消定时器
          */
         bool cancel();
-        
+
         /**
          * @brief 刷新设置定时器的执行时间
          */
@@ -64,13 +64,11 @@ namespace lim_webserver
         u_int64_t m_ms = 0;                         // 执行周期
         u_int64_t m_next = 0;                       // 精确的执行事件
         std::function<void()> m_callback = nullptr; // 召回函数
-        TimerManager *m_manager;                  // 管理器
+        TimerManager *m_manager;                    // 管理器
     };
 
     class TimerManager : public Singleton<TimerManager>, Noncopyable
     {
-        friend Timer;
-
     public:
         using MutexType = Mutex;
 
@@ -81,7 +79,7 @@ namespace lim_webserver
         /**
          * @brief 添加定时器
          *
-         * @param ms 定时器执行间隔时间
+         * @param ms 定时器执行间隔时间(毫秒)
          * @param callback 定时器回调函数
          * @param recurring 是否循环定时器
          * @return Timer::ptr
@@ -97,6 +95,35 @@ namespace lim_webserver
          * @return Timer::ptr
          */
         Timer::ptr addConditionTimer(uint64_t ms, std::function<void()> callback, std::weak_ptr<void> weak_cond, bool recurring = false);
+
+        /**
+         * @brief 取消定时器
+         *
+         * @param timer
+         * @return true
+         * @return false
+         */
+        bool cancelTimer(Timer::ptr timer);
+
+        /**
+         * @brief 刷新定时器
+         *
+         * @param timer
+         * @return true
+         * @return false
+         */
+        bool refreshTimer(Timer::ptr timer);
+
+        /**
+         * @brief 重置定时器时间
+         *
+         * @param timer 定时器
+         * @param ms 定时器执行间隔时间(毫秒)
+         * @param from_now 是否从当前时间开始计算
+         * @return true 
+         * @return false 
+         */
+        bool resetTimer(Timer::ptr timer, uint64_t ms, bool from_now = false);
 
         /**
          * @brief 生命周期结束
@@ -121,11 +148,11 @@ namespace lim_webserver
         /**
          * @brief 将定时器添加到管理器中
          */
-        void addTimer(Timer::ptr timer, MutexType::Lock &lock);
+        void addTimer(Timer::ptr timer);
 
         /**
          * @brief 执行超时回调
-         * 
+         *
          * @param callback 回调函数
          */
         void doFunc(std::function<void()> &callback);
@@ -137,7 +164,7 @@ namespace lim_webserver
 
         /**
          * @brief 唤醒线程
-         * 
+         *
          */
         void tickle();
 
@@ -149,9 +176,9 @@ namespace lim_webserver
 
     private:
         std::set<Timer::ptr, Timer::Comparator> m_timer_set; // 定时器集合
-        uint64_t m_previousTime = 0;                             // 上次执行时间
-        bool m_started = true;                                   // 生命周期管理
-        Thread::ptr m_thread;                                    // 工作线程
+        uint64_t m_previousTime = 0;                         // 上次执行时间
+        bool m_started = true;                               // 生命周期管理
+        Thread::ptr m_thread;                                // 工作线程
         MutexType m_mutex;
         ConditionVariable m_cond;
     };

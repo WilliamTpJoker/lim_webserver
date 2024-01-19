@@ -12,7 +12,7 @@ namespace lim_webserver
         WRITE = 0x4
     };
 
-    enum class FdContextState
+    enum class IoChannelState
     {
         NEW,    // 新句柄
         EXIST,  // 活动句柄
@@ -21,7 +21,7 @@ namespace lim_webserver
 
     class EventLoop;
 
-    class FdContext : public Noncopyable
+    class IoChannel : public Noncopyable
     {
         friend EventLoop;
 
@@ -30,8 +30,8 @@ namespace lim_webserver
         using EventCallback = std::function<void()>;
 
     public:
-        FdContext(EventLoop *loop, int fd);
-        ~FdContext();
+        IoChannel(EventLoop *loop, int fd);
+        ~IoChannel();
 
         /**
          * @brief 更新
@@ -110,23 +110,23 @@ namespace lim_webserver
         inline bool isNoneEvent() { return m_events == IoEvent::NONE; }
 
         /**
-         * @brief 获得Context状态
+         * @brief 获得Channel状态
          *
-         * @return FdContextState
+         * @return IoChannelState
          */
-        inline FdContextState state() const { return m_state; }
+        inline IoChannelState state() const { return m_state; }
 
         /**
-         * @brief 设置Context状态
+         * @brief 设置Channel状态
          *
          * @param state
          * @return int
          */
-        inline int setState(FdContextState state) { m_state = state; }
+        inline int setState(IoChannelState state) { m_state = state; }
 
     private:
         const int m_fd;                               // 管理的fd
-        FdContextState m_state = FdContextState::NEW; // fd状态
+        IoChannelState m_state = IoChannelState::NEW; // fd状态
         IoEvent m_events = IoEvent::NONE;             // fd的Event
         EventLoop *m_loop;                            // 所属的EventLoop
         EventCallback m_readCallback;                 // 读回调

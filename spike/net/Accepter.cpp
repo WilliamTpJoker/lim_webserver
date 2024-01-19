@@ -3,7 +3,7 @@
 namespace lim_webserver
 {
     Accepter::Accepter(EventLoop* loop, Address::ptr address)
-    : m_loop(loop), m_socket(Socket::CreateTCP(address)),m_fdcontext(loop, m_socket->fd())
+    : m_loop(loop), m_socket(Socket::CreateTCP(address)),m_channel(loop, m_socket->fd())
     {
 
     }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/Noncopyable.h"
-#include "net/FdContext.h"
+#include "net/IoChannel.h"
 
 #include <vector>
 #include <map>
@@ -23,27 +23,27 @@ namespace lim_webserver
         virtual ~Poller(){}
 
         /**
-         * @brief 更新Context
+         * @brief 更新Channel
          *
-         * @param context
+         * @param channel
          */
-        virtual void updateContext(FdContext *context) = 0;
+        virtual void updateChannel(IoChannel *channel) = 0;
 
         /**
-         * @brief 移除Context
+         * @brief 移除Channel
          *
-         * @param context
+         * @param channel
          */
-        virtual void removeContext(FdContext *context) = 0;
+        virtual void removeChannel(IoChannel *channel) = 0;
 
         /**
-         * @brief 确认是否存在Context
+         * @brief 确认是否存在Channel
          *
-         * @param context
+         * @param channel
          * @return true
          * @return false
          */
-        bool hasContext(FdContext *context);
+        bool hasChannel(IoChannel *channel);
 
         /**
          * @brief 获取响应时间
@@ -53,7 +53,7 @@ namespace lim_webserver
         virtual void poll(int ms) = 0;
 
     protected:
-        std::map<int, FdContext *> m_contexts_map; // 管理的所有context
+        std::map<int, IoChannel *> m_channels_map; // 管理的所有channel
 
     private:
         EventLoop *m_loop; // 所属的EventLoop
@@ -68,8 +68,8 @@ namespace lim_webserver
         EpollPoller(EventLoop *loop);
         ~EpollPoller();
 
-        void updateContext(FdContext *context) override;
-        void removeContext(FdContext *context) override;
+        void updateChannel(IoChannel *channel) override;
+        void removeChannel(IoChannel *channel) override;
         void poll(int ms) override;
 
     private:
@@ -77,9 +77,9 @@ namespace lim_webserver
          * @brief 修改Fd的行为
          *
          * @param op
-         * @param context
+         * @param channel
          */
-        void update(int op, FdContext *context);
+        void update(int op, IoChannel *channel);
 
     private:
         int m_epfd;                           // 文件句柄
