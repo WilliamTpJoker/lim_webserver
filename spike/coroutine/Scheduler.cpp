@@ -82,7 +82,7 @@ namespace lim_webserver
     void Scheduler::addTask(Task::ptr &task)
     {
         // 如果任务指定了处理器则直接调度
-        Processor *processor = task->m_processor;
+        Processor *processor = task->getProcessor();
         // 若处在激活态则可以调度
         if (processor && processor->m_activated)
         {

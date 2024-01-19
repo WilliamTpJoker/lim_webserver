@@ -1,22 +1,22 @@
-#include "coroutine/CoTimer.h"
+#include "coroutine/Timer.h"
 #include "base/TimeStamp.h"
 
 namespace lim_webserver
 {
-    CoTimer::CoTimer(uint64_t time, std::function<void()> callback, bool recurring, CoTimerManager *manager)
+    Timer::Timer(uint64_t time, std::function<void()> callback, bool recurring, TimerManager *manager)
         : m_recurring(recurring), m_ms(time), m_callback(callback), m_manager(manager)
     {
         m_next = TimeStamp::now()->ms() + m_ms;
     }
 
-    CoTimer::CoTimer(uint64_t next)
+    Timer::Timer(uint64_t next)
         : m_next(next)
     {
     }
 
-    bool CoTimer::cancel()
+    bool Timer::cancel()
     {
-        CoTimerManager::MutexType::Lock lock(m_manager->m_mutex);
+        TimerManager::MutexType::Lock lock(m_manager->m_mutex);
         if (m_callback)
         {
             m_callback = nullptr;
@@ -27,9 +27,9 @@ namespace lim_webserver
         return false;
     }
 
-    bool CoTimer::refresh()
+    bool Timer::refresh()
     {
-        CoTimerManager::MutexType::Lock lock(m_manager->m_mutex);
+        TimerManager::MutexType::Lock lock(m_manager->m_mutex);
         if (!m_callback)
         {
             return false;
@@ -45,13 +45,13 @@ namespace lim_webserver
         return false;
     }
 
-    bool CoTimer::reset(uint64_t ms, bool from_now)
+    bool Timer::reset(uint64_t ms, bool from_now)
     {
         if (ms == m_ms && !from_now)
         {
             return true;
         }
-        CoTimerManager::MutexType::Lock lock(m_manager->m_mutex);
+        TimerManager::MutexType::Lock lock(m_manager->m_mutex);
         if (!m_callback)
         {
             return false;
@@ -78,7 +78,7 @@ namespace lim_webserver
         return false;
     }
 
-    bool CoTimer::Comparator::operator()(const CoTimer::ptr &lhs, const CoTimer::ptr &rhs) const
+    bool Timer::Comparator::operator()(const Timer::ptr &lhs, const Timer::ptr &rhs) const
     {
         if (!lhs)
         {
@@ -91,7 +91,7 @@ namespace lim_webserver
         return lhs->m_next < rhs->m_next || (rhs->m_next == lhs->m_next && lhs.get() < rhs.get());
     }
 
-    CoTimerManager::CoTimerManager()
+    TimerManager::TimerManager()
         : m_cond(m_mutex)
     {
         m_thread = Thread::Create([this]
@@ -99,20 +99,20 @@ namespace lim_webserver
                                   "Timer");
     }
 
-    CoTimerManager::~CoTimerManager()
+    TimerManager::~TimerManager()
     {
         stop();
     }
 
-    CoTimer::ptr CoTimerManager::addTimer(uint64_t ms, std::function<void()> callback, bool recurring)
+    Timer::ptr TimerManager::addTimer(uint64_t ms, std::function<void()> callback, bool recurring)
     {
-        CoTimer::ptr timer(new CoTimer(ms, callback, recurring, this));
+        Timer::ptr timer(new Timer(ms, callback, recurring, this));
         MutexType::Lock lock(m_mutex);
         addTimer(timer, lock);
         return timer;
     }
 
-    CoTimer::ptr CoTimerManager::addConditionTimer(uint64_t ms, std::function<void()> callback, std::weak_ptr<void> weak_cond, bool recurring)
+    Timer::ptr TimerManager::addConditionTimer(uint64_t ms, std::function<void()> callback, std::weak_ptr<void> weak_cond, bool recurring)
     {
         return addTimer(
             ms,
@@ -127,7 +127,7 @@ namespace lim_webserver
             recurring);
     }
 
-    uint64_t CoTimerManager::getNextExpire()
+    uint64_t TimerManager::getNextExpire()
     {
         // 没有超时任务，则一秒后再次查询
         if (m_timer_set.empty())
@@ -136,7 +136,7 @@ namespace lim_webserver
         }
 
         // 获取最近超时点
-        const CoTimer::ptr &next = *m_timer_set.begin();
+        const Timer::ptr &next = *m_timer_set.begin();
         uint64_t now_ms = TimeStamp::now()->ms();
 
         // 已超时则返回0
@@ -150,7 +150,7 @@ namespace lim_webserver
         }
     }
 
-    void CoTimerManager::stop()
+    void TimerManager::stop()
     {
         if (!m_started)
         {
@@ -163,7 +163,7 @@ namespace lim_webserver
         m_thread->join();
     }
 
-    void CoTimerManager::listExpiredCallback(std::vector<std::function<void()>> &callback_list)
+    void TimerManager::listExpiredCallback(std::vector<std::function<void()>> &callback_list)
     {
         MutexType::Lock lock(m_mutex);
         // 若没有定时器任务则返回
@@ -180,7 +180,7 @@ namespace lim_webserver
             return;
         }
 
-        CoTimer::ptr now_timer(new CoTimer(now_ms));
+        Timer::ptr now_timer(new Timer(now_ms));
         // 如果系统超时则指针指向尾部，未超时则指向第一个大于当前时间的位置
         auto it = rollover ? m_timer_set.end() : m_timer_set.lower_bound(now_timer);
         while (it != m_timer_set.end() && (*it)->m_next == now_ms)
@@ -189,7 +189,7 @@ namespace lim_webserver
         }
 
         // 将超时任务加入超时队列并移出定时器任务队列
-        std::vector<CoTimer::ptr> expired_timer_vec;
+        std::vector<Timer::ptr> expired_timer_vec;
         expired_timer_vec.insert(expired_timer_vec.begin(), m_timer_set.begin(), it);
         m_timer_set.erase(m_timer_set.begin(), it);
 
@@ -212,7 +212,7 @@ namespace lim_webserver
         }
     }
 
-    void CoTimerManager::addTimer(CoTimer::ptr timer, MutexType::Lock &lock)
+    void TimerManager::addTimer(Timer::ptr timer, MutexType::Lock &lock)
     {
         // Timer入队
         auto it = m_timer_set.insert(timer).first;
@@ -225,7 +225,7 @@ namespace lim_webserver
         }
     }
 
-    void CoTimerManager::doFunc(std::function<void()> &callback)
+    void TimerManager::doFunc(std::function<void()> &callback)
     {
         try
         {
@@ -237,7 +237,7 @@ namespace lim_webserver
         }
     }
 
-    bool CoTimerManager::detectClockRollover(uint64_t now_ms)
+    bool TimerManager::detectClockRollover(uint64_t now_ms)
     {
         bool rollover = false;
         if (now_ms < m_previousTime && now_ms < (m_previousTime - 60 * 60 * 1000))
@@ -247,7 +247,7 @@ namespace lim_webserver
         m_previousTime = now_ms;
         return rollover;
     }
-    void CoTimerManager::tickle()
+    void TimerManager::tickle()
     {
         MutexType::Lock lock(m_mutex);
 
@@ -255,7 +255,7 @@ namespace lim_webserver
         m_cond.notify_one();
     }
 
-    void CoTimerManager::run()
+    void TimerManager::run()
     {
         while (m_started)
         {

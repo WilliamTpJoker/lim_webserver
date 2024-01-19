@@ -14,7 +14,6 @@ namespace lim_webserver
     Socket::ptr Socket::CreateUDP(Address::ptr address)
     {
         Socket::ptr sock(new Socket(address->getFamily(), UDP, 0));
-        sock->newSock();
         sock->m_isConnected = true;
         return sock;
     }
@@ -28,7 +27,6 @@ namespace lim_webserver
     Socket::ptr Socket::CreateUDPSocket()
     {
         Socket::ptr sock(new Socket(IPv4, UDP, 0));
-        sock->newSock();
         sock->m_isConnected = true;
         return sock;
     }
@@ -42,7 +40,6 @@ namespace lim_webserver
     Socket::ptr Socket::CreateUDPSocket6()
     {
         Socket::ptr sock(new Socket(IPv6, UDP, 0));
-        sock->newSock();
         sock->m_isConnected = true;
         return sock;
     }
@@ -60,8 +57,9 @@ namespace lim_webserver
     }
 
     Socket::Socket(int family, int type, int protocol)
-        : m_fd(-1), m_family(family), m_type(type), m_protocol(protocol), m_isConnected(false)
+        : m_fd(::socket(m_family, m_type, m_protocol)), m_family(family), m_type(type), m_protocol(protocol), m_isConnected(false)
     {
+        initSock();
     }
 
     Socket::~Socket()
@@ -113,8 +111,8 @@ namespace lim_webserver
         if (rt)
         {
             LOG_DEBUG(g_logger) << "getOption sock=" << m_fd
-                                    << " level=" << level << " option=" << option
-                                    << " errno=" << errno << " errstr=" << strerror(errno);
+                                << " level=" << level << " option=" << option
+                                << " errno=" << errno << " errstr=" << strerror(errno);
             return false;
         }
         return true;
@@ -125,8 +123,8 @@ namespace lim_webserver
         if (setsockopt(m_fd, level, option, value, len))
         {
             LOG_DEBUG(g_logger) << "setOption sock=" << m_fd
-                                    << " level=" << level << " option=" << option
-                                    << " errno=" << errno << " errstr=" << strerror(errno);
+                                << " level=" << level << " option=" << option
+                                << " errno=" << errno << " errstr=" << strerror(errno);
             return false;
         }
         return true;
@@ -139,7 +137,7 @@ namespace lim_webserver
         if (newsock == -1)
         {
             LOG_ERROR(g_logger) << "accept(" << m_fd << ") errno="
-                                    << errno << " errstr=" << strerror(errno);
+                                << errno << " errstr=" << strerror(errno);
             return nullptr;
         }
         if (sock->init(newsock))
@@ -166,26 +164,18 @@ namespace lim_webserver
 
     bool Socket::bind(const Address::ptr addr)
     {
-        if (!isValid())
-        {
-            newSock();
-            if (UNLIKELY(!isValid()))
-            {
-                return false;
-            }
-        }
         if (UNLIKELY(addr->getFamily() != m_family))
         {
             LOG_ERROR(g_logger) << "bind sock.family("
-                                    << m_family << ") addr.family(" << addr->getFamily()
-                                    << ") not equal, addr=" << addr->toString();
+                                << m_family << ") addr.family(" << addr->getFamily()
+                                << ") not equal, addr=" << addr->toString();
             return false;
         }
 
         if (::bind(m_fd, addr->getAddr(), addr->getAddrLen()))
         {
             LOG_ERROR(g_logger) << "bind error errrno=" << errno
-                                    << " errstr=" << strerror(errno);
+                                << " errstr=" << strerror(errno);
             return false;
         }
         getLocalAddress();
@@ -194,20 +184,11 @@ namespace lim_webserver
 
     bool Socket::connect(const Address::ptr addr, uint64_t timeout_ms)
     {
-        if (!isValid())
-        {
-            newSock();
-            if (UNLIKELY(!isValid()))
-            {
-                return false;
-            }
-        }
-
         if (UNLIKELY(addr->getFamily() != m_family))
         {
             LOG_ERROR(g_logger) << "connect sock.family("
-                                    << m_family << ") addr.family(" << addr->getFamily()
-                                    << ") not equal, addr=" << addr->toString();
+                                << m_family << ") addr.family(" << addr->getFamily()
+                                << ") not equal, addr=" << addr->toString();
             return false;
         }
 
@@ -216,28 +197,23 @@ namespace lim_webserver
             if (::connect(m_fd, addr->getAddr(), addr->getAddrLen()))
             {
                 LOG_ERROR(g_logger) << "sock=" << m_fd << " connect(" << addr->toString()
-                                        << ") error errno=" << errno << " errstr=" << strerror(errno);
+                                    << ") error errno=" << errno << " errstr=" << strerror(errno);
                 close();
                 return false;
             }
         }
         m_isConnected = true;
-        getRemoteAddress();
+        getPeerAddress();
         getLocalAddress();
         return true;
     }
 
     bool Socket::listen(int backlog)
     {
-        if (!isValid())
-        {
-            LOG_ERROR(g_logger) << "listen error sock=-1";
-            return false;
-        }
         if (::listen(m_fd, backlog) == 0)
         {
             LOG_ERROR(g_logger) << "listen error errno=" << errno
-                                    << " errstr=" << strerror(errno);
+                                << " errstr=" << strerror(errno);
             return false;
         }
         return true;
@@ -351,7 +327,7 @@ namespace lim_webserver
         return -1;
     }
 
-    Address::ptr Socket::getRemoteAddress()
+    Address::ptr Socket::getPeerAddress()
     {
         if (m_remoteAddress)
         {
@@ -425,11 +401,6 @@ namespace lim_webserver
         return m_localAddress;
     }
 
-    bool Socket::isValid() const
-    {
-        return m_fd != -1;
-    }
-
     int Socket::getError()
     {
         int error = 0;
@@ -448,21 +419,6 @@ namespace lim_webserver
         if (m_type == TCP)
         {
             setOption(IPPROTO_TCP, TCP_NODELAY, val);
-        }
-    }
-
-    void Socket::newSock()
-    {
-        m_fd = socket(m_family, m_type, m_protocol);
-        if (LIKELY(m_fd != -1))
-        {
-            initSock();
-        }
-        else
-        {
-            LOG_ERROR(g_logger) << "socket(" << m_family
-                                    << ", " << m_type << ", " << m_protocol << ") errno="
-                                    << errno << " errstr=" << strerror(errno);
         }
     }
 

@@ -8,7 +8,6 @@
 namespace lim_webserver
 {
     /**
-     * INIT:   初始状态，协程对象已创建但未开始执行
      * READY:  就绪状态，协程已准备好被调度执行
      * EXEC:   执行状态，协程正在执行中
      * HOLD:   暂停状态，协程执行被暂时挂起
@@ -17,7 +16,6 @@ namespace lim_webserver
      */
     enum class TaskState
     {
-        INIT,   // 初始状态，协程对象已创建但未开始执行
         READY,  // 就绪状态，协程已准备好被调度执行
         EXEC,   // 执行状态，协程正在执行中
         HOLD,   // 暂停状态，协程执行被暂时挂起
@@ -28,13 +26,9 @@ namespace lim_webserver
     using TaskFunc = std::function<void()>;
 
     class Processor;
-    class Scheduler;
 
-    class Task : public std::enable_shared_from_this<Task>, public Noncopyable
+    class Task : public Noncopyable
     {
-        friend Processor;
-        friend Scheduler;
-
     public:
         using ptr = std::unique_ptr<Task>;
         static ptr Create(TaskFunc func, size_t size)
@@ -46,17 +40,65 @@ namespace lim_webserver
         Task(TaskFunc func, size_t size);
         ~Task();
 
-        inline uint64_t getId() const { return m_id; }
+        inline uint64_t id() const { return m_id; }
 
+        /**
+         * @brief 上下文切入
+         *
+         */
         inline void swapIn()
         {
             m_context.swapIn();
         }
 
+        /**
+         * @brief 上下文切出
+         *
+         */
         inline void swapOut()
         {
             m_context.swapOut();
         }
+
+        /**
+         * @brief 让出线程执行权
+         * 
+         */
+        inline void yield()
+        {
+            m_state = TaskState::READY;
+            swapOut();
+        }
+
+        /**
+         * @brief 进入阻塞态
+         * 
+         */
+        inline void hold()
+        {
+            m_state = TaskState::HOLD;
+            swapOut();
+        }
+
+        /**
+         * @brief 设定Processor
+         *
+         */
+        inline void setProcessor(Processor *processor) { m_processor = processor; }
+
+        /**
+         * @brief 获得Processor
+         *
+         * @return Processor*
+         */
+        inline Processor *getProcessor() const { return m_processor; }
+
+        /**
+         * @brief 获得任务状态
+         *
+         * @return TaskState
+         */
+        inline TaskState state() const { return m_state; }
 
     private:
         /**
@@ -68,10 +110,10 @@ namespace lim_webserver
         static void StaticRun(uint32_t low32, uint32_t high32);
 
     private:
-        const uint64_t m_id;                 // 协程ID
-        TaskState m_state = TaskState::INIT; // 协程状态
-        Context m_context;                   // 协程上下文
-        Processor *m_processor = nullptr;    // 对应的执行器
-        TaskFunc m_callback;                 // 回调函数
+        const uint64_t m_id;                  // 协程ID
+        TaskState m_state = TaskState::READY; // 协程状态
+        Context m_context;                    // 协程上下文
+        Processor *m_processor = nullptr;     // 对应的执行器
+        TaskFunc m_callback;                  // 回调函数
     };
 } // namespace lim_webserver

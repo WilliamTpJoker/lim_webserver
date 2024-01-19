@@ -37,7 +37,7 @@ namespace lim_webserver
         {
             m_callback = TaskFunc();
             m_state = TaskState::EXCEPT;
-            std::cout << "Task Except: " << e.what() << " task_id=" << getId()
+            std::cout << "Task Except: " << e.what() << " task_id=" << id()
                       << "\n"
                       << BackTraceToString() << std::endl;
         }
@@ -45,11 +45,11 @@ namespace lim_webserver
         {
             m_callback = TaskFunc();
             m_state = TaskState::EXCEPT;
-            std::cout << "Task Except: task_id=" << getId()
+            std::cout << "Task Except: task_id=" << id()
                       << "\n"
                       << BackTraceToString() << std::endl;
         }
-        Processor::CoYield();
+        swapOut();
     }
 
     void Task::StaticRun(uint32_t low32, uint32_t high32)

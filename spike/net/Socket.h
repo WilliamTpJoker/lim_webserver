@@ -82,6 +82,7 @@ namespace lim_webserver
         void setRecvTimeout(int64_t v);
 
         bool getOption(int level, int option, void *result, socklen_t *len);
+        
         template <class T>
         bool getOption(int level, int option, T &result)
         {
@@ -112,35 +113,73 @@ namespace lim_webserver
         int recvFrom(void *buffer, size_t length, const Address::ptr from, int flags = 0);
         int recvFrom(iovec *buffers, size_t length, const Address::ptr from, int flags = 0);
 
-        Address::ptr getRemoteAddress();
+        /**
+         * @brief 获得端地址
+         * 
+         * @return Address::ptr 
+         */
+        Address::ptr getPeerAddress();
+
+        /**
+         * @brief 获得本地地址
+         * 
+         * @return Address::ptr 
+         */
         Address::ptr getLocalAddress();
 
+        /**
+         * @brief 获得协议族
+         *
+         * @return int
+         */
         int getFamily() const { return m_family; }
+
+        /**
+         * @brief 获得IP类型
+         *
+         * @return int
+         */
         int getType() const { return m_type; }
+
+        /**
+         * @brief 获得具体协议
+         *
+         * @return int
+         */
         int getProtocol() const { return m_protocol; }
 
+        /**
+         * @brief 确认是否建立连接
+         *
+         * @return true
+         * @return false
+         */
         bool isConnected() const { return m_isConnected; }
-        bool isValid() const;
+
+        /**
+         * @brief 获得错误信息
+         * 
+         * @return int 
+         */
         int getError();
 
         /**
          * @brief 获得句柄
-         * 
-         * @return int 
+         *
+         * @return int
          */
         int fd() const { return m_fd; }
 
     private:
         void initSock();
-        void newSock();
         bool init(int sock);
 
     private:
-        int m_fd; // 句柄
-        int m_family;
-        int m_type;
-        int m_protocol;
-        bool m_isConnected;
+        int m_fd;             // 句柄
+        const int m_family;   // 协议族
+        const int m_type;     // IP类型
+        const int m_protocol; // 具体协议
+        bool m_isConnected;   // 连接标志符,TCP需要确认连接
 
         Address::ptr m_localAddress;
         Address::ptr m_remoteAddress;

@@ -23,11 +23,24 @@ namespace lim_webserver
         proc->coYield();
     }
 
+    void Processor::CoHold()
+    {
+        auto proc = GetCurrentProcessor();
+        proc->coHold();
+    }
+
     void Processor::coYield()
     {
         Task *task = GetCurrentTask();
         assert(task);
-        task->swapOut();
+        task->yield();
+    }
+
+    void Processor::coHold()
+    {
+        Task *task = GetCurrentTask();
+        assert(task);
+        task->hold();
     }
 
     Processor::Processor(Scheduler *scheduler, int id)
@@ -77,6 +90,19 @@ namespace lim_webserver
         return true;
     }
 
+    void Processor::wakeupTask(uint64_t id)
+    {
+        auto it = m_waitMap.find(id);
+        if (it == m_waitMap.end())
+        {
+            return;
+        }
+        m_runableQueue.push(it->second);
+        m_waitMap.erase(it);
+
+        tickle();
+    }
+
     inline void Processor::garbageCollection()
     {
         m_garbageQueue.clear();
@@ -84,12 +110,7 @@ namespace lim_webserver
 
     void Processor::start()
     {
-        if (m_started)
-        {
-            return;
-        }
         MutexType::Lock lock(m_mutex);
-        m_started = true;
         m_thread = Thread::Create([this]()
                                   { this->run(); },
                                   "Proc_" + std::to_string(m_id));
@@ -155,24 +176,23 @@ namespace lim_webserver
             // 每轮环形协程调度后都重置
             while (m_curTask && m_scheduler->m_started)
             {
-                m_curTask->m_state = TaskState::EXEC;
-                m_curTask->m_processor = this;
+                m_curTask->setProcessor(this);
                 ++m_switchCount;
                 m_curTask->swapIn();
 
                 // 此时回到了Processor中
                 // 若为ready态则重新加入调度队列
-                if (m_curTask->m_state == TaskState::READY)
+                if (m_curTask->state() == TaskState::READY)
                 {
                     m_runableQueue.push(m_curTask);
                 }
                 // 若为hold态则加入等待队列
-                else if (m_curTask->m_state == TaskState::HOLD)
+                else if (m_curTask->state() == TaskState::HOLD)
                 {
-                    m_waitQueue.push(m_curTask);
+                    m_waitMap[m_curTask->id()] = std::move(m_curTask);
                 }
                 // 若为term态则加入垃圾队列，等待析构
-                else if (m_curTask->m_state == TaskState::TERM)
+                else if (m_curTask->state() == TaskState::TERM)
                 {
                     if (m_garbageQueue.size() > 16)
                     {

@@ -12,14 +12,14 @@
 
 namespace lim_webserver
 {
-    class CoTimerManager;
+    class TimerManager;
 
-    class CoTimer : public std::enable_shared_from_this<CoTimer>
+    class Timer : public std::enable_shared_from_this<Timer>
     {
-        friend CoTimerManager;
+        friend TimerManager;
 
     public:
-        using ptr = std::shared_ptr<CoTimer>;
+        using ptr = std::shared_ptr<Timer>;
 
     public:
         /**
@@ -43,8 +43,8 @@ namespace lim_webserver
         bool reset(uint64_t ms, bool from_now = false);
 
     private:
-        CoTimer(uint64_t time, std::function<void()> callback, bool recurring, CoTimerManager *manager);
-        CoTimer(uint64_t next);
+        Timer(uint64_t time, std::function<void()> callback, bool recurring, TimerManager *manager);
+        Timer(uint64_t next);
 
         /**
          * @brief 定时器比较仿函数
@@ -56,7 +56,7 @@ namespace lim_webserver
              * @param lhs 定时器智能指针
              * @param rhs 定时器智能指针
              */
-            bool operator()(const CoTimer::ptr &lhs, const CoTimer::ptr &rhs) const;
+            bool operator()(const Timer::ptr &lhs, const Timer::ptr &rhs) const;
         };
 
     private:
@@ -64,19 +64,19 @@ namespace lim_webserver
         u_int64_t m_ms = 0;                         // 执行周期
         u_int64_t m_next = 0;                       // 精确的执行事件
         std::function<void()> m_callback = nullptr; // 召回函数
-        CoTimerManager *m_manager;                  // 管理器
+        TimerManager *m_manager;                  // 管理器
     };
 
-    class CoTimerManager : public Singleton<CoTimerManager>, Noncopyable
+    class TimerManager : public Singleton<TimerManager>, Noncopyable
     {
-        friend CoTimer;
+        friend Timer;
 
     public:
         using MutexType = Mutex;
 
     public:
-        CoTimerManager();
-        virtual ~CoTimerManager();
+        TimerManager();
+        virtual ~TimerManager();
 
         /**
          * @brief 添加定时器
@@ -84,9 +84,9 @@ namespace lim_webserver
          * @param ms 定时器执行间隔时间
          * @param callback 定时器回调函数
          * @param recurring 是否循环定时器
-         * @return CoTimer::ptr
+         * @return Timer::ptr
          */
-        CoTimer::ptr addTimer(uint64_t ms, std::function<void()> callback, bool recurring = false);
+        Timer::ptr addTimer(uint64_t ms, std::function<void()> callback, bool recurring = false);
         /**
          * @brief 添加条件定时器
          *
@@ -94,9 +94,9 @@ namespace lim_webserver
          * @param callback 定时器回调函数
          * @param weak_cond 条件
          * @param recurring 是否循环
-         * @return CoTimer::ptr
+         * @return Timer::ptr
          */
-        CoTimer::ptr addConditionTimer(uint64_t ms, std::function<void()> callback, std::weak_ptr<void> weak_cond, bool recurring = false);
+        Timer::ptr addConditionTimer(uint64_t ms, std::function<void()> callback, std::weak_ptr<void> weak_cond, bool recurring = false);
 
         /**
          * @brief 生命周期结束
@@ -121,7 +121,7 @@ namespace lim_webserver
         /**
          * @brief 将定时器添加到管理器中
          */
-        void addTimer(CoTimer::ptr timer, MutexType::Lock &lock);
+        void addTimer(Timer::ptr timer, MutexType::Lock &lock);
 
         /**
          * @brief 执行超时回调
@@ -148,7 +148,7 @@ namespace lim_webserver
         void run();
 
     private:
-        std::set<CoTimer::ptr, CoTimer::Comparator> m_timer_set; // 定时器集合
+        std::set<Timer::ptr, Timer::Comparator> m_timer_set; // 定时器集合
         uint64_t m_previousTime = 0;                             // 上次执行时间
         bool m_started = true;                                   // 生命周期管理
         Thread::ptr m_thread;                                    // 工作线程

@@ -1,4 +1,4 @@
-#include "coroutine/CoTimer.h"
+#include "coroutine/Timer.h"
 #include "splog/splog.h"
 
 using namespace lim_webserver;
@@ -7,7 +7,7 @@ static Logger::ptr g_logger = LOG_NAME("test");
 
 void test_timer()
 {
-    CoTimerManager *tm = CoTimerManager::GetInstance();
+    TimerManager *tm = TimerManager::GetInstance();
 
 
     // 测试同时输出
