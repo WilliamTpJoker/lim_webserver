@@ -1,5 +1,39 @@
 # 开发更新日志
 
+## 2024/01/19
+
+完成coroutine与timer的结合，为hook做准备
+
+```bash
+
+notify
+back
+2024-01-19 21:26:17     108105 Proc_0   [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:41        Hello world
+2024-01-19 21:26:17     108105 Proc_0   [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:42        before hold
+condition wait
+tickle
+condition back
+back
+condition wait
+tickle
+condition back
+back
+condition wait
+tickle
+condition back
+back
+2024-01-19 21:26:19     108105 Proc_0   [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:44        after hold
+condition wait
+tickle
+condition back
+back
+condition wait
+tickle
+condition back
+back
+
+```
+
 ## 2024/01/17
 
 完成EventLoop与协程的配合，待Accepter和connector的完成后联调
