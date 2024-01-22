@@ -62,7 +62,7 @@ namespace lim_webserver
     private:
         bool m_recurring = false;                   // 是否循环
         u_int64_t m_ms = 0;                         // 执行周期
-        u_int64_t m_next = 0;                       // 精确的执行事件
+        u_int64_t m_next = 0;                       // 精确的执行时间
         std::function<void()> m_callback = nullptr; // 召回函数
         TimerManager *m_manager;                    // 管理器
     };

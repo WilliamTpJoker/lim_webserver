@@ -11,6 +11,7 @@
  * @param level  事件级别
  */
 #define LOG_LEVEL(logger, level) lim_webserver::LogMessageWrap(lim_webserver::LogMessage::Create(logger, __FILE__, __LINE__, time(0), level, logger->getName())).getStream()
+#define LOG_TRACE(logger) LOG_LEVEL(logger, LogLevel_TRACE)
 #define LOG_DEBUG(logger) LOG_LEVEL(logger, LogLevel_DEBUG)
 #define LOG_INFO(logger) LOG_LEVEL(logger, LogLevel_INFO)
 #define LOG_WARN(logger) LOG_LEVEL(logger, LogLevel_WARN)
@@ -18,6 +19,7 @@
 #define LOG_FATAL(logger) LOG_LEVEL(logger, LogLevel_FATAL)
 
 #define LOG_ROOT() lim_webserver::LogManager::GetInstance()->getRoot()
+#define LOG_SYS() lim_webserver::LogManager::GetInstance()->getLogger("system")
 #define LOG_NAME(name) lim_webserver::LogManager::GetInstance()->getLogger(name)
 
 #if defined __GNUC__ || defined __llvm__

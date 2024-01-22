@@ -11,11 +11,10 @@
 
 namespace lim_webserver
 {
-    class Scheduler : public Noncopyable
+    class Scheduler : public Noncopyable, public Singleton<Scheduler>
     {
         friend Processor;
         friend Singleton<Scheduler>;
-
     public:
         using MutexType = Mutex;
 
@@ -34,7 +33,7 @@ namespace lim_webserver
          *
          * @param num_threads 工作线程数
          */
-        void start(int num_threads);
+        void start(int num_threads=1);
 
         /**
          * @brief 关闭调度
@@ -77,6 +76,6 @@ namespace lim_webserver
         ConditionVariable m_cond;              // 条件变量
     };
 
-#define g_Scheduler Singleton<Scheduler>::GetInstance()
-
+#define g_Scheduler lim_webserver::Scheduler::GetInstance()
+#define co(task) g_Scheduler->createTask(&task)
 } // namespace lim_webserver

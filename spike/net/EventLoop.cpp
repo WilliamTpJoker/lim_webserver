@@ -7,7 +7,7 @@
 namespace lim_webserver
 {
     EventLoop::EventLoop()
-        : m_poller(new EpollPoller(this)), m_funcHandler(new CoHandler(g_Scheduler))
+        : m_poller(new EpollPoller(this))
     {
     }
 

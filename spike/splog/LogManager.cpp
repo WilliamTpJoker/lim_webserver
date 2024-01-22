@@ -168,7 +168,7 @@ namespace lim_webserver
     {
         ConsoleAppender::ptr appender = AppenderFactory::newConsoleAppender();
         appender->setName("console");
-        appender->setLevel(LogLevel_DEBUG);
+        appender->setLevel(LogLevel_TRACE);
         appender->setFormatter(DEFAULT_PATTERN);
         appender->start();
 

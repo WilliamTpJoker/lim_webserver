@@ -1,10 +1,14 @@
+#include "splog/splog.h"
 #include "Scheduler.h"
+#include "Hook.h"
 
 #include <memory>
 #include <iostream>
 
 namespace lim_webserver
 {
+    Logger::ptr g_logger = LOG_SYS();
+
     Scheduler *Scheduler::Create()
     {
         return new Scheduler();
@@ -14,7 +18,7 @@ namespace lim_webserver
     {
         if (!m_started)
         {
-            std::cout << "Scheduler not started" << std::endl;
+            LOG_ERROR(g_logger) << "Scheduler not started";
             return;
         }
         Task::ptr tk = Task::Create(func, 128 * 1024);
@@ -117,6 +121,7 @@ namespace lim_webserver
 
     void Scheduler::run()
     {
+        set_hook_enable(true);
         while (m_started)
         {
             // 每一秒调度一次

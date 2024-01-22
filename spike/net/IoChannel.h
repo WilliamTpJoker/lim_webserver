@@ -21,13 +21,12 @@ namespace lim_webserver
 
     class EventLoop;
 
+    class Task;
+
     class IoChannel : public Noncopyable
     {
-        friend EventLoop;
-
     public:
         using MutexType = Mutex;
-        using EventCallback = std::function<void()>;
 
     public:
         IoChannel(EventLoop *loop, int fd);
@@ -46,53 +45,17 @@ namespace lim_webserver
         void remove();
 
         /**
-         * @brief 触发回调(加入到协程调度)
+         * @brief 触发协程
          *
          */
         void trigger(uint32_t op);
 
         /**
-         * @brief 设置读事件回调
-         *
-         * @param cb
-         */
-        inline void setReadCallback(EventCallback cb) { m_readCallback = std::move(cb); }
-
-        /**
-         * @brief 设置写事件回调
-         *
-         * @param cb
-         */
-        inline void setWriteCallback(EventCallback cb) { m_writeCallback = std::move(cb); }
-
-        /**
-         * @brief 设置关闭事件回调
-         *
-         * @param cb
-         */
-        inline void setCloseCallback(EventCallback cb) { m_closeCallback = std::move(cb); }
-
-        /**
-         * @brief 设置错误事件回调
-         *
-         * @param cb
-         */
-        inline void setErrorCallback(EventCallback cb) { m_errorCallback = std::move(cb); }
-
-        /**
-         * @brief 获得回调函数
-         *
-         * @param event
-         * @return EventCallback&
-         */
-        EventCallback &getCallback(IoEvent event);
-
-        /**
          * @brief 获得事件行为
          *
-         * @return IoEvent
+         * @return int
          */
-        inline IoEvent event() const { return m_events; }
+        inline int event() const { return m_events; }
 
         /**
          * @brief 获得句柄
@@ -102,12 +65,12 @@ namespace lim_webserver
         inline int fd() const { return m_fd; }
 
         /**
-         * @brief 是否为空时间
+         * @brief 是否为空事件
          *
          * @return true
          * @return false
          */
-        inline bool isNoneEvent() { return m_events == IoEvent::NONE; }
+        inline bool isNoneEvent() const { return m_events == IoEvent::NONE; }
 
         /**
          * @brief 获得Channel状态
@@ -124,15 +87,58 @@ namespace lim_webserver
          */
         inline int setState(IoChannelState state) { m_state = state; }
 
+        /**
+         * @brief 添加event
+         *
+         * @param event
+         */
+        void addEvent(IoEvent event);
+
+        /**
+         * @brief 删除event
+         *
+         * @param event
+         */
+        void cancelEvent(IoEvent event);
+
+        /**
+         * @brief 取消所有
+         *
+         */
+        void clearEvent();
+
+        /**
+         * @brief 可写
+         *
+         * @return true
+         * @return false
+         */
+        bool isWriting() const { return m_events & IoEvent::WRITE; }
+
+        /**
+         * @brief 可读
+         *
+         * @return true
+         * @return false
+         */
+        bool isReading() const { return m_events & IoEvent::READ; }
+
+        std::string stateToString() const;
+
+        std::string eventsToString() const;
+
+    private:
+        static std::string stateToString(IoChannelState state);
+
+        static std::string eventsToString(int ev);
+
     private:
         const int m_fd;                               // 管理的fd
         IoChannelState m_state = IoChannelState::NEW; // fd状态
-        IoEvent m_events = IoEvent::NONE;             // fd的Event
+        int m_events = 0;                             // fd的Event
         EventLoop *m_loop;                            // 所属的EventLoop
-        EventCallback m_readCallback;                 // 读回调
-        EventCallback m_writeCallback;                // 写回调
-        EventCallback m_closeCallback;                // 关闭回调
-        EventCallback m_errorCallback;                  // 错误回调
+        Task *m_readTask = nullptr;                   // 读协程
+        Task *m_writeTask = nullptr;                  // 写协程
         MutexType m_mutex;
     };
 } // namespace lim_webserver

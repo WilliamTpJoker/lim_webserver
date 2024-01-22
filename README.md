@@ -1,5 +1,114 @@
 # 开发更新日志
 
+## 2024/01/24
+
+原本的思路是协程相关的线程工作于独立的线程,即GMP模型在其自己工作线程;网络IO的IO多路复用模型运行与独立的线程。这种设计模式线程分工明确,但是存在一大设计难点就是在设计非阻塞IO时,传统的同步表现异步的方式是采用忙询法,即重复调用io操作，直到查询到结果；而采用了协程的方法，那么利用好协程的特性是非常必要的，即在io无果后hold协程，在合适的时机即io多路复用接受到了信息后唤醒协程。
+这一机制对分离线程模式的设计造成了非常大的挑战，主要原因在于协程调度的线程同步方式为条件变量，对io信息无感知；而对io信息有感知的IO多路复用模型运行与别的线程。因此想要达到协程的唤醒，需要绑定回调到IO多路复用中,通过IO线程唤醒协程。
+同时这种设计方法将IO检测到的行为添加到协程调度后，会调度到多个Processor中，可能导致行为处理的无序。
+
+****
+
+最理想状态下有
+
++ 主从Reactor模型和GMP模型对应，即主Reactor与Scheduler对应，从Reactor与Processor对应。
++ 一切行为基于协程，服务器的逻辑符合同步从而不使用回调
++ 协程的调度和Reactor对用户不可见，只需要创建服务并编写运行逻辑。
++ 回调只在协程task中
+
+总结来说，当程序运行时，至少运行三条线程：1条timer,1条scheduler,1条processor.
+
+此时的一个重要问题是，IO多路复用该如何嵌入
+
++ 独立线程
++ 替换协程中的条件变量
+
+> 需要注意的是除了IO多路复用的epoll_wait或poll_wait部分，其他所有任务都应当在协程中运行
+
+****
+
+为了消除回调，则需要知道各个回调的运行时机
+
++ OnConnection: accept后执行
++ OnRead: read后执行
++ OnWrite: write后执行
++ OnClose: close后执行
+
+理想状态下的echo-server代码
+
+```c++
+class Echo: public TCPServer
+{
+    void handleClient(Socket::ptr client) override
+    {
+        // 业务逻辑
+    }
+}
+
+int main()
+{
+    auto server = Echo::Create(8080,"myserver");
+    server->start();
+}
+```
+
+最理想状态下的客户端
+
+```c++
+void func()
+{
+
+    auto client = TCPClient::Create(Address("localhost",8080),"myclient");
+
+    client->connect();
+    // 原OnConnect 回调
+    LOG<<"connect!";
+
+    client->send("hello world!");
+    auto res = client->read();
+    // 原OnMessage 回调
+    LOG<<res;
+
+    client->close();
+}
+
+int main()
+{
+    co func();  // 在协程中运行逻辑
+}
+```
+
+****
+
+IoChannel的机制提供一层抽象，所有修改event的操作都需要先操作channel后实际更新到epoll，这种方法提供了很好的安全；在设计net协程时，需要几个准则：
+
++ 一个fd只可由一个eventloop监听，一个eventloop可以监听多个fd
++ 一个channel对应一个fd，存储读写操作的协程
++ 一个socket对应一个fd，是对网络io行为的封装
+
+同时，也需要理清哪些组件是底层的，哪些组件是上层的（底层与上层的界限就是是否可被hook的函数调用）
+
++ 底层: eventloop, poller, iochannel, fdinfo
++ 上层: socket, server, client
+
+其中，底层的组件poller是eventloop的一部分，无法被hook直接调用，那么在hook函数中如何将当前的工作协程记录到iochannel中则尤为重要。因为在hook中需要先获得channel，然后修改channel的event属性，调用loop的update方法，则可以把协程记录到io复用线程中。在原本的muduo设计中，channel由connection建立并进行动态管理，而channel是server的操作单元。在该设计中，由于不需要绑定回调，所以并没有设计connection类，而是使用socket直接进行封装，换句话说，在本系统的socket负责了muduo中connection的操作，而之前提到过socket是上层行为不可被hook的函数使用，因此对channel的操作需要独立出来，考虑的方案如下：
+
+1. 添加channel manager单例管理
+2. 修改loop和poller的函数形参，将接受channel改为接受fd
+
+使用哪种方案需要考虑channel对原系统和现系统的意义
+
++ 原系统: 记录回调与状态，通过状态的不同调用不同的回调，由于回调的设定需要从内部的接口一直暴露到最外层，因此channel作为一个桥梁在各个组件层次传递（编译时绑定）
++ 现系统: 记录状态，通过状态的不同调用不同的协程，由于回调已不存在（以同步的方式存在于协程中），所以不需要再有这种将channel实体暴露在外面的设计；
+而现要考虑的是如何将协程设置到channel中，当程序在协程中运行时，协程的信息对自己是已知的，也就是说要考虑的是如何获取net的信息，至此又回到了上面的议题——“如何设计channel的操作”的两种方案，由于在poller中已经管理了其连接的channel，添加全局的单例管理类会占用额外的内存开销，并且由于回调需求的消失，该方案则取消，使用上述的方案二：修改函数传参。
+
+至此，对于修改event行为的设计则又成为设计要点——之前提到过，channel是对epoll的event属性的记录。原本的channel操作接口为
+
++ updateChannel: 将传入的Channel更新到poller中并修改ep行为，根据Channel的状态修改ep行为
++ removeChannel: 将传入的Channel从poller中移出，根据Channel的状态删除ep行为
++ hasChannel: 查询是否有channel，由于channel不再存在于外部，因此该方法可废弃
+
+Channel的进一步
+
 ## 2024/01/19
 
 完成coroutine与timer的结合，为hook做准备

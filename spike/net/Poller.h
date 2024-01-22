@@ -19,8 +19,10 @@ namespace lim_webserver
         using ptr = std::unique_ptr<Poller>;
 
     public:
-        Poller(EventLoop *loop) : m_loop(loop) {}
-        virtual ~Poller(){}
+        Poller(EventLoop *loop);
+        virtual ~Poller() {}
+
+        IoChannel *getChannel(int fd);
 
         /**
          * @brief 更新Channel
@@ -37,16 +39,7 @@ namespace lim_webserver
         virtual void removeChannel(IoChannel *channel) = 0;
 
         /**
-         * @brief 确认是否存在Channel
-         *
-         * @param channel
-         * @return true
-         * @return false
-         */
-        bool hasChannel(IoChannel *channel);
-
-        /**
-         * @brief 获取响应时间
+         * @brief 读取io
          *
          * @param ms
          */
@@ -68,8 +61,25 @@ namespace lim_webserver
         EpollPoller(EventLoop *loop);
         ~EpollPoller();
 
+        /**
+         * @brief 更新channel
+         *
+         * @param channel
+         */
         void updateChannel(IoChannel *channel) override;
+
+        /**
+         * @brief 移除channel
+         *
+         * @param channel
+         */
         void removeChannel(IoChannel *channel) override;
+
+        /**
+         * @brief 读取io
+         *
+         * @param ms
+         */
         void poll(int ms) override;
 
     private:
@@ -80,6 +90,8 @@ namespace lim_webserver
          * @param channel
          */
         void update(int op, IoChannel *channel);
+
+        static const char* opToString(int op);
 
     private:
         int m_epfd;                           // 文件句柄

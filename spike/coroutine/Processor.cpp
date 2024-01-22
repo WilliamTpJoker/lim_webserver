@@ -1,5 +1,6 @@
 #include "Processor.h"
 #include "Scheduler.h"
+#include "Hook.h"
 
 #include <iostream>
 
@@ -122,7 +123,6 @@ namespace lim_webserver
         // 若处于休眠态，则唤醒
         if (m_idled)
         {
-            std::cout << "tickle" << std::endl;
             m_cond.notify_one();
         }
         // 若处于工作态，则尝试通知
@@ -131,7 +131,6 @@ namespace lim_webserver
             // 若已被通知，则不通知
             if (!m_notified)
             {
-                std::cout << "notify" << std::endl;
                 m_notified = true;
             }
         }
@@ -152,14 +151,13 @@ namespace lim_webserver
 
         // 进入等待状态
         m_idled = true;
-        std::cout << "condition wait" << std::endl;
         m_cond.wait();
-        std::cout << "condition back" << std::endl;
         m_idled = false;
     }
 
     void Processor::run()
     {
+        set_hook_enable(true);
         GetCurrentProcessor() = this;
         while (m_scheduler->m_started)
         {
@@ -168,7 +166,6 @@ namespace lim_webserver
                 // 执行空闲任务
                 idle();
                 // 回到了工作状态，说明调度了新任务到队列中
-                std::cout << "back" << std::endl;
                 addNewTask();
                 continue;
             }

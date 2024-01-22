@@ -1,9 +1,10 @@
 #include "net/Socket.h"
 #include "splog/splog.h"
+#include "coroutine/FdInfo.h"
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_SYS();
 
     Socket::ptr Socket::CreateTCP(Address::ptr address)
     {
@@ -67,15 +68,15 @@ namespace lim_webserver
         close();
     }
 
-    // int64_t Socket::getSendTimeout()
-    // {
-    //     FdCtx::ptr ctx = FdMgr::GetInstance()->get(m_fd);
-    //     if (ctx)
-    //     {
-    //         return ctx->getTimeout(SO_SNDTIMEO);
-    //     }
-    //     return -1;
-    // }
+    int64_t Socket::getSendTimeout()
+    {
+        FdInfo::ptr fdInfo = FdManager::GetInstance()->get(m_fd);
+        if (fdInfo)
+        {
+            return fdInfo->getTimeout(SO_SNDTIMEO);
+        }
+        return -1;
+    }
 
     void Socket::setSendTimeout(int64_t v)
     {
@@ -86,15 +87,15 @@ namespace lim_webserver
         setOption(SOL_SOCKET, SO_SNDTIMEO, tv);
     }
 
-    // int64_t Socket::getRecvTimeout()
-    // {
-    //     FdCtx::ptr ctx = FdMgr::GetInstance()->get(m_fd);
-    //     if (ctx)
-    //     {
-    //         return ctx->getTimeout(SO_RCVTIMEO);
-    //     }
-    //     return -1;
-    // }
+    int64_t Socket::getRecvTimeout()
+    {
+        FdInfo::ptr fdInfo = FdManager::GetInstance()->get(m_fd);
+        if (fdInfo)
+        {
+            return fdInfo->getTimeout(SO_RCVTIMEO);
+        }
+        return -1;
+    }
 
     void Socket::setRecvTimeout(int64_t v)
     {
@@ -147,20 +148,20 @@ namespace lim_webserver
         return nullptr;
     }
 
-    // bool Socket::init(int sock)
-    // {
-    //     FdCtx::ptr ctx = FdMgr::GetInstance()->get(sock);
-    //     if (ctx && ctx->isSocket() && !ctx->isClosed())
-    //     {
-    //         m_fd = sock;
-    //         m_isConnected = true;
-    //         initSock();
-    //         getLocalAddress();
-    //         getRemoteAddress();
-    //         return true;
-    //     }
-    //     return false;
-    // }
+    bool Socket::init(int sock)
+    {
+        FdInfo::ptr fdInfo = FdManager::GetInstance()->get(sock);
+        if (fdInfo && fdInfo->isSocket())
+        {
+            m_fd = sock;
+            m_isConnected = true;
+            initSock();
+            getLocalAddress();
+            getPeerAddress();
+            return true;
+        }
+        return false;
+    }
 
     bool Socket::bind(const Address::ptr addr)
     {
@@ -191,17 +192,17 @@ namespace lim_webserver
                                 << ") not equal, addr=" << addr->toString();
             return false;
         }
+        FdInfo::ptr fdInfo = FdManager::GetInstance()->get(m_fd);
+        fdInfo->setConnectTimeout(timeout_ms);
 
-        if (timeout_ms == (uint64_t)-1)
+        if (::connect(m_fd, addr->getAddr(), addr->getAddrLen()))
         {
-            if (::connect(m_fd, addr->getAddr(), addr->getAddrLen()))
-            {
-                LOG_ERROR(g_logger) << "sock=" << m_fd << " connect(" << addr->toString()
-                                    << ") error errno=" << errno << " errstr=" << strerror(errno);
-                close();
-                return false;
-            }
+            LOG_ERROR(g_logger) << "sock=" << m_fd << " connect(" << addr->toString()
+                                << ") error errno=" << errno << " errstr=" << strerror(errno);
+            close();
+            return false;
         }
+
         m_isConnected = true;
         getPeerAddress();
         getLocalAddress();
