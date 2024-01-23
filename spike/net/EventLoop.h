@@ -20,21 +20,34 @@ namespace lim_webserver
         ~EventLoop();
         void stop();
 
-        inline IoChannel * getChannel(int fd){return m_poller->getChannel(fd);}
+        /**
+         * @brief 添加event
+         *
+         * @param fd
+         * @param event
+         * @return true
+         * @return false
+         */
+        bool addEvent(int fd, IoEvent event);
 
         /**
-         * @brief 更新Channel
+         * @brief 取消event
          *
-         * @param channel
+         * @param fd
+         * @param event
+         * @return true
+         * @return false
          */
-        inline void updateChannel(IoChannel *channel) { m_poller->updateChannel(channel); }
+        bool cancelEvent(int fd, IoEvent event);
 
         /**
-         * @brief 移除Channel
+         * @brief 清空event
          *
-         * @param channel
+         * @param fd
+         * @return true
+         * @return false
          */
-        inline void removeChannel(IoChannel *channel) { m_poller->removeChannel(channel); }
+        bool clearEvent(int fd);
 
         /**
          * @brief 运行
@@ -43,8 +56,7 @@ namespace lim_webserver
         void run();
 
     private:
-        bool m_started = true;          // 开始标志符
-        Poller::ptr m_poller;           // IO模块
-        MutexType m_mutex;
+        bool m_started = true; // 开始标志符
+        Poller::ptr m_poller;  // IO模块
     };
 } // namespace lim_webserver

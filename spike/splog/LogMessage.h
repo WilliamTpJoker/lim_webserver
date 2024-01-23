@@ -4,6 +4,7 @@
 
 #include "LogLevel.h"
 #include "LogStream.h"
+#include "base/FileName.h"
 
 namespace lim_webserver
 {
@@ -24,7 +25,7 @@ namespace lim_webserver
          * @param time          时间戳
          * @param level         日志级别，默认为DEBUG级别
          */
-        static ptr Create(std::shared_ptr<Logger> logger, const char *file, int32_t line, uint64_t time, LogLevel level,std::string name)
+        static ptr Create(std::shared_ptr<Logger> logger, FileName file, int32_t line, uint64_t time, LogLevel level, std::string name)
         {
             return std::make_shared<LogMessage>(logger, file, line, time, level, name);
         }
@@ -39,15 +40,15 @@ namespace lim_webserver
          * @param time          时间戳
          * @param level         日志级别，默认为DEBUG级别
          */
-        LogMessage(std::shared_ptr<Logger> logger, const char *file, int32_t line, uint64_t time, LogLevel level, std::string name)
+        LogMessage(std::shared_ptr<Logger> logger, FileName file, int32_t line, uint64_t time, LogLevel level, std::string name)
             : m_logger(logger), m_file(file), m_line(line), m_time(time), m_level(level), m_name(name) {}
 
         /**
          * @brief 获取文件路径。
          *
-         * @return const char* 文件路径。
+         * @return const FileName & 文件路径。
          */
-        const char *getFile() const { return m_file; }
+        const FileName &getFile() const { return m_file; }
         /**
          * @brief 获取日志事件所在的行号。
          *
@@ -88,7 +89,7 @@ namespace lim_webserver
         const std::string &getName() const { return m_name; }
 
     private:
-        const char *m_file = nullptr;     // 文件名
+        FileName m_file;                  // 文件名
         LogLevel m_level;                 // 级别
         uint32_t m_line = 0;              // 行号
         uint64_t m_time;                  // 时间戳

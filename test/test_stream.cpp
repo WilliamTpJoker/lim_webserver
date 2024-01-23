@@ -1,4 +1,4 @@
-#include "splog/splog.h"
+#include "splog.h"
 
 #include <iostream>
 

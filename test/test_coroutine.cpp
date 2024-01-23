@@ -1,5 +1,5 @@
-#include "coroutine/coroutine.h"
-#include "splog/splog.h"
+#include "coroutine.h"
+#include "splog.h"
 
 #include <iostream>
 #include <unistd.h>

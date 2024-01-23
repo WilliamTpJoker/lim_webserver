@@ -12,6 +12,12 @@ namespace lim_webserver
         return proc;
     }
 
+    Scheduler *Processor::GetCurrentScheduler()
+    {
+        auto proc = GetCurrentProcessor();
+        return proc ? proc->m_scheduler : nullptr;
+    }
+
     Task *Processor::GetCurrentTask()
     {
         auto proc = GetCurrentProcessor();

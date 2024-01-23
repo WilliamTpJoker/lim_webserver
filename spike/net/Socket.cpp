@@ -1,5 +1,5 @@
 #include "net/Socket.h"
-#include "splog/splog.h"
+#include "splog.h"
 #include "coroutine/FdInfo.h"
 
 namespace lim_webserver
@@ -111,7 +111,7 @@ namespace lim_webserver
         int rt = getsockopt(m_fd, level, option, result, len);
         if (rt)
         {
-            LOG_DEBUG(g_logger) << "getOption sock=" << m_fd
+            LOG_TRACE(g_logger) << "getOption sock=" << m_fd
                                 << " level=" << level << " option=" << option
                                 << " errno=" << errno << " errstr=" << strerror(errno);
             return false;
@@ -123,7 +123,7 @@ namespace lim_webserver
     {
         if (setsockopt(m_fd, level, option, value, len))
         {
-            LOG_DEBUG(g_logger) << "setOption sock=" << m_fd
+            LOG_TRACE(g_logger) << "setOption sock=" << m_fd
                                 << " level=" << level << " option=" << option
                                 << " errno=" << errno << " errstr=" << strerror(errno);
             return false;

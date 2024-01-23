@@ -26,23 +26,11 @@ namespace lim_webserver
     class IoChannel : public Noncopyable
     {
     public:
-        using MutexType = Mutex;
+        using MutexType = Spinlock;
 
     public:
-        IoChannel(EventLoop *loop, int fd);
+        IoChannel(int fd);
         ~IoChannel();
-
-        /**
-         * @brief 更新
-         *
-         */
-        void update();
-
-        /**
-         * @brief 移除
-         *
-         */
-        void remove();
 
         /**
          * @brief 触发协程
@@ -92,20 +80,20 @@ namespace lim_webserver
          *
          * @param event
          */
-        void addEvent(IoEvent event);
+        bool addEvent(IoEvent event);
 
         /**
          * @brief 删除event
          *
          * @param event
          */
-        void cancelEvent(IoEvent event);
+        bool cancelEvent(IoEvent event);
 
         /**
          * @brief 取消所有
          *
          */
-        void clearEvent();
+        bool clearEvent();
 
         /**
          * @brief 可写
@@ -136,7 +124,6 @@ namespace lim_webserver
         const int m_fd;                               // 管理的fd
         IoChannelState m_state = IoChannelState::NEW; // fd状态
         int m_events = 0;                             // fd的Event
-        EventLoop *m_loop;                            // 所属的EventLoop
         Task *m_readTask = nullptr;                   // 读协程
         Task *m_writeTask = nullptr;                  // 写协程
         MutexType m_mutex;

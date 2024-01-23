@@ -1,5 +1,74 @@
 # 开发更新日志
 
+## 2024/01/25
+
+仿照libgo实现语法糖
+
+``` c++
+// 化简后的协程创建
+co[]
+{
+    sleep(2);
+}
+
+// 原版的协程创建
+co_sched->createTask(
+    []
+    {
+        sleep(2);
+    }
+)
+```
+
+目前针对channel的设计仍然有问题——没有主动创建channel。虽然channel被管理于poller中，但channel的创建不在poller中。
+通过修改数据结构为数组，在构造函数中创建32个channel，当不够时再增加。
+
+****
+
+目前hook也可以正常运行，但仍然存在错误
+
+```c++
+2024-01-23 17:22:15     36372 Proc_0    [system] [TRACE] Hook.cpp:286       fd = 4 create socket
+2024-01-23 17:22:15     36372 Proc_0    [root] [INFO] test_hook.cpp:40      begin connect
+2024-01-23 17:22:15     36372 Proc_0    [system] [TRACE] Hook.cpp:300       fd = 4 connect
+2024-01-23 17:22:15     36372 Proc_0    [system] [TRACE] Hook.cpp:335       run in coroutine
+2024-01-23 17:22:15     36372 Proc_0    [system] [TRACE] Poller.cpp:175     epoll_ctl op = ADD fd = 4 event = { OUT  }
+2024-01-23 17:22:15     36370 main      [system] [TRACE] Poller.cpp:141     1 events happened
+2024-01-23 17:22:15     36370 main      [system] [TRACE] IoChannel.cpp:24   OUT 
+2024-01-23 17:22:15     36370 main      [system] [TRACE] Poller.cpp:141     1 events happened
+2024-01-23 17:22:15     36372 Proc_0    [system] [TRACE] Hook.cpp:360       coroutine waked
+2024-01-23 17:22:15     36370 main      [system] [TRACE] IoChannel.cpp:24   OUT 
+2024-01-23 17:22:15     36372 Proc_0    [root] [INFO] test_hook.cpp:42      connect rt=0 errno = 115 strerror = Operation now in progress
+2024-01-23 17:22:15     36372 Proc_0    [system] [TRACE] Hook.cpp:134       fd = 4 try function : send
+2024-01-23 17:22:15     36370 main      [system] [TRACE] IoChannel.cpp:24   OUT 
+2024-01-23 17:22:15     36370 main      [system] [TRACE] Poller.cpp:141     1 events happened
+2024-01-23 17:22:15     36370 main      [system] [TRACE] IoChannel.cpp:24   OUT 
+2024-01-23 17:22:15     36370 main      [system] [TRACE] Poller.cpp:141     1 events happened
+2024-01-23 17:22:15     36370 main      [system] [TRACE] IoChannel.cpp:24   OUT 
+2024-01-23 17:22:15     36372 Proc_0    [system] [TRACE] Hook.cpp:134       fd = 4 try function : recv
+2024-01-23 17:22:15     36370 main      [system] [TRACE] Poller.cpp:141     1 events happened
+2024-01-23 17:22:15     36372 Proc_0    [system] [ERROR] IoChannel.cpp:62   addEvent assert fd = 4 event = {IN } channel.event = {IN OUT }
+2024-01-23 17:22:15     36372 Proc_0    [root] [ERROR] IoChannel.cpp:63
+ASSERTION: !(m_events & event)
+backtrace:
+output/test_hook(+0x43f9b) [0x55a295001f9b]
+output/test_hook(+0x44896) [0x55a295002896]
+output/test_hook(+0x4af5e) [0x55a295008f5e]
+output/test_hook(+0x3cc47) [0x55a294ffac47]
+output/test_hook(+0x176b8) [0x55a294fd56b8]
+output/test_hook(recv+0x2d) [0x55a294fd5c6d]
+output/test_hook(+0xd112) [0x55a294fcb112]
+output/test_hook(+0x32012) [0x55a294ff0012]
+/lib/x86_64-linux-gnu/libc.so.6(+0x58680) [0x7f97483b4680]
+
+test_hook: IoChannel.cpp:63: bool lim_webserver::IoChannel::addEvent(lim_webserver::IoEvent): Assertion `!(m_events & event)' failed.
+Aborted (core dumped)
+```
+
+> 从以上调试信息可以发现，是由于我在addEvent中添加的重复事件报错所导致，将其注释则问题解决
+> 原因是在hook中connect本身也是一个读操作，后续的recv又是一个读操作，导致了操作的重复注册。
+> TODO: 所以目前需要考虑的问题是是否需要对这部分工作进行优化（换方式实现connect）
+
 ## 2024/01/24
 
 原本的思路是协程相关的线程工作于独立的线程,即GMP模型在其自己工作线程;网络IO的IO多路复用模型运行与独立的线程。这种设计模式线程分工明确,但是存在一大设计难点就是在设计非阻塞IO时,传统的同步表现异步的方式是采用忙询法,即重复调用io操作，直到查询到结果；而采用了协程的方法，那么利用好协程的特性是非常必要的，即在io无果后hold协程，在合适的时机即io多路复用接受到了信息后唤醒协程。
@@ -117,8 +186,8 @@ Channel的进一步
 
 notify
 back
-2024-01-19 21:26:17     108105 Proc_0   [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:41        Hello world
-2024-01-19 21:26:17     108105 Proc_0   [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:42        before hold
+2024-01-19 21:26:17     108105 Proc_0   [test_co] [INFO] test_coroutine.cpp:41        Hello world
+2024-01-19 21:26:17     108105 Proc_0   [test_co] [INFO] test_coroutine.cpp:42        before hold
 condition wait
 tickle
 condition back
@@ -131,7 +200,7 @@ condition wait
 tickle
 condition back
 back
-2024-01-19 21:26:19     108105 Proc_0   [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:44        after hold
+2024-01-19 21:26:19     108105 Proc_0   [test_co] [INFO] test_coroutine.cpp:44        after hold
 condition wait
 tickle
 condition back
@@ -152,17 +221,17 @@ back
 完成定时器模块
 
 ```bash
-2024-01-14 21:38:33     34236 main      [test] [INFO] /home/book/Webserver/test/test_timer.cpp:20       start
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
-2024-01-14 21:38:34     34237 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:18       hello world
+2024-01-14 21:38:33     34236 main      [test] [INFO] test_timer.cpp:20       start
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
+2024-01-14 21:38:34     34237 Timer     [test] [INFO] test_timer.cpp:18       hello world
 ```
 
 采用独立线程来处理定时任务
@@ -170,26 +239,26 @@ back
 已知问题：对于循环打印的计时器任务，存在一定问题
 
 ```bash
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-2024-01-14 21:46:11     34541 Timer     [test] [INFO] /home/book/Webserver/test/test_timer.cpp:28       hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
-���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] /home/book/Webserver/test/test_timer.cpp:28    hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+2024-01-14 21:46:11     34541 Timer     [test] [INFO] test_timer.cpp:28       hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
+���&=V14 21:46:11       34541 Timer     [test] [UNKNOWN] test_timer.cpp:28    hello world 200
 ```
 
 > 对于以上实验现象，推测可能的原因为 程序结束时析构顺序混乱导致
@@ -215,16 +284,16 @@ tickle
 tickle
 tickle
 back
-2024-01-12 00:49:22     81060 Proc      1       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      2       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      3       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      4       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      5       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      6       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      7       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      8       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      9       [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
-2024-01-12 00:49:22     81060 Proc      10      [test_co] [INFO] /home/book/Webserver/test/test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      1       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      2       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      3       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      4       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      5       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      6       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      7       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      8       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      9       [test_co] [INFO] test_coroutine.cpp:14        Hello world
+2024-01-12 00:49:22     81060 Proc      10      [test_co] [INFO] test_coroutine.cpp:14        Hello world
 tickle
 back
 ```

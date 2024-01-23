@@ -1,5 +1,6 @@
-#include "splog/splog.h"
-#include "coroutine/coroutine.h"
+#include "splog.h"
+#include "coroutine.h"
+#include "net/EventLoop.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -13,15 +14,17 @@ lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 void test_sleep()
 {
     LOG_INFO(g_logger) << "test_sleep: start";
-    g_Scheduler->createTask([]
-                            {
-    sleep(2);
-    LOG_INFO(g_logger)<<"test_sleep: 2 seconds"; });
+    co[]
+    {
+        sleep(2);
+        LOG_INFO(g_logger) << "test_sleep: 2 seconds";
+    };
 
-    g_Scheduler->createTask([]
-                            {
-    sleep(3);
-    LOG_INFO(g_logger)<<"test_sleep: 3 seconds"; });
+    co[]
+    {
+        sleep(3);
+        LOG_INFO(g_logger) << "test_sleep: 3 seconds";
+    };
 }
 
 void test_socket()
@@ -32,11 +35,11 @@ void test_socket()
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(80);
-    inet_pton(AF_INET, "180.101.50.188", &addr.sin_addr.s_addr);
+    inet_pton(AF_INET, "180.101.50.242", &addr.sin_addr.s_addr);
 
     LOG_INFO(g_logger) << "begin connect";
     int rt = connect(sock, (const sockaddr *)&addr, sizeof(addr));
-    LOG_INFO(g_logger) << "connect rt=" << rt << " errno=" << errno;
+    LOG_INFO(g_logger) << "connect rt=" << rt << " errno = " << errno << " strerror = " << strerror(errno);
 
     if (rt)
     {
@@ -45,7 +48,7 @@ void test_socket()
 
     const char data[] = "GET / HTTP/1.0\r\n\r\n";
     rt = send(sock, data, sizeof(data), 0);
-    LOG_INFO(g_logger) << "send rt=" << rt << " errno=" << errno;
+    LOG_INFO(g_logger) << "send rt=" << rt << " errno = " << errno << " strerror = " << strerror(errno);
 
     if (rt <= 0)
     {
@@ -53,10 +56,10 @@ void test_socket()
     }
 
     std::string buff;
-    buff.resize(4096);
+    buff.resize(2048);
 
     rt = recv(sock, &buff[0], buff.size(), 0);
-    LOG_INFO(g_logger) << "recv rt=" << rt << " errno=" << errno;
+    LOG_INFO(g_logger) << "recv rt=" << rt << " errno = " << errno << " strerror = " << strerror(errno);
 
     if (rt <= 0)
     {
@@ -65,14 +68,20 @@ void test_socket()
 
     buff.resize(rt);
     LOG_INFO(g_logger) << buff;
+    lim_webserver::EventLoop::GetInstance()->stop();
 }
 
 int main(int argc, char *args[])
 {
-    LOG_SYS()->setLevel(LogLevel_TRACE);
-    g_Scheduler->start();
-    // co(test_sleep);
-    co(test_socket);
-    sleep(3);
+    lim_webserver::LogLevel level = LogLevel_DEBUG;
+    if (argc == 2)
+    {
+        level = LogLevel_TRACE;
+    }
+    LOG_SYS()->setLevel(level);
+    co_sched->start();
+    // co test_sleep;
+    co test_socket;
+    lim_webserver::EventLoop::GetInstance()->run();
     return 0;
 }

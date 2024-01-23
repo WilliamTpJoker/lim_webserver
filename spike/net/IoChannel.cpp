@@ -1,7 +1,7 @@
 #include "IoChannel.h"
 #include "EventLoop.h"
-#include "coroutine/coroutine.h"
-#include "splog/splog.h"
+#include "coroutine.h"
+#include "splog.h"
 
 #include <sys/epoll.h>
 #include <sstream>
@@ -10,8 +10,8 @@ namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_SYS();
 
-    IoChannel::IoChannel(EventLoop *loop, int fd)
-        : m_loop(loop), m_fd(fd)
+    IoChannel::IoChannel(int fd)
+        : m_fd(fd)
     {
     }
 
@@ -19,19 +19,9 @@ namespace lim_webserver
     {
     }
 
-    void IoChannel::update()
-    {
-        m_loop->updateChannel(this);
-    }
-
-    void IoChannel::remove()
-    {
-        m_loop->removeChannel(this);
-    }
-
     void IoChannel::trigger(uint32_t op)
     {
-        LOG_TRACE(g_logger) <<eventsToString(op);
+        LOG_TRACE(g_logger) << eventsToString(op);
         // 发生挂起事件则强制通知所有存在的协程
         if ((op & EPOLLHUP) && !(op & EPOLLIN))
         {
@@ -63,8 +53,15 @@ namespace lim_webserver
         }
     }
 
-    void IoChannel::addEvent(IoEvent event)
+    bool IoChannel::addEvent(IoEvent event)
     {
+        MutexType::Lock lock(m_mutex);
+        // 存在则跳过
+        if (m_events & event)
+        {
+            return false;
+        }
+
         // 若在协程中则记录
         Task *task = Processor::GetCurrentTask();
         if (task)
@@ -79,19 +76,33 @@ namespace lim_webserver
             }
         }
         m_events = m_events | event;
-        update();
+        return true;
     }
 
-    void IoChannel::cancelEvent(IoEvent event)
+    bool IoChannel::cancelEvent(IoEvent event)
     {
+        MutexType::Lock lock(m_mutex);
+        // 不存在则报错
+        if (!(m_events & event))
+        {
+            LOG_ERROR(g_logger) << "cancelEvent assert fd = " << m_fd << " event = {" << eventsToString(event) << "} channel.event = {" << eventsToString(m_events) << "}";
+            return false;
+        }
+
         m_events = m_events & ~event;
-        update();
+        return true;
     }
 
-    void IoChannel::clearEvent()
+    bool IoChannel::clearEvent()
     {
+        MutexType::Lock lock(m_mutex);
+        // 已空
+        if (m_events==IoEvent::NONE)
+        {
+            return false;
+        }
         m_events = IoEvent::NONE;
-        update();
+        return true;
     }
 
     std::string IoChannel::stateToString() const

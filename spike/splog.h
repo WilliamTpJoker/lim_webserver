@@ -1,7 +1,7 @@
 #pragma once
 
-#include "LogManager.h"
-#include "LogInitializer.h"
+#include "splog/LogManager.h"
+#include "splog/LogInitializer.h"
 #include "base/BackTrace.h"
 
 /**

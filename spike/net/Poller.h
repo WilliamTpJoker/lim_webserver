@@ -19,24 +19,37 @@ namespace lim_webserver
         using ptr = std::unique_ptr<Poller>;
 
     public:
-        Poller(EventLoop *loop);
+        Poller();
         virtual ~Poller() {}
 
-        IoChannel *getChannel(int fd);
+        /**
+         * @brief 添加event
+         * 
+         * @param fd 
+         * @param event 
+         * @return true 
+         * @return false 
+         */
+        virtual bool addEvent(int fd, IoEvent event);
 
         /**
-         * @brief 更新Channel
-         *
-         * @param channel
+         * @brief 取消event
+         * 
+         * @param fd 
+         * @param event 
+         * @return true 
+         * @return false 
          */
-        virtual void updateChannel(IoChannel *channel) = 0;
+        virtual bool cancelEvent(int fd, IoEvent event);
 
         /**
-         * @brief 移除Channel
-         *
-         * @param channel
+         * @brief 清空event
+         * 
+         * @param fd 
+         * @return true 
+         * @return false 
          */
-        virtual void removeChannel(IoChannel *channel) = 0;
+        virtual bool clearEvent(int fd);
 
         /**
          * @brief 读取io
@@ -46,10 +59,10 @@ namespace lim_webserver
         virtual void poll(int ms) = 0;
 
     protected:
-        std::map<int, IoChannel *> m_channels_map; // 管理的所有channel
+        void channelVecResize(size_t size);
 
-    private:
-        EventLoop *m_loop; // 所属的EventLoop
+    protected:
+        std::vector<IoChannel *> m_channel_vec; // 管理的所有channel
     };
 
     class EpollPoller : public Poller
@@ -58,22 +71,37 @@ namespace lim_webserver
         using ptr = std::unique_ptr<EpollPoller>;
 
     public:
-        EpollPoller(EventLoop *loop);
+        EpollPoller();
         ~EpollPoller();
 
         /**
-         * @brief 更新channel
-         *
-         * @param channel
+         * @brief 添加event
+         * 
+         * @param fd 
+         * @param event 
+         * @return true 
+         * @return false 
          */
-        void updateChannel(IoChannel *channel) override;
+        bool addEvent(int fd, IoEvent event) override;
 
         /**
-         * @brief 移除channel
-         *
-         * @param channel
+         * @brief 取消event
+         * 
+         * @param fd 
+         * @param event 
+         * @return true 
+         * @return false 
          */
-        void removeChannel(IoChannel *channel) override;
+        bool cancelEvent(int fd, IoEvent event) override;
+
+        /**
+         * @brief 清空event
+         * 
+         * @param fd 
+         * @return true 
+         * @return false 
+         */
+        bool clearEvent(int fd) override;
 
         /**
          * @brief 读取io
@@ -91,7 +119,7 @@ namespace lim_webserver
          */
         void update(int op, IoChannel *channel);
 
-        static const char* opToString(int op);
+        static const char *opToString(int op);
 
     private:
         int m_epfd;                           // 文件句柄

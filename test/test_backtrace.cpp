@@ -1,4 +1,4 @@
-#include "splog/splog.h"
+#include "splog.h"
 
 lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 
@@ -14,7 +14,7 @@ void test_assert()
 
 int main(int argc, char **argv)
 {
-    // test_backtrace();
+    test_backtrace();
     test_assert();
 
     return 0;

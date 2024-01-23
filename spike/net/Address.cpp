@@ -1,5 +1,5 @@
 #include "Address.h"
-#include "splog/splog.h"
+#include "splog.h"
 
 #include <sstream>
 #include <ifaddrs.h>

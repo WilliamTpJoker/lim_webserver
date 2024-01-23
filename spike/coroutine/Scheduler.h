@@ -76,6 +76,4 @@ namespace lim_webserver
         ConditionVariable m_cond;              // 条件变量
     };
 
-#define g_Scheduler lim_webserver::Scheduler::GetInstance()
-#define co(task) g_Scheduler->createTask(&task)
 } // namespace lim_webserver

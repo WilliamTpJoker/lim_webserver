@@ -1,5 +1,5 @@
 #include "net/EventLoop.h"
-#include "splog/splog.h"
+#include "splog.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>

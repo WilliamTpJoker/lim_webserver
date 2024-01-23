@@ -7,6 +7,12 @@
 
 namespace lim_webserver
 {
+    inline LogStream &operator<<(LogStream &s, const FileName &v)
+    {
+        s.append(v.data_, v.size_);
+        return s;
+    }
+
     class MessageFormatItem : public LogFormatter::FormatItem
     {
     public:
@@ -76,7 +82,7 @@ namespace lim_webserver
             : m_format(format) {}
         void format(LogStream &stream, LogMessage::ptr event) override
         {
-            time_t time_l = event->getTime();   // 获取时间
+            time_t time_l = event->getTime(); // 获取时间
             std::string buf = TimeManager::GetInstance()->getTimeString(time_l);
             stream << buf;
         }

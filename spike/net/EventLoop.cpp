@@ -7,7 +7,7 @@
 namespace lim_webserver
 {
     EventLoop::EventLoop()
-        : m_poller(new EpollPoller(this))
+        : m_poller(new EpollPoller())
     {
     }
 
@@ -22,8 +22,22 @@ namespace lim_webserver
         {
             return;
         }
-        MutexType::Lock lock(m_mutex);
         m_started = false;
+    }
+
+    bool EventLoop::addEvent(int fd, IoEvent event)
+    {
+        return m_poller->addEvent(fd, event);
+    }
+
+    bool EventLoop::cancelEvent(int fd, IoEvent event)
+    {
+        return m_poller->cancelEvent(fd, event);
+    }
+
+    bool EventLoop::clearEvent(int fd)
+    {
+        return m_poller->clearEvent(fd);
     }
 
     void EventLoop::run()

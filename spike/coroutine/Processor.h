@@ -28,6 +28,8 @@ namespace lim_webserver
          */
         static Processor *&GetCurrentProcessor();
 
+        static Scheduler *GetCurrentScheduler();
+
         /**
          * @brief 获得当前Task对象
          *

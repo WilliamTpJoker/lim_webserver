@@ -3,7 +3,7 @@
 #include "base/Configer.h"
 #include "Hook.h"
 #include "base/Thread.h"
-#include "splog/splog.h"
+#include "splog.h"
 #include "coroutine/FdInfo.h"
 #include "coroutine/Timer.h"
 #include "coroutine/Scheduler.h"
@@ -131,7 +131,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
     // 进入无限循环，用于重试IO 操作
     while (true)
     {
-        LOG_TRACE(g_logger) << "fd = " << fd << "try function : " << hook_fun_name;
+        LOG_TRACE(g_logger) << "fd = " << fd << " try function : " << hook_fun_name;
         // 调用传入的原生函数执行操作
         ssize_t n = fun(fd, std::forward<Args>(args)...);
 
@@ -166,7 +166,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         }
 
         // 添加该协程事件，即后续内容
-        lim_webserver::EventLoop::GetInstance()->getChannel(fd)->addEvent((lim_webserver::IoEvent)event);
+        lim_webserver::EventLoop::GetInstance()->addEvent(fd, (lim_webserver::IoEvent)event);
 
         lim_webserver::Processor::CoHold();
         if (timer)
@@ -349,13 +349,12 @@ extern "C"
                 timeout_ms,
                 [eventloop, &sockfd, &expired]()
                 {
-                    eventloop->getChannel(sockfd)->cancelEvent(lim_webserver::WRITE);
+                    eventloop->cancelEvent(sockfd,lim_webserver::WRITE);
                     expired = true;
                 });
         }
 
-        lim_webserver::EventLoop::GetInstance()->getChannel(sockfd)->addEvent(lim_webserver::WRITE);
-
+        lim_webserver::EventLoop::GetInstance()->addEvent(sockfd, lim_webserver::WRITE);
         lim_webserver::Processor::CoHold();
         if (timer)
         {
@@ -443,7 +442,7 @@ extern "C"
             lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(fd);
             if (fdInfo)
             {
-                lim_webserver::EventLoop::GetInstance()->getChannel(fd)->clearEvent();
+                lim_webserver::EventLoop::GetInstance()->clearEvent(fd);
                 lim_webserver::FdManager::GetInstance()->del(fd);
             }
         }

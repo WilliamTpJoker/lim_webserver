@@ -2,7 +2,7 @@
 #include <chrono>
 #include <sys/time.h>
 
-#include "splog/splog.h"
+#include "splog.h"
 #include "base/TimeStamp.h"
 
 using namespace lim_webserver;

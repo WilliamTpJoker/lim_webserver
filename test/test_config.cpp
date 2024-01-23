@@ -1,4 +1,4 @@
-#include "splog/splog.h"
+#include "splog.h"
 #include "splog/LogInitializer.h"
 
 using namespace lim_webserver;
