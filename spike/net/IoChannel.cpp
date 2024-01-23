@@ -56,11 +56,6 @@ namespace lim_webserver
     bool IoChannel::addEvent(IoEvent event)
     {
         MutexType::Lock lock(m_mutex);
-        // 存在则跳过
-        if (m_events & event)
-        {
-            return false;
-        }
 
         // 若在协程中则记录
         Task *task = Processor::GetCurrentTask();

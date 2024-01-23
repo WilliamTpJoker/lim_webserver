@@ -51,6 +51,13 @@ void test_socket()
 
 int main(int argc, char *argv[])
 {
+    lim_webserver::LogLevel level = LogLevel_DEBUG;
+    if (argc == 2)
+    {
+        level = LogLevel_TRACE;
+    }
+    LOG_SYS()->setLevel(level);
+
     co_sched->start();
     co test_socket;
     g_net->run();

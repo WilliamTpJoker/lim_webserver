@@ -16,3 +16,5 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # 添加子目录
 add_subdirectory(test)
 add_subdirectory(spike)
+add_subdirectory(bench)
+add_subdirectory(examples)
