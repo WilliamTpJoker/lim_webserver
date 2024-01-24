@@ -13,7 +13,6 @@ static lim_webserver::Logger::ptr g_logger = LOG_SYS();
 
 namespace lim_webserver
 {
-    static thread_local bool t_hook_enable = false;
     static ConfigerVar<int>::ptr g_tcp_connect_timeout = Configer::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
 
 #define HOOK_FUN(F) \
@@ -77,61 +76,34 @@ namespace lim_webserver
     };
 
     static _HookIniter s_hookIniter;
-
-    bool is_hook_enable()
-    {
-        return t_hook_enable;
-    }
-
-    void set_hook_enable(bool flag)
-    {
-        t_hook_enable = flag;
-    }
 }
 
 template <typename OriginFun, typename... Args>
 static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t event, int timeout_so, Args &&...args)
 {
-
-    // 如果全局变量 t_hook_enable 为否，不启用钩子，则直接调用系统原生函数
-    if (!lim_webserver::t_hook_enable)
-    {
-        LOG_TRACE(g_logger) << "hook disabled";
-        return fun(fd, std::forward<Args>(args)...);
-    }
-
     // 如果不在协程中，则直接调用系统原生函数
     lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
+    LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << "(fd = " << fd << ") " << (!!task ? "in" : "not in") << " coroutine.";
     if (!task)
     {
-        LOG_TRACE(g_logger) << "fd = " << fd << " not run in coroutine";
         return fun(fd, std::forward<Args>(args)...);
     }
 
-    // 获取文件描述符信息，如果无法获取信息，则说明文件句柄不存在，直接调用原生函数
     lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(fd);
-    if (!fdInfo)
+    if (!fdInfo || !fdInfo->isSocket() || fdInfo->getUserNonblock())
     {
-        LOG_TRACE(g_logger) << "fd = " << fd << " unregistered in FdManager";
         return fun(fd, std::forward<Args>(args)...);
     }
-
-    // 文件描述符若不为套接字或用户设置了非阻塞模式，直接调用原生函数
-    if (!fdInfo->isSocket() || fdInfo->getUserNonblock())
-    {
-        LOG_TRACE(g_logger) << "fd = " << fd << " user set nonblocked or is not socket";
-        return fun(fd, std::forward<Args>(args)...);
-    }
-
-    // 后续则为自定义的socket操作函数
 
     // 获取超时时间
     uint64_t to = fdInfo->getTimeout(timeout_so);
     lim_webserver::Timer::ptr timer;
-    // 进入无限循环，用于重试IO 操作
+
+    // 重试IO 操作(一般循环一次)
     while (true)
     {
-        LOG_TRACE(g_logger) << "fd = " << fd << " try function : " << hook_fun_name;
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") try hook " << hook_fun_name << "(fd = " << fd << ").";
+
         // 调用传入的原生函数执行操作
         ssize_t n = fun(fd, std::forward<Args>(args)...);
 
@@ -148,19 +120,19 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
             return n;
         }
 
-        // 后续则为函数因为资源不可用的调用失败,则表明需要进行异步操作
-        auto id = task->id();
-        lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
+        // 后续则为函数因为资源不可用的调用失败,阻塞等待
+        lim_webserver::EventLoop *eventloop = lim_webserver::EventLoop::GetInstance();
         bool expired = false;
+
         // 若设置了超时时间，则创建一个条件定时器来处理超时事件
         if (to != (uint64_t)-1)
         {
-            // 超时则触发回调，若条件弱指针的对象析构了或条件为取消，则说明事件结束，直接退出；否则就设定事件类型为取消并取消事件
+            // 超时则触发回调
             timer = lim_webserver::TimerManager::GetInstance()->addTimer(
                 to,
-                [id, processor, &expired]
+                [eventloop, fd, event, &expired]()
                 {
-                    processor->wakeupTask(id);
+                    eventloop->cancelEvent(fd, (lim_webserver::IoEvent)event);
                     expired = true;
                 });
         }
@@ -190,20 +162,13 @@ extern "C"
 
     unsigned int sleep(unsigned int seconds)
     {
-        if (!lim_webserver::t_hook_enable)
-        {
-            LOG_TRACE(g_logger) << "hook disabled";
-            return sleep_f(seconds);
-        }
-
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook sleep " << (!!task ? "in" : "not in") << " coroutine.";
         if (!task)
         {
-            LOG_TRACE(g_logger) << "not run in coroutine";
             return sleep_f(seconds);
         }
 
-        LOG_TRACE(g_logger) << "run in coroutine";
         // 获取当前task的id并设定当前processor在一定时间后唤醒对应task
         uint64_t id = task->id();
         lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
@@ -213,7 +178,6 @@ extern "C"
                                                                  processor->wakeupTask(id);
                                                              });
         // 阻塞当前协程
-
         lim_webserver::Processor::CoHold();
 
         return 0;
@@ -221,20 +185,13 @@ extern "C"
 
     int usleep(useconds_t usec)
     {
-        if (!lim_webserver::t_hook_enable)
-        {
-            LOG_TRACE(g_logger) << "hook disabled";
-            return usleep_f(usec);
-        }
-
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook usleep " << (!!task ? "in" : "not in") << " coroutine.";
         if (!task)
         {
-            LOG_TRACE(g_logger) << "not run in coroutine";
             return usleep_f(usec);
         }
 
-        LOG_TRACE(g_logger) << "run in coroutine";
         uint64_t id = task->id();
         lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
         lim_webserver::TimerManager::GetInstance()->addTimer(usec / 1000,
@@ -248,20 +205,13 @@ extern "C"
 
     int nanosleep(const struct timespec *req, struct timespec *rem)
     {
-        if (!lim_webserver::t_hook_enable)
-        {
-            LOG_TRACE(g_logger) << "hook disabled";
-            return nanosleep_f(req, rem);
-        }
-
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook nanosleep " << (!!task ? "in" : "not in") << " coroutine.";
         if (!task)
         {
-            LOG_TRACE(g_logger) << "not run in coroutine";
             return nanosleep_f(req, rem);
         }
 
-        LOG_TRACE(g_logger) << "run in coroutine";
         int timeout_ms = req->tv_sec * 1000 + req->tv_nsec / 1000 / 1000;
         uint64_t id = task->id();
         lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
@@ -278,26 +228,31 @@ extern "C"
 
     int socket(int domain, int type, int protocol)
     {
-        int fd = socket_f(domain, type, protocol);
-        if (lim_webserver::t_hook_enable)
+        lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
+        if (!task)
         {
-            if (fd > 0)
-            {
-                LOG_TRACE(g_logger) << "fd = "<<fd<<" create socket";
-                lim_webserver::FdManager::GetInstance()->insert(fd);
-            }
+            LOG_TRACE(g_logger) << "not run in coroutine";
+            return socket_f(domain, type, protocol);
+        }
+
+        int fd = socket_f(domain, type, protocol);
+        if (fd > 0)
+        {
+            LOG_TRACE(g_logger) << "fd = " << fd << " create socket";
+            lim_webserver::FdManager::GetInstance()->insert(fd);
         }
         return fd;
     }
 
     int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     {
-        if (!lim_webserver::t_hook_enable)
+        lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook connect(fd = " << sockfd << ") " << (!!task ? "in" : "not in") << " coroutine.";
+        if (!task)
         {
-            LOG_TRACE(g_logger) << "hook disabled";
             return connect_f(sockfd, addr, addrlen);
         }
-        LOG_TRACE(g_logger)<<"fd = "<<sockfd<<" connect";
+
         lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(sockfd);
         if (!fdInfo)
         {
@@ -305,41 +260,31 @@ extern "C"
             return -1;
         }
 
-        // 如果文件描述符不是套接字，直接调用原始的 connect 函数并返回其结果
-        if (!fdInfo->isSocket())
-        {
-            LOG_TRACE(g_logger) << "fd = "<<sockfd<<" is not socket";
-            return connect_f(sockfd, addr, addrlen);
-        }
-
-        // 如果用户设置了非阻塞模式，直接调用原始的 connect 函数并返回其结果
-        if (fdInfo->getUserNonblock())
+        if (!fdInfo->isSocket() || fdInfo->getUserNonblock())
         {
             return connect_f(sockfd, addr, addrlen);
         }
 
-        // 调用原始的 connect 函数，尝试建立连接
+        // 调用原始的 connect 函数，尝试建立连接(非阻塞的，立即返回结果)
         int n = connect_f(sockfd, addr, addrlen);
 
         // 如果连接成功，返回 0
         if (n == 0)
         {
+            LOG_TRACE(g_logger) << "task(" << task->id() << ") hook connect(fd = " << sockfd << ") completed immediately.";
             return 0;
         }
-        // 如果连接没有立即成功且 errno 不是 EINPROGRESS，返回 n（通常为 -1）
-        else if (n != -1 || errno != EINPROGRESS)
+        else if (n != -1 || errno != EINPROGRESS) // 如果连接不在进行中，返回
         {
             return n;
         }
 
-        LOG_TRACE(g_logger) << "run in coroutine";
+        // 此时错误为EINPROGRESS，表明连接正在进行中,hold住协程等待epoll反馈
 
+        // 若定义了超时，则创建超时定时器
         lim_webserver::Timer::ptr timer;
-
         uint64_t timeout_ms = fdInfo->getConnectTimeout();
-
         lim_webserver::EventLoop *eventloop = lim_webserver::EventLoop::GetInstance();
-
         bool expired = false;
         // 如果设置了连接超时时间 timeout_ms  不等于 (uint64_t)-1
         if (timeout_ms != (uint64_t)-1)
@@ -349,17 +294,23 @@ extern "C"
                 timeout_ms,
                 [eventloop, &sockfd, &expired]()
                 {
-                    eventloop->cancelEvent(sockfd,lim_webserver::WRITE);
+                    eventloop->cancelEvent(sockfd, lim_webserver::WRITE);
                     expired = true;
                 });
         }
 
+        // 添加读时间监听
         lim_webserver::EventLoop::GetInstance()->addEvent(sockfd, lim_webserver::WRITE);
         lim_webserver::Processor::CoHold();
+
+        // 协程被唤醒
+        // 若未超时,则取消定时器
         if (timer)
         {
             timer->cancel();
         }
+
+        // 若超时,则返回超时
         if (expired)
         {
             errno = ETIMEDOUT;
@@ -437,14 +388,11 @@ extern "C"
 
     int close(int fd)
     {
-        if (lim_webserver::t_hook_enable)
+        lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(fd);
+        if (fdInfo)
         {
-            lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(fd);
-            if (fdInfo)
-            {
-                lim_webserver::EventLoop::GetInstance()->clearEvent(fd);
-                lim_webserver::FdManager::GetInstance()->del(fd);
-            }
+            lim_webserver::EventLoop::GetInstance()->clearEvent(fd);
+            lim_webserver::FdManager::GetInstance()->del(fd);
         }
         return close_f(fd);
     }
@@ -589,12 +537,10 @@ extern "C"
 
     int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
     {
-        if (!lim_webserver::t_hook_enable)
-        {
-            return setsockopt_f(sockfd, level, optname, optval, optlen);
-        }
+        int res = setsockopt_f(sockfd, level, optname, optval, optlen);
+
         // 如果选项级别是 SOL_SOCKET（套接字选项级别）
-        if (level == SOL_SOCKET)
+        if (res == 0 && level == SOL_SOCKET)
         {
             // 如果选项名称是 SO_RCVTIMEO（接收超时）或 SO_SNDTIMEO（发送超时）
             if (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)
@@ -609,6 +555,6 @@ extern "C"
                 }
             }
         }
-        return setsockopt_f(sockfd, level, optname, optval, optlen);
+        return res;
     }
 }

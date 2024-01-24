@@ -163,7 +163,6 @@ namespace lim_webserver
 
     void Processor::run()
     {
-        set_hook_enable(true);
         GetCurrentProcessor() = this;
         while (m_scheduler->m_started)
         {

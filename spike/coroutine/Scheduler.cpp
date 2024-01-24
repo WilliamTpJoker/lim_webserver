@@ -121,7 +121,6 @@ namespace lim_webserver
 
     void Scheduler::run()
     {
-        set_hook_enable(true);
         while (m_started)
         {
             // 每一秒调度一次

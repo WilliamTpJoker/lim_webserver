@@ -16,12 +16,6 @@ namespace lim_webserver
      * @brief 当前线程是否hook
      */
     bool is_hook_enable();
-
-    /**
-     * @brief 设置当前线程的hook状态
-     * @note 开启hook则会用自定义函数替代系统函数
-     */
-    void set_hook_enable(bool flag);
 }
 
 extern "C"

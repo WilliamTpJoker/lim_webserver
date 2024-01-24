@@ -40,6 +40,8 @@ namespace lim_webserver
             if (m_readTask)
             {
                 m_readTask->getProcessor()->wakeupTask(m_readTask->id());
+                // 协程操作完就置空，防止野指针
+                m_readTask = nullptr;
             }
         }
 
@@ -49,6 +51,7 @@ namespace lim_webserver
             if (m_writeTask)
             {
                 m_writeTask->getProcessor()->wakeupTask(m_writeTask->id());
+                m_writeTask = nullptr;
             }
         }
     }
@@ -92,7 +95,7 @@ namespace lim_webserver
     {
         MutexType::Lock lock(m_mutex);
         // 已空
-        if (m_events==IoEvent::NONE)
+        if (m_events == IoEvent::NONE)
         {
             return false;
         }
