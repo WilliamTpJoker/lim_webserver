@@ -17,5 +17,6 @@ void EchoServer::handleClient(Socket::ptr client)
 
 int main(int argc, char *argv[])
 {
+    return 0;
 }
 

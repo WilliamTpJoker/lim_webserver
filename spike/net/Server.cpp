@@ -24,6 +24,10 @@ namespace lim_webserver
         }
     }
 
+    void TCPServer::stop()
+    {
+    }
+
     void TCPServer::accept(Socket::ptr socket)
     {
         while (m_started)

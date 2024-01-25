@@ -58,7 +58,7 @@ namespace lim_webserver
     }
 
     Socket::Socket(int family, int type, int protocol)
-        : m_fd(::socket(m_family, m_type, m_protocol)), m_family(family), m_type(type), m_protocol(protocol), m_isConnected(false)
+        : m_fd(::socket(family, type, protocol)), m_family(family), m_type(type), m_protocol(protocol), m_isConnected(false)
     {
         initSock();
     }
@@ -193,7 +193,11 @@ namespace lim_webserver
             return false;
         }
         FdInfo::ptr fdInfo = FdManager::GetInstance()->get(m_fd);
-        fdInfo->setConnectTimeout(timeout_ms);
+        if (timeout_ms != (uint64_t)-1)
+        {
+
+            fdInfo->setConnectTimeout(timeout_ms);
+        }
 
         if (::connect(m_fd, addr->getAddr(), addr->getAddrLen()))
         {

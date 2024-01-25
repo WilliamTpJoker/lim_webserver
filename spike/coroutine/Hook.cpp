@@ -229,18 +229,13 @@ extern "C"
     int socket(int domain, int type, int protocol)
     {
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
-        if (!task)
-        {
-            LOG_TRACE(g_logger) << "not run in coroutine";
-            return socket_f(domain, type, protocol);
-        }
-
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook socket, domain = "<<domain<<" type = "<<type<<" protocal = "<<protocol;
         int fd = socket_f(domain, type, protocol);
         if (fd > 0)
         {
-            LOG_TRACE(g_logger) << "fd = " << fd << " create socket";
             lim_webserver::FdManager::GetInstance()->insert(fd);
         }
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook socket, returns (fd = " << fd << ").";
         return fd;
     }
 

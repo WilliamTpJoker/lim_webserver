@@ -6,7 +6,7 @@
 
 namespace lim_webserver
 {
-    static Logger::ptr g_logger = LOG_NAME("system");
+    static Logger::ptr g_logger = LOG_SYS();
 
     template <class T>
     static T CreateMask(uint32_t bits)
@@ -50,8 +50,9 @@ namespace lim_webserver
 
     bool Address::Lookup(std::vector<Address::ptr> &result, const std::string &host, int family, int type, int protocol)
     {
+        LOG_TRACE(g_logger)<<"family = "<<family<<" type = "<<type<<" protocol = "<<protocol;
         addrinfo hints, *res, *p;
-        memset(&hints, 0, sizeof(hints));
+        memset(&hints, 0, sizeof(struct addrinfo));
         hints.ai_family = family;
         hints.ai_socktype = type;
         hints.ai_protocol = protocol;
@@ -103,6 +104,7 @@ namespace lim_webserver
         }
 
         int error = getaddrinfo(node.c_str(), service, &hints, &res);
+
         if (error)
         {
             LOG_ERROR(g_logger) << "Address::Lookup getaddress(" << host << ", "

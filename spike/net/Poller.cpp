@@ -61,7 +61,7 @@ namespace lim_webserver
     }
 
     EpollPoller::EpollPoller()
-        : m_epfd(epoll_create(5000)), m_event_vec(16)
+        : m_epfd(epoll_create(1)), m_event_vec(16)
     {
         ASSERT(m_epfd >= 0);
     }

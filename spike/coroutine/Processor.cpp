@@ -6,6 +6,7 @@
 
 namespace lim_webserver
 {
+
     Processor *&Processor::GetCurrentProcessor()
     {
         static thread_local Processor *proc = nullptr;
@@ -15,7 +16,11 @@ namespace lim_webserver
     Scheduler *Processor::GetCurrentScheduler()
     {
         auto proc = GetCurrentProcessor();
-        return proc ? proc->m_scheduler : nullptr;
+        if (proc)
+        {
+            return proc->m_scheduler;
+        }
+        return nullptr;
     }
 
     Task *Processor::GetCurrentTask()
