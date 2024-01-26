@@ -21,12 +21,12 @@ void test_socket()
     addr->setPort(80);
     if (!sock->connect(addr))
     {
-        LOG_ERROR(g_logger) << "connect " << addr->toString() << " fail";
+        LOG_ERROR(g_logger) << "connect " << addr->toString() << " fail.";
         return;
     }
     else
     {
-        LOG_INFO(g_logger) << "connnect" << addr->toString() << " success";
+        LOG_INFO(g_logger) << "connnect " << addr->toString() << " success.";
     }
 
     const char buff[] = "GET / HTTP/1.0\r\n\r\n";

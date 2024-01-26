@@ -248,6 +248,10 @@ namespace lim_webserver
             std::cout << "AsyncAppender error: no appender binded" << std::endl;
             ++errors;
         }
+        if (!m_appender->isStarted())
+        {
+            m_appender->start();
+        }
         if (errors == 0)
         {
             LogAppender::start();
@@ -340,6 +344,8 @@ namespace lim_webserver
         FileAppender::ptr appender = newFileAppender();
         appender->setName("default_file");
         appender->setFormatter(DEFAULT_PATTERN);
+        appender->setFile("./log/default_log.txt");
+        appender->setAppend(true);
         return appender;
     }
 
@@ -349,6 +355,14 @@ namespace lim_webserver
         appender->setName("default_console");
         appender->setFormatter(DEFAULT_PATTERN);
         return appender;
+    }
+
+    AsyncAppender::ptr AppenderFactory::defaultAsyncAppender()
+    {
+        AsyncAppender::ptr async = newAsyncAppender();
+        async->setName("default_async");
+        async->setInterval(2);
+        return async;
     }
 
 } // namespace lim_webserver

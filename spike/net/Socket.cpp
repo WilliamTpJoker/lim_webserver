@@ -156,8 +156,8 @@ namespace lim_webserver
             m_fd = sock;
             m_isConnected = true;
             initSock();
-            getLocalAddress();
-            getPeerAddress();
+            localAddress();
+            peerAddress();
             return true;
         }
         return false;
@@ -179,7 +179,7 @@ namespace lim_webserver
                                 << " errstr=" << strerror(errno);
             return false;
         }
-        getLocalAddress();
+        localAddress();
         return true;
     }
 
@@ -208,14 +208,14 @@ namespace lim_webserver
         }
 
         m_isConnected = true;
-        getPeerAddress();
-        getLocalAddress();
+        peerAddress();
+        localAddress();
         return true;
     }
 
     bool Socket::listen(int backlog)
     {
-        if (::listen(m_fd, backlog) == 0)
+        if (::listen(m_fd, backlog))
         {
             LOG_ERROR(g_logger) << "listen error errno=" << errno
                                 << " errstr=" << strerror(errno);
@@ -332,7 +332,7 @@ namespace lim_webserver
         return -1;
     }
 
-    Address::ptr Socket::getPeerAddress()
+    Address::ptr Socket::peerAddress()
     {
         if (m_remoteAddress)
         {
@@ -369,7 +369,7 @@ namespace lim_webserver
         return m_remoteAddress;
     }
 
-    Address::ptr Socket::getLocalAddress()
+    Address::ptr Socket::localAddress()
     {
         if (m_localAddress)
         {
@@ -406,7 +406,7 @@ namespace lim_webserver
         return m_localAddress;
     }
 
-    int Socket::getError()
+    int Socket::error()
     {
         int error = 0;
         socklen_t len = sizeof(error);

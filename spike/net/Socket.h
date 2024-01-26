@@ -118,35 +118,35 @@ namespace lim_webserver
          * 
          * @return Address::ptr 
          */
-        Address::ptr getPeerAddress();
+        Address::ptr peerAddress();
 
         /**
          * @brief 获得本地地址
          * 
          * @return Address::ptr 
          */
-        Address::ptr getLocalAddress();
+        Address::ptr localAddress();
 
         /**
          * @brief 获得协议族
          *
          * @return int
          */
-        int getFamily() const { return m_family; }
+        int family() const { return m_family; }
 
         /**
          * @brief 获得IP类型
          *
          * @return int
          */
-        int getType() const { return m_type; }
+        int type() const { return m_type; }
 
         /**
          * @brief 获得具体协议
          *
          * @return int
          */
-        int getProtocol() const { return m_protocol; }
+        int protocol() const { return m_protocol; }
 
         /**
          * @brief 确认是否建立连接
@@ -161,7 +161,7 @@ namespace lim_webserver
          * 
          * @return int 
          */
-        int getError();
+        int error();
 
         /**
          * @brief 获得句柄

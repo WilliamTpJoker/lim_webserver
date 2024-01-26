@@ -166,7 +166,7 @@ namespace lim_webserver
         void format(LogStream &logstream, LogMessage::ptr message) override;
         void append(const char *logline, int len) override;
 
-        LogLevel m_level = LogLevel_DEBUG; // 级别
+        LogLevel m_level = LogLevel_TRACE; // 级别
         LogFormatter::ptr m_formatter;     // 格式器
         LogSink::ptr m_sink;               // 落地器
         LogStream::Buffer m_buffer;        // 4k缓存
@@ -398,6 +398,7 @@ namespace lim_webserver
     public:
         FileAppender::ptr defaultFileAppender();
         ConsoleAppender::ptr defaultConsoleAppender();
+        AsyncAppender::ptr defaultAsyncAppender();
 
     private:
         std::unordered_map<std::string, LogAppender::ptr> m_appenders; // 系统全部输出地

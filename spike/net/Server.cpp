@@ -1,14 +1,70 @@
 #include "Server.h"
+#include "splog.h"
+#include "base/Configer.h"
 
 #include <iostream>
 
 namespace lim_webserver
 {
-    void TCPServer::bind()
+    static Logger::ptr g_logger = LOG_SYS();
+
+    static ConfigerVar<uint64_t>::ptr g_tcp_server_read_timeout = Configer::Lookup("tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2),
+                                                                                   "tcp server read timeout");
+
+    TcpServer::TcpServer(const std::string &name)
+        : Server(name),m_recvTimeout(g_tcp_server_read_timeout->getValue())
     {
     }
 
-    void TCPServer::start()
+    TcpServer::~TcpServer()
+    {
+        stop();
+    }
+
+    bool TcpServer::bind(Address::ptr addr, bool ssl)
+    {
+        std::vector<Address::ptr> addrs;
+        std::vector<Address::ptr> fails;
+        addrs.push_back(addr);
+        m_ssl = ssl;
+        for (auto &addr : addrs)
+        {
+            Socket::ptr sock = Socket::CreateTCP(addr);
+            if (!sock->bind(addr))
+            {
+                LOG_ERROR(g_logger) << "bind fail errno="
+                                    << errno << " errstr=" << strerror(errno)
+                                    << " addr=[" << addr->toString() << "]";
+                fails.push_back(addr);
+                continue;
+            }
+            if (!sock->listen())
+            {
+                LOG_ERROR(g_logger) << "listen fail errno="
+                                    << errno << " errstr=" << strerror(errno)
+                                    << " addr=[" << addr->toString() << "]";
+                fails.push_back(addr);
+                continue;
+            }
+            m_socket_vec.push_back(sock);
+        }
+
+        if (!fails.empty())
+        {
+            m_socket_vec.clear();
+            return false;
+        }
+
+        for (auto &socket : m_socket_vec)
+        {
+            LOG_INFO(g_logger) << " name=" << m_name
+                               << " ssl=" << m_ssl
+                               << " server bind success: " << socket->peerAddress()->getAddr();
+        }
+        return true;
+    }
+
+    void TcpServer::start()
     {
         if (m_started)
         {
@@ -24,11 +80,21 @@ namespace lim_webserver
         }
     }
 
-    void TCPServer::stop()
+    void TcpServer::stop()
     {
+        if (!m_started)
+        {
+            return;
+        }
+        m_started = false;
+        for (auto &socket : m_socket_vec)
+        {
+            socket->close();
+        }
+        m_socket_vec.clear();
     }
 
-    void TCPServer::accept(Socket::ptr socket)
+    void TcpServer::accept(Socket::ptr socket)
     {
         while (m_started)
         {
@@ -44,7 +110,7 @@ namespace lim_webserver
         }
     }
 
-    void TCPServer::handleClient(Socket::ptr client)
+    void TcpServer::handleClient(Socket::ptr client)
     {
         std::cout << "handle" << std::endl;
     }

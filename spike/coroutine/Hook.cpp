@@ -83,11 +83,11 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
 {
     // 如果不在协程中，则直接调用系统原生函数
     lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
-    LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << "(fd = " << fd << ") " << (!!task ? "in" : "not in") << " coroutine.";
     if (!task)
     {
         return fun(fd, std::forward<Args>(args)...);
     }
+    LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << "(fd = " << fd << ") in coroutine.";
 
     lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(fd);
     if (!fdInfo || !fdInfo->isSocket() || fdInfo->getUserNonblock())
@@ -102,7 +102,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
     // 重试IO 操作(一般循环一次)
     while (true)
     {
-        LOG_TRACE(g_logger) << "task(" << task->id() << ") try hook " << hook_fun_name << "(fd = " << fd << ").";
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") try hook " << hook_fun_name << "(fd = " << fd << "). timeout = " << (to == (uint64_t)-1 ? "NULL" : std::to_string(to));
 
         // 调用传入的原生函数执行操作
         ssize_t n = fun(fd, std::forward<Args>(args)...);
@@ -143,6 +143,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         lim_webserver::Processor::CoHold();
         if (timer)
         {
+            LOG_TRACE(g_logger) << "cancel timer";
             timer->cancel();
         }
         // 如果定时器信息为超时，则表明事件超时，设置错误码为超时并返回 -1
@@ -163,11 +164,11 @@ extern "C"
     unsigned int sleep(unsigned int seconds)
     {
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
-        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook sleep " << (!!task ? "in" : "not in") << " coroutine.";
         if (!task)
         {
             return sleep_f(seconds);
         }
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook sleep(seconds = " << seconds << ") in coroutine.";
 
         // 获取当前task的id并设定当前processor在一定时间后唤醒对应task
         uint64_t id = task->id();
@@ -186,11 +187,11 @@ extern "C"
     int usleep(useconds_t usec)
     {
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
-        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook usleep " << (!!task ? "in" : "not in") << " coroutine.";
         if (!task)
         {
             return usleep_f(usec);
         }
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook usleep(usec = " << usec << ") in coroutine.";
 
         uint64_t id = task->id();
         lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
@@ -206,13 +207,14 @@ extern "C"
     int nanosleep(const struct timespec *req, struct timespec *rem)
     {
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
-        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook nanosleep " << (!!task ? "in" : "not in") << " coroutine.";
         if (!task)
         {
             return nanosleep_f(req, rem);
         }
 
         int timeout_ms = req->tv_sec * 1000 + req->tv_nsec / 1000 / 1000;
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook nanosleep(nsec = " << timeout_ms << ") in coroutine.";
+
         uint64_t id = task->id();
         lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
         lim_webserver::TimerManager::GetInstance()->addTimer(timeout_ms,
@@ -229,24 +231,30 @@ extern "C"
     int socket(int domain, int type, int protocol)
     {
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
-        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook socket, domain = "<<domain<<" type = "<<type<<" protocal = "<<protocol;
+        if (task)
+        {
+            LOG_TRACE(g_logger) << "task(" << task->id() << ") hook socket, domain = " << domain << " type = " << type << " protocal = " << protocol;
+        }
         int fd = socket_f(domain, type, protocol);
         if (fd > 0)
         {
             lim_webserver::FdManager::GetInstance()->insert(fd);
         }
-        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook socket, returns (fd = " << fd << ").";
+        if (task)
+        {
+            LOG_TRACE(g_logger) << "task(" << task->id() << ") hook socket, returns (fd = " << fd << ").";
+        }
         return fd;
     }
 
     int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     {
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
-        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook connect(fd = " << sockfd << ") " << (!!task ? "in" : "not in") << " coroutine.";
         if (!task)
         {
             return connect_f(sockfd, addr, addrlen);
         }
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook connect(fd = " << sockfd << ") in coroutine.";
 
         lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(sockfd);
         if (!fdInfo)
@@ -388,6 +396,11 @@ extern "C"
         {
             lim_webserver::EventLoop::GetInstance()->clearEvent(fd);
             lim_webserver::FdManager::GetInstance()->del(fd);
+        }
+        lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
+        if (task)
+        {
+            LOG_TRACE(g_logger) << "task(" << task->id() << ") hook close(fd = " << fd << ")";
         }
         return close_f(fd);
     }

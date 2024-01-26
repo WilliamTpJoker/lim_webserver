@@ -1,5 +1,104 @@
 # 开发更新日志
 
+## 2024/01/26
+
+构建完成TcpServer，使用EchoServer做简单测试，低并发情况下运行正常，高并发时存在问题，日志如下
+
+```bash
+2024-01-26 17:07:38 13996 Proc_0 [system] [TRACE] Address.cpp:53 family = 2 type = 0 protocol = 0
+2024-01-26 17:07:38 13996 Proc_0 [system] [TRACE] Hook.cpp:236 task(1) hook socket, domain = 2 type = 1 protocal = 0
+2024-01-26 17:07:38 13996 Proc_0 [system] [TRACE] Hook.cpp:245 task(1) hook socket, returns (fd = 5).
+2024-01-26 17:07:38 13996 Proc_0 [system] [INFO] Server.cpp:60  name=echo ssl=0 server bind success: 1
+2024-01-26 17:07:38 13996 Proc_0 [system] [TRACE] Hook.cpp:236 task(2) hook socket, domain = 2 type = 1 protocal = 0
+2024-01-26 17:07:38 13996 Proc_0 [system] [TRACE] Hook.cpp:245 task(2) hook socket, returns (fd = 6).
+2024-01-26 17:07:38 13996 Proc_0 [system] [TRACE] Hook.cpp:90 task(2) hook accept(fd = 5) in coroutine.
+2024-01-26 17:07:38 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(2) try hook accept(fd = 5). timeout = NULL
+2024-01-26 17:07:38 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = ADD fd = 5 event = { IN  }
+2024-01-26 17:07:40 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:40 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:40 13993 main [system] [TRACE] IoChannel.cpp:42 read task(2) trigger.
+2024-01-26 17:07:40 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:40 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(2) try hook accept(fd = 5). timeout = NULL
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Hook.cpp:236 task(2) hook socket, domain = 2 type = 1 protocal = 0
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Hook.cpp:245 task(2) hook socket, returns (fd = 8).
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Hook.cpp:90 task(2) hook accept(fd = 5) in coroutine.
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(2) try hook accept(fd = 5). timeout = NULL
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = MOD fd = 5 event = { IN  }
+2024-01-26 17:07:40 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Hook.cpp:90 task(3) hook recvmsg(fd = 7) in coroutine.
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:40 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:40 13993 main [system] [TRACE] IoChannel.cpp:42 read task(2) trigger.
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = ADD fd = 7 event = { IN  }
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(2) try hook accept(fd = 5). timeout = NULL
+2024-01-26 17:07:40 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = MOD fd = 5 event = { IN  }
+2024-01-26 17:07:42 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:42 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:42 13993 main [system] [TRACE] IoChannel.cpp:42 read task(3) trigger.
+2024-01-26 17:07:42 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:42 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:42 13996 Proc_0 [system] [TRACE] Hook.cpp:146 cancel timer
+2024-01-26 17:07:42 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:42 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:42 13996 Proc_0 [system] [TRACE] Hook.cpp:90 task(3) hook recvmsg(fd = 7) in coroutine.
+2024-01-26 17:07:42 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:42 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:42 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = MOD fd = 7 event = { IN  }
+2024-01-26 17:07:44 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:44 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:44 13993 main [system] [TRACE] IoChannel.cpp:42 read task(3) trigger.
+2024-01-26 17:07:44 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:44 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:44 13996 Proc_0 [system] [TRACE] Hook.cpp:146 cancel timer
+2024-01-26 17:07:44 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:44 13996 Proc_0 [system] [TRACE] Hook.cpp:90 task(3) hook recvmsg(fd = 7) in coroutine.
+2024-01-26 17:07:44 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:44 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = MOD fd = 7 event = { IN  }
+2024-01-26 17:07:44 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:44 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:44 13993 main [system] [TRACE] IoChannel.cpp:42 read task(3) trigger.
+2024-01-26 17:07:44 13996 Proc_0 [system] [TRACE] Hook.cpp:146 cancel timer
+2024-01-26 17:07:44 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:44 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = MOD fd = 7 event = { IN  }
+2024-01-26 17:07:45 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:45 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:45 13993 main [system] [TRACE] IoChannel.cpp:42 read task(3) trigger.
+2024-01-26 17:07:45 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:45 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:45 13996 Proc_0 [system] [TRACE] Hook.cpp:146 cancel timer
+2024-01-26 17:07:45 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:45 13996 Proc_0 [system] [TRACE] Hook.cpp:90 task(3) hook recvmsg(fd = 7) in coroutine.
+2024-01-26 17:07:45 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:45 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = MOD fd = 7 event = { IN  }
+2024-01-26 17:07:45 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:45 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:45 13993 main [system] [TRACE] IoChannel.cpp:42 read task(3) trigger.
+2024-01-26 17:07:45 13996 Proc_0 [system] [TRACE] Hook.cpp:146 cancel timer
+2024-01-26 17:07:45 13996 Proc_0 [system] [TRACE] Hook.cpp:105 task(3) try hook recvmsg(fd = 7). timeout = 120000
+2024-01-26 17:07:45 13996 Proc_0 [system] [TRACE] Poller.cpp:175 epoll_ctl op = MOD fd = 7 event = { IN  }
+2024-01-26 17:07:46 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:46 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:46 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:46 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:46 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:46 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+2024-01-26 17:07:46 13993 main [system] [TRACE] Poller.cpp:141 1 events happened
+2024-01-26 17:07:46 13993 main [system] [TRACE] IoChannel.cpp:24 IN 
+.
+.
+.
+.
+.
+.
+```
+
+> 上图的报错信息为，后面一直循环在事件触发，但是没有协程任务被唤醒（channel中没有绑定协程）:原因是每次tigger后都置空了task指针，不再置空指针则解决该问题。
+
+## 2024/01/25
+
+底层的协程已经简单的封装完毕，现在需要封装Server模块，一个Server可以监听多个socket，每个socket对应一条连接，在我的设计中每条连接对应一个协程，因此，也需要将连接封装成类并维护成员Task.
+
 ## 2024/01/24
 
 针对之前的connect问题，采取无视重复设置，使用connect方法的是TCP连接，其需要读取三次握手中最后一次握手的常规报文，而后该fd还是会持续读取事件的，因此也不考虑将读事件关闭；但是需要在cannel的trigger方法中触发协程唤醒后将task指向空指针，以防在后续的意外读事件发生时栈溢出。
@@ -110,7 +209,7 @@ Aborted (core dumped)
 理想状态下的echo-server代码
 
 ```c++
-class Echo: public TCPServer
+class Echo: public TcpServer
 {
     void handleClient(Socket::ptr client) override
     {

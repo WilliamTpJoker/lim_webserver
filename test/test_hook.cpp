@@ -80,8 +80,9 @@ int main(int argc, char *args[])
     }
     LOG_SYS()->setLevel(level);
     co_sched->start();
-    // co test_sleep;
-    co test_socket;
-    lim_webserver::EventLoop::GetInstance()->run();
+    co test_sleep;
+    sleep(4);
+    // co test_socket;
+    // lim_webserver::EventLoop::GetInstance()->run();
     return 0;
 }

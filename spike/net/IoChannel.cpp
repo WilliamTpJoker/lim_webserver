@@ -39,9 +39,8 @@ namespace lim_webserver
         {
             if (m_readTask)
             {
+                LOG_TRACE(g_logger) << "read task("<<m_readTask->id()<<") trigger.";
                 m_readTask->getProcessor()->wakeupTask(m_readTask->id());
-                // 协程操作完就置空，防止野指针
-                m_readTask = nullptr;
             }
         }
 
@@ -50,8 +49,8 @@ namespace lim_webserver
         {
             if (m_writeTask)
             {
+                LOG_TRACE(g_logger) << "write task("<<m_writeTask->id()<<") trigger.";
                 m_writeTask->getProcessor()->wakeupTask(m_writeTask->id());
-                m_writeTask = nullptr;
             }
         }
     }

@@ -13,12 +13,12 @@ namespace lim_webserver
     class Server
     {
     public:
-        Server(std::string name) : m_name(name) {}
+        Server(const std::string &name) : m_name(name) {}
         ~Server() {}
 
-        virtual void start()=0;
+        virtual void start() = 0;
 
-        virtual void stop()=0;
+        virtual void stop() = 0;
 
     protected:
         EventLoop *m_eventloop;
@@ -26,9 +26,13 @@ namespace lim_webserver
         std::string m_name;
     };
 
-    class TCPServer : public Server
+    class TcpServer : public Server
     {
-        void bind();
+    public:
+        TcpServer(const std::string &name);
+        ~TcpServer();
+
+        bool bind(Address::ptr addr, bool ssl = false);
 
         void start() override;
 
@@ -47,6 +51,7 @@ namespace lim_webserver
     protected:
         std::vector<Socket::ptr> m_socket_vec;
         uint64_t m_recvTimeout;
+        bool m_ssl;
     };
 
 } // namespace lim_webserver
