@@ -126,6 +126,7 @@ namespace lim_webserver
         int m_events = 0;                             // fd的Event
         Task *m_readTask = nullptr;                   // 读协程
         Task *m_writeTask = nullptr;                  // 写协程
+        Task *m_task = nullptr;
         MutexType m_mutex;
     };
 } // namespace lim_webserver

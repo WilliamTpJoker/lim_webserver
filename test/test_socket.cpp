@@ -50,6 +50,12 @@ void test_socket()
     LOG_INFO(g_logger) << buffs;
 }
 
+void stop_sched()
+{
+    sleep(3);
+    g_net->stop();
+}
+
 int main(int argc, char *argv[])
 {
     lim_webserver::LogLevel level = LogLevel_TRACE;
@@ -61,6 +67,7 @@ int main(int argc, char *argv[])
 
     co_sched->start();
     co test_socket;
+    co stop_sched;
     g_net->run();
     return 0;
 }

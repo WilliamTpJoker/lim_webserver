@@ -7,6 +7,8 @@
 #include "Mutex.h"
 #include "Singleton.h"
 
+#include <iostream>
+
 namespace lim_webserver
 {
     class TimeStamp
@@ -49,8 +51,8 @@ namespace lim_webserver
 
         /**
          * @brief 获得字符串
-         * 
-         * @return std::string 
+         *
+         * @return std::string
          */
         std::string toString() const
         {
@@ -63,9 +65,9 @@ namespace lim_webserver
 
         /**
          * @brief 获得格式化字符串
-         * 
-         * @param showMicroseconds 
-         * @return std::string 
+         *
+         * @param showMicroseconds
+         * @return std::string
          */
         std::string toFormattedString(bool showMicroseconds) const
         {
@@ -93,7 +95,7 @@ namespace lim_webserver
 
     class TimeManager : public Singleton<TimeManager>
     {
-        using MutexType = RWMutex;
+        using MutexType = Spinlock;
 
     public:
         TimeManager()
@@ -107,23 +109,14 @@ namespace lim_webserver
             {
                 formatString(seconds);
             }
-            // 读锁返回当前时间的字符串
-            MutexType::ReadLock lock(m_mutex);
+            MutexType::Lock lock(m_mutex);
             return m_lastTimeString;
         }
 
     private:
         void formatString(time_t seconds)
         {
-            // 写锁构造字符串
-            MutexType::WriteLock lock(m_mutex);
-
-            // 堆积的尝试写线程，若已同步则直接退出
-            if (seconds == m_lastSeconds)
-            {
-                return;
-            }
-
+            MutexType::Lock lock(m_mutex);
             char buf[64]{0};
             struct tm tm_time;
             // 使用 localtime_r 获取本地时间
@@ -137,8 +130,7 @@ namespace lim_webserver
 
         bool isNewestSecond(time_t seconds)
         {
-            // 读锁获取是否需要改变时间
-            MutexType::ReadLock lock(m_mutex);
+            MutexType::Lock lock(m_mutex);
             return seconds == m_lastSeconds;
         }
 

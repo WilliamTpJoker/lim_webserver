@@ -345,7 +345,7 @@ namespace lim_webserver
         appender->setName("default_file");
         appender->setFormatter(DEFAULT_PATTERN);
         appender->setFile("./log/default_log.txt");
-        appender->setAppend(true);
+        appender->setAppend(false);
         return appender;
     }
 

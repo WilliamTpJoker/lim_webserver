@@ -50,6 +50,12 @@ namespace lim_webserver
         bool clearEvent(int fd);
 
         /**
+         * @brief 唤醒
+         *
+         */
+        void tickle();
+
+        /**
          * @brief 运行
          *
          */
@@ -58,5 +64,6 @@ namespace lim_webserver
     private:
         bool m_started = true; // 开始标志符
         Poller::ptr m_poller;  // IO模块
+        int m_wakeFd;
     };
 } // namespace lim_webserver

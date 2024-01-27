@@ -38,7 +38,7 @@ void EchoServer::handleClient(Socket::ptr client)
         ba->setPosition(ba->getPosition() + rt);
         ba->setPosition(0);
 
-        std::cout << ba->toString()<< std::endl;
+        std::cout << ba->toString();
         std::cout.flush();
     }
 }

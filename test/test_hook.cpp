@@ -68,7 +68,6 @@ void test_socket()
 
     buff.resize(rt);
     LOG_INFO(g_logger) << buff;
-    lim_webserver::EventLoop::GetInstance()->stop();
 }
 
 int main(int argc, char *args[])
@@ -80,9 +79,9 @@ int main(int argc, char *args[])
     }
     LOG_SYS()->setLevel(level);
     co_sched->start();
-    co test_sleep;
-    sleep(4);
-    // co test_socket;
-    // lim_webserver::EventLoop::GetInstance()->run();
+    // co test_sleep;
+    // sleep(4);
+    co test_socket;
+    lim_webserver::EventLoop::GetInstance()->run();
     return 0;
 }

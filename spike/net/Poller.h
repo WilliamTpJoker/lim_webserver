@@ -24,30 +24,30 @@ namespace lim_webserver
 
         /**
          * @brief 添加event
-         * 
-         * @param fd 
-         * @param event 
-         * @return true 
-         * @return false 
+         *
+         * @param fd
+         * @param event
+         * @return true
+         * @return false
          */
         virtual bool addEvent(int fd, IoEvent event);
 
         /**
          * @brief 取消event
-         * 
-         * @param fd 
-         * @param event 
-         * @return true 
-         * @return false 
+         *
+         * @param fd
+         * @param event
+         * @return true
+         * @return false
          */
         virtual bool cancelEvent(int fd, IoEvent event);
 
         /**
          * @brief 清空event
-         * 
-         * @param fd 
-         * @return true 
-         * @return false 
+         *
+         * @param fd
+         * @return true
+         * @return false
          */
         virtual bool clearEvent(int fd);
 
@@ -76,30 +76,30 @@ namespace lim_webserver
 
         /**
          * @brief 添加event
-         * 
-         * @param fd 
-         * @param event 
-         * @return true 
-         * @return false 
+         *
+         * @param fd
+         * @param event
+         * @return true
+         * @return false
          */
         bool addEvent(int fd, IoEvent event) override;
 
         /**
          * @brief 取消event
-         * 
-         * @param fd 
-         * @param event 
-         * @return true 
-         * @return false 
+         *
+         * @param fd
+         * @param event
+         * @return true
+         * @return false
          */
         bool cancelEvent(int fd, IoEvent event) override;
 
         /**
          * @brief 清空event
-         * 
-         * @param fd 
-         * @return true 
-         * @return false 
+         *
+         * @param fd
+         * @return true
+         * @return false
          */
         bool clearEvent(int fd) override;
 

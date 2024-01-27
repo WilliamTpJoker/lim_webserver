@@ -29,6 +29,8 @@ namespace lim_webserver
 
     class Task : public Noncopyable
     {
+        friend Processor;
+
     public:
         using ptr = std::unique_ptr<Task>;
         static ptr Create(TaskFunc func, size_t size)
@@ -43,26 +45,8 @@ namespace lim_webserver
         inline uint64_t id() const { return m_id; }
 
         /**
-         * @brief 上下文切入
-         *
-         */
-        inline void swapIn()
-        {
-            m_context.swapIn();
-        }
-
-        /**
-         * @brief 上下文切出
-         *
-         */
-        inline void swapOut()
-        {
-            m_context.swapOut();
-        }
-
-        /**
          * @brief 让出线程执行权
-         * 
+         *
          */
         inline void yield()
         {
@@ -72,13 +56,19 @@ namespace lim_webserver
 
         /**
          * @brief 进入阻塞态
-         * 
+         *
          */
         inline void hold()
         {
             m_state = TaskState::HOLD;
             swapOut();
         }
+
+        /**
+         * @brief 从阻塞唤醒
+         * 
+         */
+        void wake();
 
         /**
          * @brief 设定Processor
@@ -101,6 +91,24 @@ namespace lim_webserver
         inline TaskState state() const { return m_state; }
 
     private:
+        /**
+         * @brief 上下文切入
+         *
+         */
+        inline void swapIn()
+        {
+            m_context.swapIn();
+        }
+
+        /**
+         * @brief 上下文切出
+         *
+         */
+        inline void swapOut()
+        {
+            m_context.swapOut();
+        }
+
         /**
          * @brief 工作函数
          *

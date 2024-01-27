@@ -45,25 +45,26 @@ namespace lim_webserver
         /**
          * @brief 将日志级别转换为对应的文本表示
          */
-        static std::string ToString(LogLevel level)
+        static const char *ToString(LogLevel level)
         {
-            static const std::unordered_map<LogLevel, std::string> levelStrings = {
-                {LogLevel::TRACE, "TRACE"},
-                {LogLevel::DEBUG, "DEBUG"},
-                {LogLevel::INFO, "INFO"},
-                {LogLevel::WARN, "WARN"},
-                {LogLevel::ERROR, "ERROR"},
-                {LogLevel::FATAL, "FATAL"},
-                {LogLevel::OFF, "OFF"},
-            };
-            auto it = levelStrings.find(level);
-            if (it != levelStrings.end())
+            switch (level)
             {
-                return it->second;
-            }
-            else
-            {
-                return std::string("UNKNOWN");
+            case LogLevel::TRACE:
+                return "TRACE";
+            case LogLevel::DEBUG:
+                return "DEBUG";
+            case LogLevel::INFO:
+                return "INFO";
+            case LogLevel::WARN:
+                return "WARN";
+            case LogLevel::ERROR:
+                return "ERROR";
+            case LogLevel::FATAL:
+                return "FATAL";
+            case LogLevel::OFF:
+                return "OFF";
+            default:
+                return "UNKNOWN";
             }
         }
         /**
@@ -71,24 +72,38 @@ namespace lim_webserver
          */
         static LogLevel FromString(const std::string &val)
         {
-            static const std::unordered_map<std::string, LogLevel> stringToLevel = {
-                {"TRACE", LogLevel::TRACE},
-                {"DEBUG", LogLevel::DEBUG},
-                {"INFO", LogLevel::INFO},
-                {"WARN", LogLevel::WARN},
-                {"ERROR", LogLevel::ERROR},
-                {"FATAL", LogLevel::FATAL},
-                {"OFF", LogLevel::OFF}};
+            LogLevel result = LogLevel::UNKNOWN;
 
-            auto it = stringToLevel.find(val);
-            if (it != stringToLevel.end())
+            if (val == "TRACE")
             {
-                return it->second;
+                result = LogLevel::TRACE;
             }
-            else
+            else if (val == "DEBUG")
             {
-                return LogLevel::UNKNOWN;
+                result = LogLevel::DEBUG;
             }
+            else if (val == "INFO")
+            {
+                result = LogLevel::INFO;
+            }
+            else if (val == "WARN")
+            {
+                result = LogLevel::WARN;
+            }
+            else if (val == "ERROR")
+            {
+                result = LogLevel::ERROR;
+            }
+            else if (val == "FATAL")
+            {
+                result = LogLevel::FATAL;
+            }
+            else if (val == "OFF")
+            {
+                result = LogLevel::OFF;
+            }
+
+            return result;
         }
     };
 } // namespace lim_webserver

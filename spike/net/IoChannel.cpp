@@ -21,7 +21,7 @@ namespace lim_webserver
 
     void IoChannel::trigger(uint32_t op)
     {
-        LOG_TRACE(g_logger) << eventsToString(op);
+        LOG_TRACE(g_logger) << "fd = " << m_fd << " { " << eventsToString(op) << "}";
         // 发生挂起事件则强制通知所有存在的协程
         if ((op & EPOLLHUP) && !(op & EPOLLIN))
         {
@@ -34,23 +34,28 @@ namespace lim_webserver
             op |= (EPOLLIN | EPOLLOUT) & m_events;
         }
 
-        // 读操作   紧急读操作  关闭写半部分
-        if (op & (EPOLLIN | EPOLLPRI | EPOLLRDHUP))
-        {
-            if (m_readTask)
-            {
-                LOG_TRACE(g_logger) << "read task("<<m_readTask->id()<<") trigger.";
-                m_readTask->getProcessor()->wakeupTask(m_readTask->id());
-            }
-        }
+        // // 读操作   紧急读操作  关闭写半部分
+        // if (op & (EPOLLIN | EPOLLPRI | EPOLLRDHUP))
+        // {
+        //     if (m_readTask)
+        //     {
+        //         m_readTask->wake();
+        //     }
+        // }
 
-        // 写操作
-        if (op & EPOLLOUT)
+        // // 写操作
+        // if (op & EPOLLOUT)
+        // {
+        //     if (m_writeTask)
+        //     {
+        //         m_writeTask->wake();
+        //     }
+        // }
+        if (op & (EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLOUT))
         {
-            if (m_writeTask)
+            if (m_task)
             {
-                LOG_TRACE(g_logger) << "write task("<<m_writeTask->id()<<") trigger.";
-                m_writeTask->getProcessor()->wakeupTask(m_writeTask->id());
+                m_task->wake();
             }
         }
     }
@@ -58,19 +63,25 @@ namespace lim_webserver
     bool IoChannel::addEvent(IoEvent event)
     {
         MutexType::Lock lock(m_mutex);
+        // 存在则跳过
+        if (m_events & event)
+        {
+            return false;
+        }
 
         // 若在协程中则记录
         Task *task = Processor::GetCurrentTask();
         if (task)
         {
-            if (event == IoEvent::READ)
-            {
-                m_readTask = task;
-            }
-            else if (event == IoEvent::WRITE)
-            {
-                m_writeTask = task;
-            }
+            // if (event == IoEvent::READ)
+            // {
+            //     m_readTask = task;
+            // }
+            // else if (event == IoEvent::WRITE)
+            // {
+            //     m_writeTask = task;
+            // }
+            m_task = task;
         }
         m_events = m_events | event;
         return true;

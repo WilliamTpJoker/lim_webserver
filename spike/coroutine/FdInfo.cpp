@@ -69,33 +69,33 @@ namespace lim_webserver
 
     FdManager::FdManager()
     {
+        m_fd_vec.resize(64);
     }
 
     void FdManager::insert(int fd)
     {
         RWMutexType::WriteLock lock(m_mutex);
         FdInfo::ptr fdInfo = FdInfo::Create(fd);
-        m_fd_map[fd] = fdInfo;
+        m_fd_vec[fd] = fdInfo;
     }
 
     FdInfo::ptr FdManager::get(int fd)
     {
         RWMutexType::ReadLock lock(m_mutex);
-        auto it = m_fd_map.find(fd);
-        if (it != m_fd_map.end())
+        if((int)m_fd_vec.size()<=fd)
         {
-            return it->second;
+            return nullptr;
         }
-        return nullptr;
+        return m_fd_vec[fd];
     }
 
     void FdManager::del(int fd)
     {
         RWMutexType::WriteLock lock(m_mutex);
-        auto it = m_fd_map.find(fd);
-        if (it != m_fd_map.end())
+        if((int)m_fd_vec.size()<=fd)
         {
-            m_fd_map.erase(it);
+            return;
         }
+        m_fd_vec[fd].reset();
     }
 }

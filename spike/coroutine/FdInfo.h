@@ -5,7 +5,7 @@
 #include "base/Mutex.h"
 #include "base/Singleton.h"
 
-#include <unordered_map>
+#include <vector>
 
 namespace lim_webserver
 {
@@ -81,6 +81,6 @@ namespace lim_webserver
 
     private:
         RWMutexType m_mutex;
-        std::unordered_map<int, FdInfo::ptr> m_fd_map;
+        std::vector<FdInfo::ptr> m_fd_vec;
     };
 }

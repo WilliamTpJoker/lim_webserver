@@ -63,7 +63,6 @@ namespace lim_webserver
     EpollPoller::EpollPoller()
         : m_epfd(epoll_create(1)), m_event_vec(16)
     {
-        ASSERT(m_epfd >= 0);
     }
 
     EpollPoller::~EpollPoller()
@@ -169,7 +168,7 @@ namespace lim_webserver
     void EpollPoller::update(int op, IoChannel *channel)
     {
         struct epoll_event ev;
-        ev.events = channel->event();
+        ev.events = channel->event() | EPOLLET;
         ev.data.ptr = channel;
         int fd = channel->fd();
         LOG_TRACE(g_logger) << "epoll_ctl op = " << opToString(op)

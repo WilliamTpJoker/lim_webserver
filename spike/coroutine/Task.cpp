@@ -1,12 +1,16 @@
+#include "Task.h"
+
 #include "base/BackTrace.h"
-#include "coroutine/Task.h"
 #include "coroutine/Processor.h"
+#include "splog.h"
 
 #include <atomic>
 #include <iostream>
 
 namespace lim_webserver
 {
+    static Logger::ptr g_logger = LOG_SYS();
+
     static std::atomic<uint64_t> s_task_id{0};
 
     Task::Task(TaskFunc func, size_t size)
@@ -16,6 +20,12 @@ namespace lim_webserver
 
     Task::~Task()
     {
+    }
+
+    void Task::wake()
+    {
+        LOG_TRACE(g_logger) << "try wake task("<<m_id<<").";
+        m_processor->wakeupTask(m_id);
     }
 
     void Task::run()
@@ -37,17 +47,17 @@ namespace lim_webserver
         {
             m_callback = TaskFunc();
             m_state = TaskState::EXCEPT;
-            std::cout << "Task Except: " << e.what() << " task_id=" << id()
-                      << "\n"
-                      << BackTraceToString() << std::endl;
+            LOG_ERROR(g_logger) << "Task Except: " << e.what() << " task_id=" << id()
+                                << "\n"
+                                << BackTraceToString();
         }
         catch (...)
         {
             m_callback = TaskFunc();
             m_state = TaskState::EXCEPT;
-            std::cout << "Task Except: task_id=" << id()
-                      << "\n"
-                      << BackTraceToString() << std::endl;
+            LOG_ERROR(g_logger) << "Task Except: task_id=" << id()
+                                << "\n"
+                                << BackTraceToString();
         }
         swapOut();
     }

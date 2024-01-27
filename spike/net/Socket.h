@@ -182,6 +182,6 @@ namespace lim_webserver
         bool m_isConnected;   // 连接标志符,TCP需要确认连接
 
         Address::ptr m_localAddress;
-        Address::ptr m_remoteAddress;
+        Address::ptr m_peerAddress;
     };
 } // namespace lim_webserver

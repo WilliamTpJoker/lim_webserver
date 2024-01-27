@@ -19,6 +19,7 @@ namespace lim_webserver
     F(sleep)        \
     F(usleep)       \
     F(nanosleep)    \
+    F(pipe)         \
     F(socket)       \
     F(connect)      \
     F(accept)       \
@@ -92,6 +93,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
     lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(fd);
     if (!fdInfo || !fdInfo->isSocket() || fdInfo->getUserNonblock())
     {
+        LOG_TRACE(g_logger) << "return unblocked.";
         return fun(fd, std::forward<Args>(args)...);
     }
 
@@ -226,6 +228,23 @@ extern "C"
         lim_webserver::Processor::CoHold();
 
         return 0;
+    }
+
+    int pipe(int pipefd[2])
+    {
+        lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
+        if (task)
+        {
+            LOG_TRACE(g_logger) << "task(" << task->id() << ") hook pipe.";
+        }
+
+        int res = pipe_f(pipefd);
+        if (res == 0)
+        {
+            lim_webserver::FdManager::GetInstance()->insert(pipefd[0]);
+            lim_webserver::FdManager::GetInstance()->insert(pipefd[1]);
+        }
+        return res;
     }
 
     int socket(int domain, int type, int protocol)

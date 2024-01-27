@@ -2,8 +2,6 @@
 #include "splog.h"
 #include "base/Configer.h"
 
-#include <iostream>
-
 namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_SYS();
@@ -12,7 +10,7 @@ namespace lim_webserver
                                                                                    "tcp server read timeout");
 
     TcpServer::TcpServer(const std::string &name)
-        : Server(name),m_recvTimeout(g_tcp_server_read_timeout->getValue())
+        : Server(name), m_recvTimeout(g_tcp_server_read_timeout->getValue())
     {
     }
 
@@ -112,7 +110,7 @@ namespace lim_webserver
 
     void TcpServer::handleClient(Socket::ptr client)
     {
-        std::cout << "handle" << std::endl;
+        LOG_INFO(g_logger) << "TcpServer handle function for client(ip = " << client->peerAddress()->getAddr() << ")";
     }
 
 } // namespace lim_webserver

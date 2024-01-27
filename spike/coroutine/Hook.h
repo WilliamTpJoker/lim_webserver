@@ -34,6 +34,10 @@ extern "C"
     typedef int (*nanosleep_fun)(const struct timespec *req, struct timespec *rem);
     extern nanosleep_fun nanosleep_f;
 
+    // pipe
+    typedef int (*pipe_fun)(int pipefd[2]);
+    extern pipe_fun pipe_f;
+
     // socket
     typedef int (*socket_fun)(int domain, int type, int protocol);
     extern socket_fun socket_f;

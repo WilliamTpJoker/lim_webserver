@@ -334,9 +334,9 @@ namespace lim_webserver
 
     Address::ptr Socket::peerAddress()
     {
-        if (m_remoteAddress)
+        if (m_peerAddress)
         {
-            return m_remoteAddress;
+            return m_peerAddress;
         }
 
         Address::ptr result;
@@ -365,8 +365,8 @@ namespace lim_webserver
             UnixAddress::ptr addr = std::dynamic_pointer_cast<UnixAddress>(result);
             addr->setAddrLen(addrlen);
         }
-        m_remoteAddress = result;
-        return m_remoteAddress;
+        m_peerAddress = result;
+        return m_peerAddress;
     }
 
     Address::ptr Socket::localAddress()
