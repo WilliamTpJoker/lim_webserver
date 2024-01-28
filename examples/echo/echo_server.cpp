@@ -16,17 +16,14 @@ public:
 
 void EchoServer::handleClient(Socket::ptr client)
 {
-    LOG_INFO(g_logger) << "handleClient " << client->peerAddress()->getAddr();
-    ByteArray::ptr ba(new ByteArray);
+    LOG_INFO(g_logger) << "handleClient " << client->peerAddress()->toString();
+    ByteArray::ptr buf = ByteArray::Create();
     while (true)
     {
-        std::vector<iovec> iovs;
-        ba->getWriteBuffers(iovs, 1024);
-
-        int rt = client->recv(&iovs[0], iovs.size());
+        int rt = client->recv(buf, 1024);
         if (rt == 0)
         {
-            LOG_INFO(g_logger) << "client close: " << client->fd();
+            LOG_INFO(g_logger) << "client close: " << client->peerAddress()->toString();
             break;
         }
         else if (rt < 0)
@@ -35,10 +32,10 @@ void EchoServer::handleClient(Socket::ptr client)
                                << " errno=" << errno << " errstr=" << strerror(errno);
             break;
         }
-        ba->setPosition(ba->getPosition() + rt);
-        ba->setPosition(0);
+        buf->setPosition(buf->getPosition() + rt);
+        buf->setPosition(0);
 
-        std::cout << ba->toString();
+        std::cout << buf->toString();
         std::cout.flush();
     }
 }

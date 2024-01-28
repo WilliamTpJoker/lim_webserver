@@ -54,22 +54,13 @@ namespace lim_webserver
 
     void EventLoop::tickle()
     {
-        co[&]
+        LOG_TRACE(g_logger) << "EventLoop:tickle()";
+        uint64_t one = 1;
+        ssize_t n = write(m_wakeFd, &one, sizeof one);
+        if (n != sizeof one)
         {
-            LOG_TRACE(g_logger) << "EventLoop:tickle()";
-            uint64_t one = 1;
-            ssize_t n = write(m_wakeFd, &one, sizeof one);
-            if (n != sizeof one)
-            {
-                LOG_ERROR(g_logger) << "EventLoop::tickle() writes " << n << " bytes instead of 8";
-            }
-            n = read(m_wakeFd, &one, sizeof one);
-            LOG_INFO(g_logger) << n;
-            if (n != sizeof one)
-            {
-                LOG_ERROR(g_logger) << "EventLoop::handleRead() reads " << n << " bytes instead of 8";
-            }
-        };
+            LOG_ERROR(g_logger) << "EventLoop::tickle() writes " << n << " bytes instead of 8";
+        }
     }
 
     void EventLoop::run()

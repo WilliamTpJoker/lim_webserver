@@ -57,7 +57,7 @@ namespace lim_webserver
         {
             LOG_INFO(g_logger) << " name=" << m_name
                                << " ssl=" << m_ssl
-                               << " server bind success: " << socket->peerAddress()->getAddr();
+                               << " server bind success: " << socket->peerAddress()->toString();
         }
         return true;
     }
@@ -110,7 +110,7 @@ namespace lim_webserver
 
     void TcpServer::handleClient(Socket::ptr client)
     {
-        LOG_INFO(g_logger) << "TcpServer handle function for client(ip = " << client->peerAddress()->getAddr() << ")";
+        LOG_INFO(g_logger) << "TcpServer handle function for client(ip = " << client->peerAddress()->toString() << ")";
     }
 
 } // namespace lim_webserver

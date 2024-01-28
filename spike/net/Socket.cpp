@@ -1,4 +1,5 @@
-#include "net/Socket.h"
+#include "Socket.h"
+
 #include "splog.h"
 #include "coroutine/FdInfo.h"
 
@@ -239,6 +240,17 @@ namespace lim_webserver
         return false;
     }
 
+    int Socket::send(ByteArray::ptr buffer, size_t length, int flags)
+    {
+        if (isConnected())
+        {
+            std::vector<iovec> iovs;
+            buffer->getReadBuffers(iovs, length);
+            return this->send(&iovs[0], iovs.size(), flags);
+        }
+        return -1;
+    }
+
     int Socket::send(const void *buffer, size_t length, int flags)
     {
         if (isConnected())
@@ -281,6 +293,17 @@ namespace lim_webserver
             msg.msg_name = to->getAddr();
             msg.msg_namelen = to->getAddrLen();
             return ::sendmsg(m_fd, &msg, flags);
+        }
+        return -1;
+    }
+
+    int Socket::recv(ByteArray::ptr buffer, size_t length, int flags)
+    {
+        if (isConnected())
+        {
+            std::vector<iovec> iovs;
+            buffer->getWriteBuffers(iovs, length);
+            return this->recv(&iovs[0], iovs.size(), flags);
         }
         return -1;
     }

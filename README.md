@@ -2,7 +2,86 @@
 
 ## 2024/01/27
 
-epoll的event没有设置边沿触发，设置后
+epoll的event没有设置边沿触发，设置后依然存在问题
+
+``` bash
+2024-01-28 01:03:26     125537 main     [system] [TRACE] EventLoop.cpp:19       EventLoop create wakeFd = 4
+2024-01-28 01:03:26     125537 main     [system] [TRACE] Poller.cpp:174 epoll_ctl op = ADD fd = 4 event = { IN  }
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Address.cpp:53 family = 2 type = 0 protocol = 0
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:255   task(1) hook socket, domain = 2 type = 526338 protocal = 0
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:264   task(1) hook socket, returns (fd = 5).
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:276   task(1) hook connect(fd = 5) in coroutine.
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:296   task(1) hook connect(fd = 5) completed immediately.
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:91    task(1) hook send(fd = 5) in coroutine.
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:107   task(1) try hook send(fd = 5). timeout = NULL
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:91    task(1) hook recvfrom(fd = 5) in coroutine.
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:107   task(1) try hook recvfrom(fd = 5). timeout = NULL
+2024-01-28 01:03:26     125568 Proc_0   [root] [INFO] test_socket.cpp:12        get address: 180.101.50.188:0
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:255   task(1) hook socket, domain = 2 type = 1 protocal = 0
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:264   task(1) hook socket, returns (fd = 5).
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:276   task(1) hook connect(fd = 5) in coroutine.
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Poller.cpp:174 epoll_ctl op = ADD fd = 5 event = { OUT  }
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:173   task(2) hook sleep(seconds = 3) in coroutine.
+2024-01-28 01:03:26     125537 main     [system] [TRACE] Poller.cpp:140 1 events happened
+2024-01-28 01:03:26     125537 main     [system] [TRACE] IoChannel.cpp:24       fd = 5 { OUT }
+2024-01-28 01:03:26     125537 main     [system] [TRACE] Task.cpp:27    try wake task(1).
+2024-01-28 01:03:26     125568 Proc_0   [root] [INFO] test_socket.cpp:29        connnect 180.101.50.188:80 success.
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:91    task(1) hook send(fd = 5) in coroutine.
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:107   task(1) try hook send(fd = 5). timeout = NULL
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:91    task(1) hook recv(fd = 5) in coroutine.
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:107   task(1) try hook recv(fd = 5). timeout = NULL
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Poller.cpp:174 epoll_ctl op = MOD fd = 5 event = { IN OUT  }
+2024-01-28 01:03:26     125537 main     [system] [TRACE] Poller.cpp:140 1 events happened
+2024-01-28 01:03:26     125537 main     [system] [TRACE] IoChannel.cpp:24       fd = 5 { OUT }
+2024-01-28 01:03:26     125537 main     [system] [TRACE] Task.cpp:27    try wake task(1).
+2024-01-28 01:03:26     125537 main     [system] [TRACE] Poller.cpp:140 1 events happened
+2024-01-28 01:03:26     125537 main     [system] [TRACE] IoChannel.cpp:24       fd = 5 { IN OUT }
+2024-01-28 01:03:26     125537 main     [system] [TRACE] Task.cpp:27    try wake task(1).
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:107   task(1) try hook recv(fd = 5). timeout = NULL
+2024-01-28 01:03:26     125568 Proc_0   [root] [INFO] test_socket.cpp:50        HTTP/1.0 200 OK
+Accept-Ranges: bytes
+Cache-Control: no-cache
+Content-Length: 9508
+Content-Type: text/html
+Date: Sat, 27 Jan 2024 17:03:26 GMT
+P3p: CP=" OTI DSP COR IVA OUR IND COM "
+P3p: CP=" OTI DSP COR IVA OUR IND COM "
+Pragma: no-cache
+Server: BWS/1.1
+Set-Cookie: BAIDUID=14F557E4F8B503C839895969ABDB0E33:FG=1; expires=Thu, 31-Dec-37 23:55:55 GMT; max-age=2147483647; path=/; domain=.baidu.com
+Set-Cookie: BIDUPSID=14F557E4F8B503C839895969ABDB0E33; expires=Thu, 31-Dec-37 23:55:55 GMT; max-age=2147483647; path=/; domain=.baidu.com
+Set-Cookie: PSTM=1706375006; expires=Thu, 31-Dec-37 23:55:55 GMT; max-age=2147483647; path=/; domain=.baidu.com
+Set-Cookie: BAIDUID=14F557E4F8B503C846053F7A7204F296:FG=1; max-age=31536000; expires=Sun, 26-Jan-25 17:03:26 GMT; domain=.baidu.com; path=/; version=1; comment=bd
+Traceid: 170637500606236856428292563864224621885
+Vary: Accept-Encoding
+X-Ua-Compatible: IE=Edge,chrome=1
+
+<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta content="always" name="referrer"><meta name="description" content="全球领先的中文搜索引擎、致力于让网民更便捷地获取信息，找到所求。百度超过千亿的中文网页数据库，可以瞬间找到相关的搜索结果。"><link rel="shortcut icon" href="//www.baidu.com/favicon.ico" type="image/x-icon">
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Poller.cpp:174 epoll_ctl op = DEL fd = 5 event = {  }
+2024-01-28 01:03:26     125568 Proc_0   [system] [TRACE] Hook.cpp:422   task(1) hook close(fd = 5)
+2024-01-28 01:03:31     125537 main     [system] [TRACE] Poller.cpp:174 epoll_ctl op = DEL fd = 4 event = {  }
+28 01:03:31     125568 Proc_0   [system] [TRACE] EventLoop.cpp:57       EventLoop:tickle()
+28 01:03:31     125568 Proc_0   [system] [TRACE] Hook.cpp:91    task(2) hook write(fd = 4) in coroutine.
+28 01:03:31     125568 Proc_0   [system] [TRACE] Hook.cpp:96    return unblocked.
+28 01:03:31     125568 Proc_0   [system] [ERROR] EventLoop.cpp:62       EventLoop::tickle() writes -1 bytes instead of 8
+```
+
+> 在退出阶段，日志的打印也出现了问题，~~疑似内存溢出导致~~，发现在日志打印中fd=4事件在EventLoop:tickle前被删除(wakeFd的删除只在eventloop的析构中发生，也就是说eventloop在tickle前析构)，因此导致了内存的错误。
+
+以下是正确的退出顺序
+
+```bash
+2024-01-28 01:16:23     4146 Proc_0     [system] [TRACE] Poller.cpp:174 epoll_ctl op = DEL fd = 5 event = {  }
+2024-01-28 01:16:23     4146 Proc_0     [system] [TRACE] Hook.cpp:422   task(1) hook close(fd = 5)
+2024-01-28 01:16:26     4146 Proc_0     [system] [TRACE] EventLoop.cpp:57       EventLoop:tickle()
+2024-01-28 01:16:26     4146 Proc_0     [system] [TRACE] Hook.cpp:91    task(2) hook write(fd = 4) in coroutine.
+2024-01-28 01:16:26     4146 Proc_0     [system] [TRACE] Hook.cpp:96    return unblocked.
+2024-01-28 01:16:26     4144 main       [system] [TRACE] Poller.cpp:140 1 events happened
+2024-01-28 01:16:26     4144 main       [system] [TRACE] IoChannel.cpp:24       fd = 4 { IN }
+2024-01-28 01:16:27     4144 main       [system] [TRACE] Poller.cpp:174 epoll_ctl op = DEL fd = 4 event = {  }
+```
+
+TODO: 优雅退出
 
 ## 2024/01/26
 

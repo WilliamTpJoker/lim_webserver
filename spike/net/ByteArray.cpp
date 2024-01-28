@@ -1,6 +1,7 @@
-#include "splog.h"
+#include "ByteArray.h"
 
-#include "net/ByteArray.h"
+#include "Endian.h"
+#include "splog.h"
 
 #include <iomanip>
 
@@ -53,32 +54,38 @@ namespace lim_webserver
     }
     void ByteArray::writeFint16(int16_t value)
     {
-        write(&value, sizeof(value));
+        int16_t v = endian::hostToNetwork(value);
+        write(&v, sizeof(value));
     }
 
     void ByteArray::writeFuint16(uint16_t value)
     {
-        write(&value, sizeof(value));
+        uint16_t v = endian::hostToNetwork(value);
+        write(&v, sizeof(value));
     }
 
     void ByteArray::writeFint32(int32_t value)
     {
+        int32_t v = endian::hostToNetwork(value);
         write(&value, sizeof(value));
     }
 
     void ByteArray::writeFuint32(uint32_t value)
     {
-        write(&value, sizeof(value));
+        uint32_t v = endian::hostToNetwork(value);
+        write(&v, sizeof(value));
     }
 
     void ByteArray::writeFint64(int64_t value)
     {
-        write(&value, sizeof(value));
+        int64_t v = endian::hostToNetwork(value);
+        write(&v, sizeof(value));
     }
 
     void ByteArray::writeFuint64(uint64_t value)
     {
-        write(&value, sizeof(value));
+        uint64_t v = endian::hostToNetwork(value);
+        write(&v, sizeof(value));
     }
 
     static uint32_t EncodeZigzag32(const int32_t &v)
@@ -211,7 +218,7 @@ namespace lim_webserver
 #define XX(type)         \
     type v;              \
     read(&v, sizeof(v)); \
-    return v;
+    return endian::networkToHost(v);
 
     int16_t ByteArray::readFint16()
     {
@@ -625,31 +632,33 @@ namespace lim_webserver
 
         uint64_t size = len;
 
-        size_t npos = m_position % m_baseSize;
-        size_t ncap = m_cur->size - npos;
-        struct iovec iov;
-        Node *cur = m_cur;
+        size_t npos = m_position % m_baseSize; // 计算当前节点内的偏移量
+        size_t ncap = m_cur->size - npos;      // 计算当前节点内剩余可读数据长度
+        struct iovec iov;                      // 用于构建每个缓冲区的 iovec 结构体
+        Node *cur = m_cur;                     // 当前节点指针
 
         while (len > 0)
         {
             if (ncap >= len)
             {
-                iov.iov_base = cur->ptr + npos;
-                iov.iov_len = len;
-                len = 0;
+                // 如果当前节点剩余可读数据足够满足请求
+                iov.iov_base = cur->ptr + npos; // 缓冲区的起始位置
+                iov.iov_len = len;              // 缓冲区的长度
+                len = 0;                        // 已经满足请求，结束循环
             }
             else
             {
-                iov.iov_base = cur->ptr + npos;
-                iov.iov_len = ncap;
-                len -= ncap;
-                cur = cur->next;
-                ncap = cur->size;
-                npos = 0;
+                // 如果当前节点剩余可读数据不足以满足请求
+                iov.iov_base = cur->ptr + npos; // 缓冲区的起始位置
+                iov.iov_len = ncap;             // 缓冲区的长度为当前节点剩余可读数据长度
+                len -= ncap;                    // 减去已经满足的长度
+                cur = cur->next;                // 移动到下一个节点
+                ncap = cur->size;               // 更新当前节点的可读数据长度
+                npos = 0;                       // 重置偏移量
             }
-            buffers.push_back(iov);
+            buffers.push_back(iov); // 将构建好的缓冲区信息添加到向量中
         }
-        return size;
+        return size; // 返回实际获取的数据长度
     }
 
     uint64_t ByteArray::getReadBuffers(std::vector<iovec> &buffers, uint64_t len, uint64_t position) const

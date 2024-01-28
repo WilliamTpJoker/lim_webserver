@@ -3,7 +3,8 @@
 #include <memory>
 #include <netinet/tcp.h>
 
-#include "net/Address.h"
+#include "ByteArray.h"
+#include "Address.h"
 #include "base/Noncopyable.h"
 
 namespace lim_webserver
@@ -12,7 +13,6 @@ namespace lim_webserver
     {
     public:
         using ptr = std::shared_ptr<Socket>;
-        using weak_ptr = std::weak_ptr<Socket>;
 
         /**
          * @brief Socket类型
@@ -82,7 +82,7 @@ namespace lim_webserver
         void setRecvTimeout(int64_t v);
 
         bool getOption(int level, int option, void *result, socklen_t *len);
-        
+
         template <class T>
         bool getOption(int level, int option, T &result)
         {
@@ -97,17 +97,56 @@ namespace lim_webserver
             return setOption(level, option, &value, sizeof(T));
         }
 
+        /**
+         * @brief 接受连接请求，返回一个新的套接字和客户端地址（服务器端）
+         *
+         * @return Socket::ptr
+         */
         Socket::ptr accept();
+
+        /**
+         * @brief 绑定服务器地址
+         *
+         * @param addr
+         * @return true
+         * @return false
+         */
         bool bind(const Address::ptr addr);
+
+        /**
+         * @brief 连接到服务器
+         *
+         * @param addr
+         * @param timeout_ms
+         * @return true
+         * @return false
+         */
         bool connect(const Address::ptr addr, uint64_t timeout_ms = -1);
+
+        /**
+         * @brief 开始监听传入的连接
+         *
+         * @param backlog
+         * @return true
+         * @return false
+         */
         bool listen(int backlog = SOMAXCONN);
+
+        /**
+         * @brief 关闭连接
+         *
+         * @return true
+         * @return false
+         */
         bool close();
 
+        int send(ByteArray::ptr buffer, size_t length, int flags = 0);
         int send(const void *buffer, size_t length, int flags = 0);
         int send(const iovec *buffers, size_t length, int flags = 0);
         int sendTo(const void *buffer, size_t length, const Address::ptr to, int flags = 0);
         int sendTo(const iovec *buffers, size_t length, const Address::ptr to, int flags = 0);
 
+        int recv(ByteArray::ptr buffer, size_t length, int flags = 0);
         int recv(void *buffer, size_t length, int flags = 0);
         int recv(iovec *buffers, size_t length, int flags = 0);
         int recvFrom(void *buffer, size_t length, const Address::ptr from, int flags = 0);
@@ -115,15 +154,15 @@ namespace lim_webserver
 
         /**
          * @brief 获得端地址
-         * 
-         * @return Address::ptr 
+         *
+         * @return Address::ptr
          */
         Address::ptr peerAddress();
 
         /**
          * @brief 获得本地地址
-         * 
-         * @return Address::ptr 
+         *
+         * @return Address::ptr
          */
         Address::ptr localAddress();
 
@@ -158,8 +197,8 @@ namespace lim_webserver
 
         /**
          * @brief 获得错误信息
-         * 
-         * @return int 
+         *
+         * @return int
          */
         int error();
 

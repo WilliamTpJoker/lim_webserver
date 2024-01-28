@@ -11,6 +11,13 @@ namespace lim_webserver
     public:
         using ptr = std::shared_ptr<ByteArray>;
 
+        static ptr Create(size_t base_size = 4096)
+        {
+            return std::make_shared<ByteArray>(base_size);
+        }
+
+    public:
+
         struct Node
         {
             Node(size_t s);
@@ -373,16 +380,6 @@ namespace lim_webserver
         size_t getReadSize() const { return m_size - m_position; }
 
         /**
-         * @brief 是否是小端
-         */
-        bool isLittleEndian() const;
-
-        /**
-         * @brief 设置是否为小端
-         */
-        void setIsLittleEndian(bool val);
-
-        /**
          * @brief 将ByteArray里面的数据[m_position, m_size)转成std::string
          */
         std::string toString() const;
@@ -439,7 +436,6 @@ namespace lim_webserver
         size_t m_position; // 当前操作位置
         size_t m_capacity; // 当前的总容量
         size_t m_size;     // 当前数据的大小
-        int8_t m_endian;   // 字节序,默认大端
         Node *m_root;      // 第一个内存块指针
         Node *m_cur;       // 当前操作的内存块指针
     };
