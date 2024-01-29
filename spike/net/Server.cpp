@@ -57,7 +57,7 @@ namespace lim_webserver
         {
             LOG_INFO(g_logger) << " name=" << m_name
                                << " ssl=" << m_ssl
-                               << " server bind success: " << socket->peerAddress()->toString();
+                               << " server bind success: " << socket->localAddress()->toString();
         }
         return true;
     }

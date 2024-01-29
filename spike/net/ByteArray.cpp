@@ -749,4 +749,30 @@ namespace lim_webserver
             }
         }
     }
+    void ByteArray::addReadPosition(int len)
+    {
+        size_t npos = m_readPos.pos % m_baseSize;
+        size_t ncap = m_readPos.cur->size - npos;
+
+        while (len > 0)
+        {
+            if (ncap >= len)
+            {
+                if (m_readPos.cur->size == (npos + len))
+                {
+                    m_readPos.cur = m_readPos.cur->next;
+                }
+                m_readPos.pos += len;
+                len = 0;
+            }
+            else
+            {
+                m_readPos.pos += ncap;
+                len -= ncap;
+                m_readPos.cur = m_readPos.cur->next;
+                ncap = m_readPos.cur->size;
+                npos = 0;
+            }
+        }
+    }
 } // namespace lim_webserver

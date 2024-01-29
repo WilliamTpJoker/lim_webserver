@@ -246,7 +246,12 @@ namespace lim_webserver
         {
             std::vector<iovec> iovs;
             buffer->getReadBuffers(iovs, length);
-            return this->send(&iovs[0], iovs.size(), flags);
+            int rt = this->send(&iovs[0], iovs.size(), flags);
+            if(rt>0)
+            {
+                buffer->addReadPosition(rt);
+            }
+            return rt;
         }
         return -1;
     }

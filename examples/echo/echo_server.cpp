@@ -32,9 +32,10 @@ void EchoServer::handleClient(Socket::ptr client)
                                << " errno=" << errno << " errstr=" << strerror(errno);
             break;
         }
-
         std::cout << buf->toString();
         std::cout.flush();
+        
+        client->send(buf, rt);
         buf->clear();
     }
 }
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
         level = LogLevel_DEBUG;
     }
     LOG_SYS()->setLevel(level);
-    // LOG_SYS()->addAppender(aysnc);
+    LOG_SYS()->addAppender(aysnc);
 
     co_sched->start();
     co run;

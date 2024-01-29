@@ -370,6 +370,13 @@ namespace lim_webserver
          */
         void addWritePosition(int len);
 
+        /**
+         * @brief 在getReadBuffers后使用，确定写入的内容量
+         * 
+         * @param len 
+         */
+        void addReadPosition(int len);
+
     private:
         struct pointer
         {
