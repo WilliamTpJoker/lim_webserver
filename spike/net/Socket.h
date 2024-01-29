@@ -3,7 +3,6 @@
 #include <memory>
 #include <netinet/tcp.h>
 
-#include "ByteArray.h"
 #include "Address.h"
 #include "base/Noncopyable.h"
 
@@ -140,13 +139,11 @@ namespace lim_webserver
          */
         bool close();
 
-        int send(ByteArray::ptr buffer, size_t length, int flags = 0);
         int send(const void *buffer, size_t length, int flags = 0);
         int send(const iovec *buffers, size_t length, int flags = 0);
         int sendTo(const void *buffer, size_t length, const Address::ptr to, int flags = 0);
         int sendTo(const iovec *buffers, size_t length, const Address::ptr to, int flags = 0);
 
-        int recv(ByteArray::ptr buffer, size_t length, int flags = 0);
         int recv(void *buffer, size_t length, int flags = 0);
         int recv(iovec *buffers, size_t length, int flags = 0);
         int recvFrom(void *buffer, size_t length, const Address::ptr from, int flags = 0);

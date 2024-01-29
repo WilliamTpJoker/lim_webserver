@@ -1,5 +1,38 @@
 # 开发更新日志
 
+## 2024/01/29
+
+使用双指针优化bytearray，并为socket添加相关接口，实现了echo server的测试
+
+```bash
+book@100ask:~$ telnet 127.0.0.1 8020
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+d
+d
+fdfd
+fdfd
+fdsfadfas
+fdsfadfas
+
+
+fsdfasd
+fsdfasd
+dddddddddddddddddddddd
+dddddddddddddddddddddd
+sdafsdfsad
+sdafsdfsad
+fsadfsadfasd
+fsadfsadfasd
+^]
+telnet> q
+Connection closed.
+
+```
+
+> 使用telnet测试echo服务器，可以看到服务器可以正确的接受数据并返回
+
 ## 2024/01/27
 
 epoll的event没有设置边沿触发，设置后依然存在问题

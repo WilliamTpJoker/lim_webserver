@@ -6,11 +6,11 @@
 #include <sys/socket.h>
 namespace lim_webserver
 {
-    class Socket;
+    class SocketStream;
 
     class ByteArray
     {
-        friend Socket;
+        friend SocketStream;
     public:
         using ptr = std::shared_ptr<ByteArray>;
 

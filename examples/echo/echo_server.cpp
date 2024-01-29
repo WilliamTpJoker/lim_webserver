@@ -16,26 +16,26 @@ public:
 
 void EchoServer::handleClient(Socket::ptr client)
 {
-    LOG_INFO(g_logger) << "handleClient " << client->peerAddress()->toString();
+    SocketStream::ptr clientstream = SocketStream::Create(client);
+    LOG_INFO(g_logger) << "handleClient " << clientstream->peerAddressString();
     ByteArray::ptr buf = ByteArray::Create();
     while (true)
     {
-        int rt = client->recv(buf, 1024);
+        int rt = clientstream->read(buf, 1024);
         if (rt == 0)
         {
-            LOG_INFO(g_logger) << "client close: " << client->peerAddress()->toString();
+            LOG_INFO(g_logger) << "client close: " << clientstream->peerAddressString();
             break;
         }
         else if (rt < 0)
         {
-            LOG_INFO(g_logger) << "client error rt=" << rt
-                               << " errno=" << errno << " errstr=" << strerror(errno);
+            LOG_INFO(g_logger) << "client error rt=" << rt << " errno=" << errno << " errstr=" << strerror(errno);
             break;
         }
         std::cout << buf->toString();
         std::cout.flush();
-        
-        client->send(buf, rt);
+
+        clientstream->write(buf, rt);
         buf->clear();
     }
 }
