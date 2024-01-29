@@ -303,7 +303,12 @@ namespace lim_webserver
         {
             std::vector<iovec> iovs;
             buffer->getWriteBuffers(iovs, length);
-            return this->recv(&iovs[0], iovs.size(), flags);
+            int rt = this->recv(&iovs[0], iovs.size(), flags);
+            if (rt > 0)
+            {
+                buffer->addWritePosition(rt);
+            }
+            return rt;
         }
         return -1;
     }

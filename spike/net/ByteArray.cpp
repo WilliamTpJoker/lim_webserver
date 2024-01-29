@@ -28,18 +28,21 @@ namespace lim_webserver
     }
 
     ByteArray::ByteArray(size_t base_size)
-        : m_baseSize(base_size), m_position(0), m_capacity(base_size), m_size(0), m_root(new Node(base_size)), m_cur(m_root)
+        : m_baseSize(base_size), m_capacity(base_size), m_root(new Node(base_size))
     {
+        m_writePos = pointer(m_root);
+        m_readPos = pointer(m_root);
     }
 
     ByteArray::~ByteArray()
     {
+        Node *cur;
         Node *tmp = m_root;
         while (tmp)
         {
-            m_cur = tmp;
+            cur = tmp;
             tmp = tmp->next;
-            delete m_cur;
+            delete cur;
         }
     }
 
@@ -353,17 +356,19 @@ namespace lim_webserver
 
     void ByteArray::clear()
     {
-        m_position = m_size = 0;
+        m_writePos.pos = m_readPos.pos = 0;
         m_capacity = m_baseSize;
         Node *tmp = m_root->next;
+        Node *cur;
         while (tmp)
         {
-            m_cur = tmp;
+            cur = tmp;
             tmp = tmp->next;
-            delete m_cur;
+            delete cur;
         }
-        m_cur = m_root;
-        m_root->next = NULL;
+        m_writePos.cur = m_root;
+        m_readPos.cur = m_root;
+        m_root->next = nullptr;
     }
 
     void ByteArray::write(const void *buf, size_t size)
@@ -372,40 +377,37 @@ namespace lim_webserver
         {
             return;
         }
+
+        // 确保内存足够
         addCapacity(size);
 
-        size_t npos = m_position % m_baseSize;
-        size_t ncap = m_cur->size - npos;
+        size_t npos = m_writePos.pos % m_baseSize;
+        size_t ncap = m_writePos.cur->size - npos;
         size_t bpos = 0;
 
         while (size > 0)
         {
             if (ncap >= size)
             {
-                memcpy(m_cur->ptr + npos, (const char *)buf + bpos, size);
-                if (m_cur->size == (npos + size))
+                memcpy(m_writePos.cur->ptr + npos, (const char *)buf + bpos, size);
+                if (m_writePos.cur->size == (npos + size))
                 {
-                    m_cur = m_cur->next;
+                    m_writePos.cur = m_writePos.cur->next;
                 }
-                m_position += size;
+                m_writePos.pos += size;
                 bpos += size;
                 size = 0;
             }
             else
             {
-                memcpy(m_cur->ptr + npos, (const char *)buf + bpos, ncap);
-                m_position += ncap;
+                memcpy(m_writePos.cur->ptr + npos, (const char *)buf + bpos, ncap);
+                m_writePos.pos += ncap;
                 bpos += ncap;
                 size -= ncap;
-                m_cur = m_cur->next;
-                ncap = m_cur->size;
+                m_writePos.cur = m_writePos.cur->next;
+                ncap = m_writePos.cur->size;
                 npos = 0;
             }
-        }
-
-        if (m_position > m_size)
-        {
-            m_size = m_position;
         }
     }
 
@@ -416,30 +418,30 @@ namespace lim_webserver
             throw std::out_of_range("not enough len");
         }
 
-        size_t npos = m_position % m_baseSize;
-        size_t ncap = m_cur->size - npos;
+        size_t npos = m_readPos.pos % m_baseSize;
+        size_t ncap = m_readPos.cur->size - npos;
         size_t bpos = 0;
         while (size > 0)
         {
             if (ncap >= size)
             {
-                memcpy((char *)buf + bpos, m_cur->ptr + npos, size);
-                if (m_cur->size == (npos + size))
+                memcpy((char *)buf + bpos, m_readPos.cur->ptr + npos, size);
+                if (m_readPos.cur->size == (npos + size))
                 {
-                    m_cur = m_cur->next;
+                    m_readPos.cur = m_readPos.cur->next;
                 }
-                m_position += size;
+                m_readPos.pos += size;
                 bpos += size;
                 size = 0;
             }
             else
             {
-                memcpy((char *)buf + bpos, m_cur->ptr + npos, ncap);
-                m_position += ncap;
+                memcpy((char *)buf + bpos, m_readPos.cur->ptr + npos, ncap);
+                m_readPos.pos += ncap;
                 bpos += ncap;
                 size -= ncap;
-                m_cur = m_cur->next;
-                ncap = m_cur->size;
+                m_readPos.cur = m_readPos.cur->next;
+                ncap = m_readPos.cur->size;
                 npos = 0;
             }
         }
@@ -447,15 +449,15 @@ namespace lim_webserver
 
     void ByteArray::read(void *buf, size_t size, size_t position) const
     {
-        if (size > (m_size - position))
+        if (size > (m_writePos.pos - position))
         {
             throw std::out_of_range("not enough len");
         }
 
         size_t npos = position % m_baseSize;
-        size_t ncap = m_cur->size - npos;
+        size_t ncap = m_readPos.cur->size - npos;
         size_t bpos = 0;
-        Node *cur = m_cur;
+        Node *cur = m_readPos.cur;
         while (size > 0)
         {
             if (ncap >= size)
@@ -482,30 +484,7 @@ namespace lim_webserver
         }
     }
 
-    void ByteArray::setPosition(size_t v)
-    {
-        if (v > m_capacity)
-        {
-            throw std::out_of_range("set_position out of range");
-        }
-        m_position = v;
-        if (m_position > m_size)
-        {
-            m_size = m_position;
-        }
-        m_cur = m_root;
-        while (v > m_cur->size)
-        {
-            v -= m_cur->size;
-            m_cur = m_cur->next;
-        }
-        if (v == m_cur->size)
-        {
-            m_cur = m_cur->next;
-        }
-    }
-
-    bool ByteArray::writeToFile(const std::string &name) const
+    bool ByteArray::toFile(const std::string &name) const
     {
         std::ofstream ofs;
         ofs.open(name, std::ios::trunc | std::ios::binary);
@@ -517,8 +496,8 @@ namespace lim_webserver
         }
 
         int64_t read_size = getReadSize();
-        int64_t pos = m_position;
-        Node *cur = m_cur;
+        int64_t pos = m_readPos.pos;
+        Node *cur = m_readPos.cur;
 
         while (read_size > 0)
         {
@@ -533,7 +512,7 @@ namespace lim_webserver
         return true;
     }
 
-    bool ByteArray::readFromFile(const std::string &name)
+    bool ByteArray::fromFile(const std::string &name)
     {
         std::ifstream ifs;
         ifs.open(name, std::ios::binary);
@@ -561,24 +540,25 @@ namespace lim_webserver
             return;
         }
         size_t old_cap = getCapacity();
+
+        // 若容量足够则不扩容
         if (old_cap >= size)
         {
             return;
         }
 
+        // 计算需要添加的内存块数
         size = size - old_cap;
         size_t count = ceil(1.0 * size / m_baseSize);
-        Node *tmp = m_root;
-        while (tmp->next)
-        {
-            tmp = tmp->next;
-        }
 
-        Node *first = NULL;
+        // 以当前写指针为起始
+        Node *tmp = m_writePos.cur;
+
+        Node *first = nullptr;
         for (size_t i = 0; i < count; ++i)
         {
             tmp->next = new Node(m_baseSize);
-            if (first == NULL)
+            if (first == nullptr)
             {
                 first = tmp->next;
             }
@@ -586,9 +566,10 @@ namespace lim_webserver
             m_capacity += m_baseSize;
         }
 
+        // 若老容量已经为空，则直接将写指针所指向的内存指向下一块
         if (old_cap == 0)
         {
-            m_cur = first;
+            m_writePos.cur = first;
         }
     }
 
@@ -600,7 +581,7 @@ namespace lim_webserver
         {
             return str;
         }
-        read(&str[0], str.size(), m_position);
+        read(&str[0], str.size(), m_readPos.pos);
         return str;
     }
 
@@ -632,10 +613,10 @@ namespace lim_webserver
 
         uint64_t size = len;
 
-        size_t npos = m_position % m_baseSize; // 计算当前节点内的偏移量
-        size_t ncap = m_cur->size - npos;      // 计算当前节点内剩余可读数据长度
-        struct iovec iov;                      // 用于构建每个缓冲区的 iovec 结构体
-        Node *cur = m_cur;                     // 当前节点指针
+        size_t npos = m_readPos.pos % m_baseSize; // 计算当前节点内的偏移量
+        size_t ncap = m_readPos.cur->size - npos; // 计算当前节点内剩余可读数据长度
+        struct iovec iov;                         // 用于构建每个缓冲区的 iovec 结构体
+        Node *cur = m_readPos.cur;                // 当前节点指针
 
         while (len > 0)
         {
@@ -710,13 +691,15 @@ namespace lim_webserver
         {
             return 0;
         }
+
+        // 确保内存足够
         addCapacity(len);
         uint64_t size = len;
 
-        size_t npos = m_position % m_baseSize;
-        size_t ncap = m_cur->size - npos;
+        size_t npos = m_writePos.pos % m_baseSize;
+        size_t ncap = m_writePos.cur->size - npos;
         struct iovec iov;
-        Node *cur = m_cur;
+        Node *cur = m_writePos.cur;
         while (len > 0)
         {
             if (ncap >= len)
@@ -738,5 +721,32 @@ namespace lim_webserver
             buffers.push_back(iov);
         }
         return size;
+    }
+
+    void ByteArray::addWritePosition(int len)
+    {
+        size_t npos = m_writePos.pos % m_baseSize;
+        size_t ncap = m_writePos.cur->size - npos;
+
+        while (len > 0)
+        {
+            if (ncap >= len)
+            {
+                if (m_writePos.cur->size == (npos + len))
+                {
+                    m_writePos.cur = m_writePos.cur->next;
+                }
+                m_writePos.pos += len;
+                len = 0;
+            }
+            else
+            {
+                m_writePos.pos += ncap;
+                len -= ncap;
+                m_writePos.cur = m_writePos.cur->next;
+                ncap = m_writePos.cur->size;
+                npos = 0;
+            }
+        }
     }
 } // namespace lim_webserver
