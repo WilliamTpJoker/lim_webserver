@@ -56,7 +56,9 @@ int main(int argc, char *argv[])
 {
     lim_webserver::LogLevel level = LogLevel_TRACE;
     lim_webserver::AsyncAppender::ptr aysnc = AppenderFactory::GetInstance()->defaultAsyncAppender();
-    aysnc->bindAppender(AppenderFactory::GetInstance()->defaultFileAppender());
+    auto fileapd = AppenderFactory::GetInstance()->defaultFileAppender();
+    fileapd->setFile("/home/book/Webserver/log/echo_server.txt");
+    aysnc->bindAppender(fileapd);
     if (argc == 2)
     {
         level = LogLevel_DEBUG;

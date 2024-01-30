@@ -2,7 +2,59 @@
 
 ## 2024/01/30
 
-经过apache压力测试发现，使用epoll独立线程的方法存在问题（由于其不直接处理任何函数，每一个到来的请求都会唤醒epoll，没有达到io多路复用的效果），决定使用强继承的方式实现基于协程的reactor.
+经过apache压力测试发现，使用epoll独立线程的方法存在问题（由于其不直接处理任何函数，每一个到来的请求都会唤醒epoll，没有达到io多路复用的效果），决定使用强继承的方式实现基于协程的reactor.(RPS为800)。
+
+```bash
+Server Software:        http
+Server Hostname:        192.168.144.131
+Server Port:            8020
+
+Document Path:          /http
+Document Length:        11 bytes
+
+Concurrency Level:      20
+Time taken for tests:   1.326 seconds
+Complete requests:      1000
+Failed requests:        0
+Total transferred:      83000 bytes
+HTML transferred:       11000 bytes
+Requests per second:    754.05 [#/sec] (mean)
+Time per request:       26.523 [ms] (mean)
+Time per request:       1.326 [ms] (mean, across all concurrent requests)
+Transfer rate:          61.12 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   1.1      1      17
+Processing:     2   25  10.8     28      52
+Waiting:        1   17  10.1     15      48
+Total:          4   26  11.2     29      54
+
+Percentage of the requests served within a certain time (ms)
+  50%     29
+  66%     33
+  75%     34
+  80%     36
+  90%     39
+  95%     42
+  98%     48
+  99%     49
+ 100%     54 (longest request)
+```
+
+测试发现存在丢包问题，调试发现为意外关闭socket所导致，问题日志如下
+
+``` bash
+2024-01-30 22:50:41 56917 Proc_0 [system] [TRACE] HttpServer.cpp:16 handleClient 192.168.144.1:65519
+2024-01-30 22:50:41 56917 Proc_0 [system] [TRACE] Hook.cpp:91 task(5445) hook recv(fd = 5345) in coroutine.
+2024-01-30 22:50:41 56917 Proc_0 [system] [TRACE] Hook.cpp:107 task(5445) try hook recv(fd = 5345). timeout = 120000
+2024-01-30 22:50:41 56917 Proc_0 [system] [TRACE] Poller.cpp:168 epoll_ctl op = MOD fd = 5345 event = { IN  }
+2024-01-30 22:50:41 56917 Proc_0 [system] [FATAL] Poller.cpp:177 epoll_ctl op =MOD fd =5345
+```
+
+> 上述日志中的5445号协程一直未被调度器重新唤醒，它在尝试resv报文后挂起，但是紧接着该socket的epoll_ctl为MOD而不是ADD，经排查为删除fd时没有正确设置状态，修改后短连接可以正常处理高并发。
+
+TODO: 发现在长连接时会丢失报文，原因不详。
 
 ## 2024/01/29
 

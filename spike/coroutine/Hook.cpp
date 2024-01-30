@@ -143,7 +143,9 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         // 添加该协程事件，即后续内容
         lim_webserver::EventLoop::GetInstance()->addEvent(fd, (lim_webserver::IoEvent)event);
 
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << " hold.";
         lim_webserver::Processor::CoHold();
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << " wake.";
         if (timer)
         {
             LOG_TRACE(g_logger) << "cancel timer";

@@ -104,6 +104,7 @@ namespace lim_webserver
         }
         else
         {
+            ASSERT(state == IoChannelState::EXIST);
             update(EPOLL_CTL_MOD, channel);
         }
         return true;
@@ -121,6 +122,7 @@ namespace lim_webserver
         if (state == IoChannelState::EXIST)
         {
             update(EPOLL_CTL_DEL, channel);
+            channel->setState(IoChannelState::DISCARD);
         }
     }
 
@@ -170,11 +172,11 @@ namespace lim_webserver
         {
             if (op == EPOLL_CTL_DEL)
             {
-                LOG_ERROR(g_logger) << "epoll_ctl op =" << opToString(op) << " fd =" << fd;
+                LOG_ERROR(g_logger) << "epoll_ctl op = " << opToString(op) << " fd =" << fd;
             }
             else
             {
-                LOG_FATAL(g_logger) << "epoll_ctl op =" << opToString(op) << " fd =" << fd;
+                LOG_FATAL(g_logger) << "epoll_ctl op = " << opToString(op) << " fd =" << fd;
             }
         }
     }

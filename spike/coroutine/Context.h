@@ -1,8 +1,10 @@
 #pragma once
 
-#include <ucontext.h>
 #include <functional>
 #include <memory>
+#include <ucontext.h>
+
+#include <boost/context/all.hpp>
 
 #include "base/Allocator.h"
 
@@ -32,8 +34,6 @@ namespace lim_webserver
 
         inline void swapIn() { swapcontext(&getTlsContext(), &m_context); }
 
-        inline void swapTo(Context &other) { swapcontext(&other.m_context, &m_context); }
-
         inline void swapOut() { swapcontext(&m_context, &getTlsContext()); }
 
     private:
@@ -41,4 +41,39 @@ namespace lim_webserver
         ucontext_t m_context;    // 上下文
         size_t m_stacksize;      // 栈大小
     };
+
+    // class BoostContext
+    // {
+    //     using context_t = ::boost::context::;
+
+    // public:
+    //     Context(std::size_t stack_size, std::function<void()> const &fn)
+    //         : protect_page_(0), ctx_(std::allocator_arg, my_fixedsize_stack_allocator(protect_page_, stack_size),
+    //                                  [=](context_t yield) mutable -> context_t
+    //                                  {
+    //                                      this->yield_ = &yield;
+    //                                      fn();
+    //                                      return std::move(*this->yield_);
+    //                                  }),
+    //           yield_(nullptr)
+    //     {
+    //     }
+
+    //     inline bool swapIn()
+    //     {
+    //         ctx_ = ctx_();
+    //         return true;
+    //     }
+
+    //     inline bool swapOut()
+    //     {
+    //         *yield_ = (*yield_)();
+    //         return true;
+    //     }
+
+    // private:
+    //     uint32_t protect_page_;
+    //     context_t ctx_;
+    //     context_t *yield_;
+    // };
 } // namespace lim_webserver
