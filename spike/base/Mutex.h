@@ -1,9 +1,9 @@
 #pragma once
 
-#include <pthread.h>
-#include <thread>
 #include <functional>
+#include <pthread.h>
 #include <semaphore.h>
+#include <thread>
 
 #include "Noncopyable.h"
 
@@ -30,10 +30,7 @@ namespace lim_webserver
         /**
          * @brief 析构函数
          */
-        ~Semaphore()
-        {
-            sem_destroy(&m_semaphore);
-        }
+        ~Semaphore() { sem_destroy(&m_semaphore); }
 
         /**
          * @brief 等待信号量
@@ -66,8 +63,7 @@ namespace lim_webserver
      *
      * @tparam T 互斥锁类型
      */
-    template <class T>
-    class ScopedLock
+    template <class T> class ScopedLock
     {
     public:
         /**
@@ -75,7 +71,11 @@ namespace lim_webserver
          *
          * @param mutex 互斥锁实例
          */
-        ScopedLock(T &mutex) : m_mutex(mutex) { lock(); }
+        ScopedLock(T &mutex) : m_mutex(mutex)
+        {
+            m_mutex.lock();
+            m_locked = true;
+        }
 
         /**
          * @brief 析构函数，解锁
@@ -87,7 +87,11 @@ namespace lim_webserver
          */
         void lock()
         {
-            m_mutex.lock();
+            if (!m_locked)
+            {
+                m_mutex.lock();
+                m_locked = true;
+            }
         }
 
         /**
@@ -95,12 +99,16 @@ namespace lim_webserver
          */
         void unlock()
         {
-
-            m_mutex.unlock();
+            if (m_locked)
+            {
+                m_mutex.unlock();
+                m_locked = false;
+            }
         }
 
     private:
         T &m_mutex; // 互斥锁实例
+        bool m_locked;
     };
 
     /**
@@ -108,8 +116,7 @@ namespace lim_webserver
      *
      * @tparam T 互斥锁类型
      */
-    template <class T>
-    class ReadScopedLock
+    template <class T> class ReadScopedLock
     {
     public:
         /**
@@ -126,20 +133,12 @@ namespace lim_webserver
         /**
          * @brief 加读锁
          */
-        void lock()
-        {
-
-            m_mutex.rdlock();
-        }
+        void lock() { m_mutex.rdlock(); }
 
         /**
          * @brief 解锁
          */
-        void unlock()
-        {
-
-            m_mutex.unlock();
-        }
+        void unlock() { m_mutex.unlock(); }
 
     private:
         T &m_mutex; // 读写锁实例
@@ -150,8 +149,7 @@ namespace lim_webserver
      *
      * @tparam T 互斥锁类型
      */
-    template <class T>
-    class WriteScopedLock
+    template <class T> class WriteScopedLock
     {
     public:
         /**
@@ -168,19 +166,12 @@ namespace lim_webserver
         /**
          * @brief 加写锁
          */
-        void lock()
-        {
-
-            m_mutex.wrlock();
-        }
+        void lock() { m_mutex.wrlock(); }
 
         /**
          * @brief 解锁
          */
-        void unlock()
-        {
-            m_mutex.unlock();
-        }
+        void unlock() { m_mutex.unlock(); }
 
     private:
         T &m_mutex; // 读写锁实例
@@ -208,19 +199,11 @@ namespace lim_webserver
         /**
          * @brief 加锁操作
          */
-        void lock()
-        {
-
-            pthread_mutex_lock(&m_mutex);
-        }
+        void lock() { pthread_mutex_lock(&m_mutex); }
         /**
          * @brief 解锁操作
          */
-        void unlock()
-        {
-
-            pthread_mutex_unlock(&m_mutex);
-        }
+        void unlock() { pthread_mutex_unlock(&m_mutex); }
 
     private:
         pthread_mutex_t m_mutex; // 互斥锁
@@ -329,16 +312,9 @@ namespace lim_webserver
     class ConditionVariable : Noncopyable
     {
     public:
-        ConditionVariable(Mutex &mutex)
-            : m_mutex(mutex)
-        {
-            pthread_cond_init(&cond, nullptr);
-        }
+        ConditionVariable(Mutex &mutex) : m_mutex(mutex) { pthread_cond_init(&cond, nullptr); }
 
-        ~ConditionVariable()
-        {
-            pthread_cond_destroy(&cond);
-        }
+        ~ConditionVariable() { pthread_cond_destroy(&cond); }
         /**
          * @brief 当条件不成立时，则会将该线程置于等待状态
          */
@@ -350,10 +326,7 @@ namespace lim_webserver
             }
         }
 
-        void wait()
-        {
-            pthread_cond_wait(&cond, &m_mutex.m_mutex);
-        }
+        void wait() { pthread_cond_wait(&cond, &m_mutex.m_mutex); }
 
         bool waitTime(int millisecond)
         {
@@ -371,15 +344,9 @@ namespace lim_webserver
             return ETIMEDOUT == pthread_cond_timedwait(&cond, &m_mutex.m_mutex, &abstime);
         }
 
-        void notify_one()
-        {
-            pthread_cond_signal(&cond);
-        }
+        void notify_one() { pthread_cond_signal(&cond); }
 
-        void notify_all()
-        {
-            pthread_cond_broadcast(&cond);
-        }
+        void notify_all() { pthread_cond_broadcast(&cond); }
 
     private:
         pthread_cond_t cond;

@@ -35,7 +35,7 @@ namespace lim_webserver
          *      @retval =0 socket被远端关闭
          *      @retval <0 socket错误
          */
-        virtual int read(void *buffer, size_t length);
+        virtual int resv(void *buffer, size_t length);
 
         /**
          * @brief 读取数据
@@ -46,7 +46,7 @@ namespace lim_webserver
          *      @retval =0 socket被远端关闭
          *      @retval <0 socket错误
          */
-        virtual int read(ByteArray::ptr ba, size_t length);
+        virtual int resv(ByteArray::ptr ba, size_t length);
 
         /**
          * @brief 写入数据
@@ -57,7 +57,7 @@ namespace lim_webserver
          *      @retval =0 socket被远端关闭
          *      @retval <0 socket错误
          */
-        virtual int write(const void *buffer, size_t length);
+        virtual int send(const void *buffer, size_t length);
 
         /**
          * @brief 写入数据
@@ -68,7 +68,7 @@ namespace lim_webserver
          *      @retval =0 socket被远端关闭
          *      @retval <0 socket错误
          */
-        virtual int write(ByteArray::ptr ba, size_t length);
+        virtual int send(ByteArray::ptr ba, size_t length);
 
         /**
          * @brief 关闭socket

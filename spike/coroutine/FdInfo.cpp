@@ -1,14 +1,13 @@
 #include "FdInfo.h"
 #include "Hook.h"
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 namespace lim_webserver
 {
-    FdInfo::FdInfo(int fd)
-        : m_isSocket(false), m_sysNonblock(false), m_userNonblock(false), m_fd(fd)
+    FdInfo::FdInfo(int fd) : m_isSocket(false), m_sysNonblock(false), m_userNonblock(false), m_fd(fd)
     {
         // 获取文件描述符的状态信息
         struct stat fd_stat;
@@ -34,14 +33,9 @@ namespace lim_webserver
         }
     }
 
-    FdInfo::~FdInfo()
-    {
-    }
+    FdInfo::~FdInfo() {}
 
-    bool FdInfo::close()
-    {
-        return false;
-    }
+    bool FdInfo::close() { return false; }
 
     void FdInfo::setTimeout(int type, uint64_t ms)
     {
@@ -67,22 +61,23 @@ namespace lim_webserver
         }
     }
 
-    FdManager::FdManager()
-    {
-        m_fd_vec.resize(64);
-    }
+    FdManager::FdManager() { m_fd_vec.resize(64); }
 
     void FdManager::insert(int fd)
     {
         RWMutexType::WriteLock lock(m_mutex);
         FdInfo::ptr fdInfo = FdInfo::Create(fd);
+        if (fd >= (int)m_fd_vec.size())
+        {
+            m_fd_vec.resize(fd * 2);
+        }
         m_fd_vec[fd] = fdInfo;
     }
 
     FdInfo::ptr FdManager::get(int fd)
     {
         RWMutexType::ReadLock lock(m_mutex);
-        if((int)m_fd_vec.size()<=fd)
+        if ((int)m_fd_vec.size() <= fd)
         {
             return nullptr;
         }
@@ -92,7 +87,7 @@ namespace lim_webserver
     void FdManager::del(int fd)
     {
         RWMutexType::WriteLock lock(m_mutex);
-        if((int)m_fd_vec.size()<=fd)
+        if ((int)m_fd_vec.size() <= fd)
         {
             return;
         }

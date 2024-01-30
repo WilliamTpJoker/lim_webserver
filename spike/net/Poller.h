@@ -1,11 +1,12 @@
 #pragma once
 
+#include "base/Mutex.h"
 #include "base/Noncopyable.h"
 #include "net/IoChannel.h"
 
-#include <vector>
 #include <map>
 #include <memory>
+#include <vector>
 
 struct epoll_event;
 
@@ -17,6 +18,7 @@ namespace lim_webserver
     {
     public:
         using ptr = std::unique_ptr<Poller>;
+        using MutexType = Spinlock;
 
     public:
         Poller();
@@ -63,6 +65,7 @@ namespace lim_webserver
 
     protected:
         std::vector<IoChannel *> m_channel_vec; // 管理的所有channel
+        MutexType m_mutex;
     };
 
     class EpollPoller : public Poller

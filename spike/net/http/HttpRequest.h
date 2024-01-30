@@ -333,14 +333,6 @@ namespace lim_webserver
             MapType m_cookies;      // 请求Cookie MAP
             uint8_t m_parserParamFlag;
         };
-
-        /**
-         * @brief 流式输出HttpRequest
-         * @param[in, out] os 输出流
-         * @param[in] req HTTP请求
-         * @return 输出流
-         */
-        std::ostream &operator<<(std::ostream &os, const HttpRequest &req);
     } // namespace http
 
 } // namespace lim_webserver

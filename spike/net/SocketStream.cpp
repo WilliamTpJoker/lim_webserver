@@ -14,7 +14,7 @@ namespace lim_webserver
 
     bool SocketStream::isConnected() const { return m_socket && m_socket->isConnected(); }
 
-    int SocketStream::read(void *buffer, size_t length)
+    int SocketStream::resv(void *buffer, size_t length)
     {
         if (!isConnected())
         {
@@ -23,7 +23,7 @@ namespace lim_webserver
         return m_socket->recv(buffer, length);
     }
 
-    int SocketStream::read(ByteArray::ptr ba, size_t length)
+    int SocketStream::resv(ByteArray::ptr ba, size_t length)
     {
         if (isConnected())
         {
@@ -39,7 +39,7 @@ namespace lim_webserver
         return -1;
     }
 
-    int SocketStream::write(const void *buffer, size_t length)
+    int SocketStream::send(const void *buffer, size_t length)
     {
         if (!isConnected())
         {
@@ -48,7 +48,7 @@ namespace lim_webserver
         return m_socket->send(buffer, length);
     }
 
-    int SocketStream::write(ByteArray::ptr ba, size_t length)
+    int SocketStream::send(ByteArray::ptr ba, size_t length)
     {
         if (isConnected())
         {

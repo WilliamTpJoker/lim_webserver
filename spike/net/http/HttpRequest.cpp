@@ -248,11 +248,6 @@ namespace lim_webserver
             PARSE_PARAM(cookie, m_cookies, ';', lim_webserver::StringUtil::Trim);
             m_parserParamFlag |= 0x4;
         }
-
-        std::ostream &operator<<(std::ostream &os, const HttpRequest &req)
-        {
-            return req.dump(os);
-        }
     } // namespace http
 
 } // namespace lim_webserver

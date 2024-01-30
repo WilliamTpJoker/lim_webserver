@@ -168,12 +168,5 @@ namespace lim_webserver
             MapType m_headers;    // 响应头部MAP
             std::vector<std::string> m_cookies;
         };
-        /**
-         * @brief 流式输出HttpResponse
-         * @param[in, out] os 输出流
-         * @param[in] rsp HTTP响应
-         * @return 输出流
-         */
-        std::ostream &operator<<(std::ostream &os, const HttpResponse &rsp);
     } // namespace http
 } // namespace lim_webserver

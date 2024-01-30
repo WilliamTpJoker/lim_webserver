@@ -21,7 +21,7 @@ void EchoServer::handleClient(Socket::ptr client)
     ByteArray::ptr buf = ByteArray::Create();
     while (true)
     {
-        int rt = clientstream->read(buf, 1024);
+        int rt = clientstream->resv(buf, 1024);
         if (rt == 0)
         {
             LOG_INFO(g_logger) << "client close: " << clientstream->peerAddressString();
@@ -35,7 +35,7 @@ void EchoServer::handleClient(Socket::ptr client)
         std::cout << buf->toString();
         std::cout.flush();
 
-        clientstream->write(buf, rt);
+        clientstream->send(buf, rt);
         buf->clear();
     }
 }

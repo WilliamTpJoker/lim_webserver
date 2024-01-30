@@ -1,35 +1,35 @@
 #include "Poller.h"
 #include "splog.h"
 
-#include <sys/epoll.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <sys/epoll.h>
+#include <unistd.h>
 
 namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_SYS();
 
-    Poller::Poller()
-    {
-        channelVecResize(32);
-    }
+    Poller::Poller() { channelVecResize(32); }
 
     bool Poller::addEvent(int fd, IoEvent event)
     {
+        MutexType::Lock lock(m_mutex);
         if ((int)m_channel_vec.size() <= fd)
         {
-            channelVecResize(fd * 1.5);
+            lock.unlock();
+            channelVecResize(fd * 2);
         }
+        lock.lock();
         IoChannel *channel = m_channel_vec[fd];
         return channel->addEvent(event);
     }
 
     bool Poller::cancelEvent(int fd, IoEvent event)
     {
+        MutexType::Lock lock(m_mutex);
         if ((int)m_channel_vec.size() <= fd)
         {
-            LOG_ERROR(g_logger) << "fd = " << fd << " not existed";
             return false;
         }
         IoChannel *channel = m_channel_vec[fd];
@@ -38,9 +38,9 @@ namespace lim_webserver
 
     bool Poller::clearEvent(int fd)
     {
+        MutexType::Lock lock(m_mutex);
         if ((int)m_channel_vec.size() <= fd)
         {
-            LOG_ERROR(g_logger) << "fd = " << fd << " not existed";
             return false;
         }
         IoChannel *channel = m_channel_vec[fd];
@@ -49,8 +49,8 @@ namespace lim_webserver
 
     void Poller::channelVecResize(size_t size)
     {
+        MutexType::Lock lock(m_mutex);
         m_channel_vec.resize(size);
-
         for (size_t i = 0; i < m_channel_vec.size(); ++i)
         {
             if (!m_channel_vec[i])
@@ -60,15 +60,9 @@ namespace lim_webserver
         }
     }
 
-    EpollPoller::EpollPoller()
-        : m_epfd(epoll_create(1)), m_event_vec(16)
-    {
-    }
+    EpollPoller::EpollPoller() : m_epfd(epoll_create(1)), m_event_vec(16) {}
 
-    EpollPoller::~EpollPoller()
-    {
-        ::close(m_epfd);
-    }
+    EpollPoller::~EpollPoller() { ::close(m_epfd); }
 
     bool EpollPoller::addEvent(int fd, IoEvent event)
     {
@@ -171,8 +165,7 @@ namespace lim_webserver
         ev.events = channel->event() | EPOLLET;
         ev.data.ptr = channel;
         int fd = channel->fd();
-        LOG_TRACE(g_logger) << "epoll_ctl op = " << opToString(op)
-                            << " fd = " << fd << " event = { " << channel->eventsToString() << " }";
+        LOG_TRACE(g_logger) << "epoll_ctl op = " << opToString(op) << " fd = " << fd << " event = { " << channel->eventsToString() << " }";
         if (::epoll_ctl(m_epfd, op, fd, &ev) < 0)
         {
             if (op == EPOLL_CTL_DEL)
