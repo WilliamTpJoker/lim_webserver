@@ -26,17 +26,16 @@ namespace lim_webserver
     using TaskFunc = std::function<void()>;
 
     class Processor;
+    class TaskQueue;
 
     class Task : public Noncopyable
     {
         friend Processor;
+        friend TaskQueue;
 
     public:
-        using ptr = std::unique_ptr<Task>;
-        static ptr Create(TaskFunc func, size_t size)
-        {
-            return std::make_unique<Task>(func, size);
-        }
+        using ptr = std::shared_ptr<Task>;
+        static ptr Create(TaskFunc func, size_t size) { return std::make_shared<Task>(func, size); }
 
     public:
         Task(TaskFunc func, size_t size);
@@ -66,7 +65,7 @@ namespace lim_webserver
 
         /**
          * @brief 从阻塞唤醒
-         * 
+         *
          */
         void wake();
 
@@ -95,19 +94,13 @@ namespace lim_webserver
          * @brief 上下文切入
          *
          */
-        inline void swapIn()
-        {
-            m_context.swapIn();
-        }
+        inline void swapIn() { m_context.swapIn(); }
 
         /**
          * @brief 上下文切出
          *
          */
-        inline void swapOut()
-        {
-            m_context.swapOut();
-        }
+        inline void swapOut() { m_context.swapOut(); }
 
         /**
          * @brief 工作函数
@@ -123,5 +116,6 @@ namespace lim_webserver
         Context m_context;                    // 协程上下文
         Processor *m_processor = nullptr;     // 对应的执行器
         TaskFunc m_callback;                  // 回调函数
+        Task *m_next = nullptr;               // 下一个任务
     };
 } // namespace lim_webserver

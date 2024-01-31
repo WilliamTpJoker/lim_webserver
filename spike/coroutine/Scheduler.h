@@ -1,11 +1,11 @@
 #pragma once
 
-#include "base/Noncopyable.h"
-#include "base/Thread.h"
 #include "base/Mutex.h"
+#include "base/Noncopyable.h"
 #include "base/Singleton.h"
-#include "coroutine/Task.h"
+#include "base/Thread.h"
 #include "coroutine/Processor.h"
+#include "coroutine/Task.h"
 
 #include <vector>
 
@@ -15,6 +15,7 @@ namespace lim_webserver
     {
         friend Processor;
         friend Singleton<Scheduler>;
+
     public:
         using MutexType = Mutex;
 
@@ -33,7 +34,7 @@ namespace lim_webserver
          *
          * @param num_threads 工作线程数
          */
-        void start(int num_threads=1);
+        void start(int num_threads = 1);
 
         /**
          * @brief 关闭调度
@@ -71,7 +72,7 @@ namespace lim_webserver
         size_t m_lastActiveIdx;                // 最后一次调度的处理器
         int m_threadId;                        // Scheduler所在线程
         bool m_started;                        // 开始标志位
-        Thread::ptr m_thread;                  // 绑定线程
+        Thread::ptr m_thread = nullptr;        // 绑定线程
         MutexType m_mutex;                     // 锁
         ConditionVariable m_cond;              // 条件变量
     };

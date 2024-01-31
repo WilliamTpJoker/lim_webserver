@@ -1,13 +1,14 @@
 #pragma once
 
+#include "Task.h"
+#include "TaskQueue.h"
+#include "base/Mutex.h"
 #include "base/Noncopyable.h"
 #include "base/Thread.h"
-#include "base/Mutex.h"
-#include "coroutine/Task.h"
-#include "coroutine/SafeQueue.h"
 
 #include <assert.h>
 #include <atomic>
+#include <list>
 #include <unordered_map>
 
 namespace lim_webserver
@@ -92,22 +93,14 @@ namespace lim_webserver
          * @brief 从新任务队列获取任务
          *
          */
-        inline void addNewTask()
-        {
-            while (!m_newQueue.empty())
-            {
-                m_runableQueue.push(m_newQueue.front());
-                m_newQueue.pop();
-            }
-            assert(m_newQueue.empty());
-        }
+        inline void addNewTask() { m_runableQueue.Concatenate(m_newQueue); }
 
         /**
          * @brief 添加任务到newQueue
          *
          * @param task
          */
-        void addTask(Task::ptr &task);
+        void addTask(Task::ptr&task);
 
         /**
          * @brief 调度下一个任务
@@ -149,13 +142,12 @@ namespace lim_webserver
         void run();
 
     private:
-        using TaskQueue = SafeQueue<Task::ptr>;
         using TaskMap = std::unordered_map<uint64_t, Task::ptr>;
-        Task::ptr m_curTask = nullptr;       // 当前运行的任务
-        TaskQueue m_newQueue;                // 新任务队列
+        Task::ptr m_curTask = nullptr;           // 当前运行的任务
         TaskMap m_waitMap;                   // 等待队列
+        TaskQueue m_newQueue;                // 新任务队列
         TaskQueue m_runableQueue;            // 可工作队列
-        TaskQueue m_garbageQueue;            // 待回收队列
+        std::list<Task::ptr> m_garbageList;     // 待回收队列
         Scheduler *m_scheduler;              // 调度者
         int m_id;                            // 编号
         volatile bool m_activated = true;    // 激活标志位

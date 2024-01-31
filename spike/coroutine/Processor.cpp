@@ -1,6 +1,6 @@
 #include "Processor.h"
-#include "Scheduler.h"
 #include "Hook.h"
+#include "Scheduler.h"
 
 #include <iostream>
 
@@ -55,24 +55,20 @@ namespace lim_webserver
         task->hold();
     }
 
-    Processor::Processor(Scheduler *scheduler, int id)
-        : m_scheduler(scheduler), m_id(id), m_cond(m_mutex)
-    {
-    }
+    Processor::Processor(Scheduler *scheduler, int id) : m_scheduler(scheduler), m_id(id), m_cond(m_mutex) {}
 
-    void Processor::addTask(Task::ptr &task)
+    void Processor::addTask(Task *&task)
     {
-        m_newQueue.push(task);
+        m_newQueue.Enqueue(std::move(task));
         tickle();
     }
 
     bool Processor::getNextTask(bool flag)
     {
         // 有任务则取任务
-        if (!m_runableQueue.empty())
+        if (m_runableQueue.Dequeue(m_curTask))
         {
-            m_curTask = std::move(m_runableQueue.front());
-            m_runableQueue.pop();
+            return true;
         }
         else
         {
@@ -88,10 +84,9 @@ namespace lim_webserver
             }
 
             // 添加成功则取任务
-            if (!m_runableQueue.empty())
+            if (m_runableQueue.Dequeue(m_curTask))
             {
-                m_curTask = std::move(m_runableQueue.front());
-                m_runableQueue.pop();
+                return true;
             }
             // 失败则返回失败
             else
@@ -99,33 +94,30 @@ namespace lim_webserver
                 return false;
             }
         }
-        return true;
     }
 
     void Processor::wakeupTask(uint64_t id)
     {
-        auto it = m_waitMap.find(id);
-        if (it == m_waitMap.end())
         {
-            return;
+            MutexType::Lock lock(m_mutex);
+            auto it = m_waitMap.find(id);
+            if (it == m_waitMap.end())
+            {
+                return;
+            }
+            m_runableQueue.Enqueue(std::move(it->second));
+            m_waitMap.erase(it);
         }
-        m_runableQueue.push(it->second);
-        m_waitMap.erase(it);
 
         tickle();
     }
 
-    inline void Processor::garbageCollection()
-    {
-        m_garbageQueue.clear();
-    }
+    inline void Processor::garbageCollection() { m_garbageList.clear(); }
 
     void Processor::start()
     {
         MutexType::Lock lock(m_mutex);
-        m_thread = Thread::Create([this]()
-                                  { this->run(); },
-                                  "Proc_" + std::to_string(m_id));
+        m_thread = Thread::Create([this]() { this->run(); }, "Proc_" + std::to_string(m_id));
     }
 
     void Processor::tickle()
@@ -191,7 +183,7 @@ namespace lim_webserver
                 // 若为ready态则重新加入调度队列
                 if (m_curTask->state() == TaskState::READY)
                 {
-                    m_runableQueue.push(m_curTask);
+                    m_runableQueue.Enqueue(std::move(m_curTask));
                 }
                 // 若为hold态则加入等待队列
                 else if (m_curTask->state() == TaskState::HOLD)
@@ -201,11 +193,11 @@ namespace lim_webserver
                 // 若为term态则加入垃圾队列，等待析构
                 else if (m_curTask->state() == TaskState::TERM)
                 {
-                    if (m_garbageQueue.size() > 16)
+                    if (m_garbageList.size() > 16)
                     {
                         garbageCollection();
                     }
-                    m_garbageQueue.push(m_curTask);
+                    m_garbageList.push_back(std::move(m_curTask));
                 }
                 getNextTask();
             }

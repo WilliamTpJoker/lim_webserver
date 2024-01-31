@@ -54,7 +54,11 @@ Percentage of the requests served within a certain time (ms)
 
 > 上述日志中的5445号协程一直未被调度器重新唤醒，它在尝试resv报文后挂起，但是紧接着该socket的epoll_ctl为MOD而不是ADD，经排查为删除fd时没有正确设置状态，修改后短连接可以正常处理高并发。
 
-TODO: 发现在长连接时会丢失报文，原因不详。
+TODO: 发现在长连接时会丢失报文，原因不详。（apr_pollset_poll: 在一个非套接字上尝试了一个操作。   (730038)）
+
+> 第一版测试数据：单epoll线程单协程线程
+> 短连接 700 RPS
+> 长连接 5000 RPS
 
 ## 2024/01/29
 

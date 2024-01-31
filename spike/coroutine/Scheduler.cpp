@@ -1,18 +1,15 @@
-#include "splog.h"
 #include "Scheduler.h"
 #include "Hook.h"
+#include "splog.h"
 
-#include <memory>
 #include <iostream>
+#include <memory>
 
 namespace lim_webserver
 {
     Logger::ptr g_logger = LOG_SYS();
 
-    Scheduler *Scheduler::Create()
-    {
-        return new Scheduler();
-    }
+    Scheduler *Scheduler::Create() { return new Scheduler(); }
 
     void Scheduler::createTask(TaskFunc const &func)
     {
@@ -46,9 +43,7 @@ namespace lim_webserver
         m_started = true;
 
         // 创建调度线程
-        m_thread = Thread::Create([this]()
-                                  { this->run(); },
-                                  "Sched");
+        m_thread = Thread::Create([this]() { this->run(); }, "Sched");
 
         m_mainProcessor->start();
     }
@@ -69,19 +64,15 @@ namespace lim_webserver
             processor->tickle();
         }
         // 关闭调度线程
-        m_thread->join();
+        if (m_thread)
+        {
+            m_thread->join();
+        }
     }
 
-    Scheduler::Scheduler()
-        : m_cond(m_mutex)
-    {
-        m_mainProcessor = new Processor(this, 0);
-    }
+    Scheduler::Scheduler() : m_cond(m_mutex) { m_mainProcessor = new Processor(this, 0); }
 
-    Scheduler::~Scheduler()
-    {
-        stop();
-    }
+    Scheduler::~Scheduler() { stop(); }
 
     void Scheduler::addTask(Task::ptr &task)
     {

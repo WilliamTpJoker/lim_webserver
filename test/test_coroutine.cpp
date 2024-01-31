@@ -16,10 +16,10 @@ void run_in_co()
 
 void test_schduler()
 {
-    g_Scheduler->start(2);
+    g_Scheduler->start(1);
     for (int i = 0; i < 10000; ++i)
     {
-        g_Scheduler->createTask(&run_in_co);
+        co run_in_co;
     }
     sleep(1);
 }
@@ -48,9 +48,9 @@ void run_in_co_hold()
 
 void test_hold()
 {
-    g_Scheduler->start(1);
+    g_Scheduler->start();
 
-    g_Scheduler->createTask(&run_in_co_hold);
+    co run_in_co_hold;
     sleep(3);
 }
 
@@ -61,6 +61,5 @@ int main()
     
     // test_schduler();
     test_hold();
-    
     return 0;
 }

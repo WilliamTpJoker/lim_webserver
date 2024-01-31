@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 # 设置全局编译选项
 set(CMAKE_VERBOSE_MAKEFILE ON)
 add_compile_options(-O3 -g -ggdb -Wno-unused-variable -Wno-deprecated -Wno-unused-function -Werror -Wno-builtin-macro-redefined -Wno-deprecated-declarations)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(lim_webserver)
