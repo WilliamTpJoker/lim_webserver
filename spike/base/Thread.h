@@ -2,6 +2,8 @@
 
 #include "Mutex.h"
 
+#include <memory>
+
 namespace lim_webserver
 {
     // 线程类，用于封装线程的操作

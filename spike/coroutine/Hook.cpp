@@ -1,13 +1,13 @@
 #include <dlfcn.h>
 
-#include "base/Configer.h"
 #include "Hook.h"
+#include "base/Configer.h"
 #include "base/Thread.h"
-#include "splog.h"
 #include "coroutine/FdInfo.h"
-#include "coroutine/Timer.h"
 #include "coroutine/Scheduler.h"
+#include "coroutine/Timer.h"
 #include "net/EventLoop.h"
+#include "splog.h"
 
 static lim_webserver::Logger::ptr g_logger = LOG_SYS();
 
@@ -15,28 +15,28 @@ namespace lim_webserver
 {
     static ConfigerVar<int>::ptr g_tcp_connect_timeout = Configer::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
 
-#define HOOK_FUN(F) \
-    F(sleep)        \
-    F(usleep)       \
-    F(nanosleep)    \
-    F(pipe)         \
-    F(socket)       \
-    F(connect)      \
-    F(accept)       \
-    F(read)         \
-    F(readv)        \
-    F(recv)         \
-    F(recvfrom)     \
-    F(recvmsg)      \
-    F(write)        \
-    F(writev)       \
-    F(send)         \
-    F(sendto)       \
-    F(sendmsg)      \
-    F(close)        \
-    F(fcntl)        \
-    F(ioctl)        \
-    F(getsockopt)   \
+#define HOOK_FUN(F)                                                                                                                                            \
+    F(sleep)                                                                                                                                                   \
+    F(usleep)                                                                                                                                                  \
+    F(nanosleep)                                                                                                                                               \
+    F(pipe)                                                                                                                                                    \
+    F(socket)                                                                                                                                                  \
+    F(connect)                                                                                                                                                 \
+    F(accept)                                                                                                                                                  \
+    F(read)                                                                                                                                                    \
+    F(readv)                                                                                                                                                   \
+    F(recv)                                                                                                                                                    \
+    F(recvfrom)                                                                                                                                                \
+    F(recvmsg)                                                                                                                                                 \
+    F(write)                                                                                                                                                   \
+    F(writev)                                                                                                                                                  \
+    F(send)                                                                                                                                                    \
+    F(sendto)                                                                                                                                                  \
+    F(sendmsg)                                                                                                                                                 \
+    F(close)                                                                                                                                                   \
+    F(fcntl)                                                                                                                                                   \
+    F(ioctl)                                                                                                                                                   \
+    F(getsockopt)                                                                                                                                              \
     F(setsockopt)
 
     void hook_init()
@@ -104,7 +104,8 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
     // 重试IO 操作(一般循环一次)
     while (true)
     {
-        LOG_TRACE(g_logger) << "task(" << task->id() << ") try hook " << hook_fun_name << "(fd = " << fd << "). timeout = " << (to == (uint64_t)-1 ? "NULL" : std::to_string(to));
+        LOG_TRACE(g_logger) << "task(" << task->id() << ") try hook " << hook_fun_name << "(fd = " << fd
+                            << "). timeout = " << (to == (uint64_t)-1 ? "NULL" : std::to_string(to));
 
         // 调用传入的原生函数执行操作
         ssize_t n = fun(fd, std::forward<Args>(args)...);
@@ -119,7 +120,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         // 若函数调用成功或者错误码不为 EAGAIN 即资源暂时不可用，表示操作成功或出错，直接返回结果。
         if (n != -1 || errno != EAGAIN)
         {
-            LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << "(fd = " << fd << "). return nonblocked "<<n;
+            LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << "(fd = " << fd << "). return nonblocked " << n;
             return n;
         }
 
@@ -176,14 +177,8 @@ extern "C"
         }
         LOG_TRACE(g_logger) << "task(" << task->id() << ") hook sleep(seconds = " << seconds << ") in coroutine.";
 
-        // 获取当前task的id并设定当前processor在一定时间后唤醒对应task
-        uint64_t id = task->id();
-        lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
-        lim_webserver::TimerManager::GetInstance()->addTimer(seconds * 1000,
-                                                             [processor, id]
-                                                             {
-                                                                 processor->wakeupTask(id);
-                                                             });
+        // 获取当前task设定当前processor在一定时间后唤醒对应task
+        lim_webserver::TimerManager::GetInstance()->addTimer(seconds * 1000, [task] { task->wake(); });
         // 阻塞当前协程
         lim_webserver::Processor::CoHold();
 
@@ -199,13 +194,7 @@ extern "C"
         }
         LOG_TRACE(g_logger) << "task(" << task->id() << ") hook usleep(usec = " << usec << ") in coroutine.";
 
-        uint64_t id = task->id();
-        lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
-        lim_webserver::TimerManager::GetInstance()->addTimer(usec / 1000,
-                                                             [processor, id]
-                                                             {
-                                                                 processor->wakeupTask(id);
-                                                             });
+        lim_webserver::TimerManager::GetInstance()->addTimer(usec / 1000, [task] { task->wake(); });
         lim_webserver::Processor::CoHold();
         return 0;
     }
@@ -221,13 +210,7 @@ extern "C"
         int timeout_ms = req->tv_sec * 1000 + req->tv_nsec / 1000 / 1000;
         LOG_TRACE(g_logger) << "task(" << task->id() << ") hook nanosleep(nsec = " << timeout_ms << ") in coroutine.";
 
-        uint64_t id = task->id();
-        lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
-        lim_webserver::TimerManager::GetInstance()->addTimer(timeout_ms,
-                                                             [processor, id]
-                                                             {
-                                                                 processor->wakeupTask(id);
-                                                             });
+        lim_webserver::TimerManager::GetInstance()->addTimer(timeout_ms, [task] { task->wake(); });
 
         lim_webserver::Processor::CoHold();
 
@@ -316,13 +299,12 @@ extern "C"
         if (timeout_ms != (uint64_t)-1)
         {
             // 创建一个定时器，当超时时取消连接
-            timer = lim_webserver::TimerManager::GetInstance()->addTimer(
-                timeout_ms,
-                [eventloop, &sockfd, &expired]()
-                {
-                    eventloop->cancelEvent(sockfd, lim_webserver::WRITE);
-                    expired = true;
-                });
+            timer = lim_webserver::TimerManager::GetInstance()->addTimer(timeout_ms,
+                                                                         [eventloop, &sockfd, &expired]()
+                                                                         {
+                                                                             eventloop->cancelEvent(sockfd, lim_webserver::WRITE);
+                                                                             expired = true;
+                                                                         });
         }
 
         // 添加读事件监听
@@ -367,50 +349,29 @@ extern "C"
         return fd;
     }
 
-    ssize_t readv(int fd, const struct iovec *iov, int iovcnt)
-    {
-        return do_io(fd, readv_f, "readv", lim_webserver::READ, SO_RCVTIMEO, iov, iovcnt);
-    }
+    ssize_t readv(int fd, const struct iovec *iov, int iovcnt) { return do_io(fd, readv_f, "readv", lim_webserver::READ, SO_RCVTIMEO, iov, iovcnt); }
 
-    ssize_t recv(int sockfd, void *buf, size_t len, int flags)
-    {
-        return do_io(sockfd, recv_f, "recv", lim_webserver::READ, SO_RCVTIMEO, buf, len, flags);
-    }
+    ssize_t recv(int sockfd, void *buf, size_t len, int flags) { return do_io(sockfd, recv_f, "recv", lim_webserver::READ, SO_RCVTIMEO, buf, len, flags); }
 
     ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
     {
         return do_io(sockfd, recvfrom_f, "recvfrom", lim_webserver::READ, SO_RCVTIMEO, buf, len, flags, src_addr, addrlen);
     }
 
-    ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags)
-    {
-        return do_io(sockfd, recvmsg_f, "recvmsg", lim_webserver::READ, SO_RCVTIMEO, msg, flags);
-    }
+    ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) { return do_io(sockfd, recvmsg_f, "recvmsg", lim_webserver::READ, SO_RCVTIMEO, msg, flags); }
 
-    ssize_t write(int fd, const void *buf, size_t count)
-    {
-        return do_io(fd, write_f, "write", lim_webserver::WRITE, SO_SNDTIMEO, buf, count);
-    }
+    ssize_t write(int fd, const void *buf, size_t count) { return do_io(fd, write_f, "write", lim_webserver::WRITE, SO_SNDTIMEO, buf, count); }
 
-    ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
-    {
-        return do_io(fd, writev_f, "writev", lim_webserver::WRITE, SO_SNDTIMEO, iov, iovcnt);
-    }
+    ssize_t writev(int fd, const struct iovec *iov, int iovcnt) { return do_io(fd, writev_f, "writev", lim_webserver::WRITE, SO_SNDTIMEO, iov, iovcnt); }
 
-    ssize_t send(int s, const void *msg, size_t len, int flags)
-    {
-        return do_io(s, send_f, "send", lim_webserver::WRITE, SO_SNDTIMEO, msg, len, flags);
-    }
+    ssize_t send(int s, const void *msg, size_t len, int flags) { return do_io(s, send_f, "send", lim_webserver::WRITE, SO_SNDTIMEO, msg, len, flags); }
 
     ssize_t sendto(int s, const void *msg, size_t len, int flags, const struct sockaddr *to, socklen_t tolen)
     {
         return do_io(s, sendto_f, "sendto", lim_webserver::WRITE, SO_SNDTIMEO, msg, len, flags, to, tolen);
     }
 
-    ssize_t sendmsg(int s, const struct msghdr *msg, int flags)
-    {
-        return do_io(s, sendmsg_f, "sendmsg", lim_webserver::WRITE, SO_SNDTIMEO, msg, flags);
-    }
+    ssize_t sendmsg(int s, const struct msghdr *msg, int flags) { return do_io(s, sendmsg_f, "sendmsg", lim_webserver::WRITE, SO_SNDTIMEO, msg, flags); }
 
     int close(int fd)
     {
@@ -561,10 +522,7 @@ extern "C"
         return ioctl_f(d, request, arg);
     }
 
-    int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen)
-    {
-        return getsockopt_f(sockfd, level, optname, optval, optlen);
-    }
+    int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen) { return getsockopt_f(sockfd, level, optname, optval, optlen); }
 
     int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
     {

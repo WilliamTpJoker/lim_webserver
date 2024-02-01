@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <thread>
+#include <stdexcept>
 
 #include "Noncopyable.h"
 

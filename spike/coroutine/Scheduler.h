@@ -51,7 +51,7 @@ namespace lim_webserver
          *
          * @param task 任务
          */
-        void addTask(Task::ptr &task);
+        void addTask(Task* &task);
 
         /**
          * @brief 线程工作函数，负责为处理器线程分发协程任务

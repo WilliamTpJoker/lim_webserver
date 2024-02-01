@@ -3,13 +3,13 @@
 
 // 根调度器
 #define g_Scheduler lim_webserver::Scheduler::GetInstance()
-#define co_sched g_Scheduler
+#define fiber_sched g_Scheduler
 
 // 创建协程
-#define co lim_webserver::Syntex() -
+#define fiber lim_webserver::Syntex() -
 
 // 协程主动让出线程权
-#define co_yield                             \
+#define fiber_yield                             \
     do                                       \
     {                                        \
         lim_webserver::Processor::CoYield(); \

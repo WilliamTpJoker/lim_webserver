@@ -19,7 +19,7 @@ void test_schduler()
     g_Scheduler->start(1);
     for (int i = 0; i < 10000; ++i)
     {
-        co run_in_co;
+        fiber run_in_co;
     }
     sleep(1);
 }
@@ -28,12 +28,11 @@ void test_schduler()
 
 void hold(unsigned int seconds)
 {
-    uint64_t id = lim_webserver::Processor::GetCurrentTask()->id();
-    lim_webserver::Processor *processor = lim_webserver::Processor::GetCurrentProcessor();
+    Task* task = lim_webserver::Processor::GetCurrentTask();
     lim_webserver::TimerManager::GetInstance()->addTimer(seconds * 1000,
-                                                         [processor, id]
+                                                         [task]
                                                          {
-                                                             processor->wakeupTask(id);
+                                                            task->wake();
                                                          });
     lim_webserver::Processor::CoHold();
 }
@@ -50,7 +49,7 @@ void test_hold()
 {
     g_Scheduler->start();
 
-    co run_in_co_hold;
+    fiber run_in_co_hold;
     sleep(3);
 }
 
@@ -59,7 +58,7 @@ int main()
     auto appender = AppenderFactory::GetInstance()->defaultConsoleAppender();
     g_logger->addAppender(appender);
     
-    // test_schduler();
-    test_hold();
+    test_schduler();
+    // test_hold();
     return 0;
 }

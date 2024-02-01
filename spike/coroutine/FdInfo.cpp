@@ -59,6 +59,7 @@ namespace lim_webserver
         {
             return m_sendTimeout;
         }
+        return -1;
     }
 
     FdManager::FdManager() { m_fd_vec.resize(64); }

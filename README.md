@@ -1,5 +1,55 @@
 # 开发更新日志
 
+## 2024/02/01
+
+优化唤醒机制，不再用哈希表存储等待中的协程任务，而是由任务自身重新加入调度队列的方式；
+使用无锁队列实现调度队列，提高并发量，经过apache压力测试，并发性能提高
+
+```bash
+Server Software:        http
+Server Hostname:        192.168.144.135
+Server Port:            8020
+
+Document Path:          /http
+Document Length:        11 bytes
+
+Concurrency Level:      200
+Time taken for tests:   0.923 seconds
+Complete requests:      10000
+Failed requests:        0
+Keep-Alive requests:    10000
+Total transferred:      880000 bytes
+HTML transferred:       110000 bytes
+Requests per second:    10838.46 [#/sec] (mean)
+Time per request:       18.453 [ms] (mean)
+Time per request:       0.092 [ms] (mean, across all concurrent requests)
+Transfer rate:          931.43 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.2      0       9
+Processing:     2   17  12.1     16     142
+Waiting:        0   17  12.1     16     141
+Total:          2   17  12.2     16     143
+
+Percentage of the requests served within a certain time (ms)
+  50%     16
+  66%     18
+  75%     20
+  80%     20
+  90%     22
+  95%     24
+  98%     31
+  99%     95
+ 100%    143 (longest request)
+```
+
+> 第二版测试数据：单epoll线程单协程线程
+> 短连接 1100 PRS   (800->1100)
+> 长连接 11000 RPS (5000->11000)
+> 可以发现，对唤醒机制的优化效果明显（在长连接中唤醒是频繁操作），而对短连接优化提升较少
+> 同时，实验发现存在意外退出程序的风险，待进一步检测
+
 ## 2024/01/30
 
 经过apache压力测试发现，使用epoll独立线程的方法存在问题（由于其不直接处理任何函数，每一个到来的请求都会唤醒epoll，没有达到io多路复用的效果），决定使用强继承的方式实现基于协程的reactor.(RPS为800)。

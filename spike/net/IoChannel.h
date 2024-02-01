@@ -71,9 +71,8 @@ namespace lim_webserver
          * @brief 设置Channel状态
          *
          * @param state
-         * @return int
          */
-        inline int setState(IoChannelState state) { m_state = state; }
+        inline void setState(IoChannelState state) { m_state = state; }
 
         /**
          * @brief 添加event

@@ -59,7 +59,7 @@ namespace lim_webserver
         free(array);
     }
 
-    std::string BackTraceToString(int size, int skip, const std::string &prefix)
+    std::string BackTraceToString(int size, int skip)
     {
         // 收集函数调用栈
         std::vector<std::string> bt;
@@ -71,7 +71,7 @@ namespace lim_webserver
         // 将调用栈转换为格式化的字符串
         for (size_t i = 0; i < bt.size(); ++i)
         {
-            ss << prefix << bt[i] << std::endl;
+            ss << bt[i] << std::endl;
         }
         return ss.str();
     }

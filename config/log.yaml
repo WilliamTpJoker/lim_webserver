@@ -36,7 +36,7 @@ logconfig:
       level: INFO
       formatter:  "[%d] [%p] [%f:%l]%T%m%n"
       append: true
-      file: /home/book/Webserver/log/test_log.txt
+      file: /home/lim/Webserver/log/test_log.txt
 
   loggers:
     - name: root

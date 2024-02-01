@@ -124,6 +124,7 @@ namespace lim_webserver
             update(EPOLL_CTL_DEL, channel);
             channel->setState(IoChannelState::DISCARD);
         }
+        return true;
     }
 
     void EpollPoller::poll(int ms)

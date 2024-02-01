@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     ConsoleAppender::ptr appender =AppenderFactory::GetInstance()->defaultConsoleAppender();
 
     FileAppender::ptr fappender =AppenderFactory::GetInstance()->defaultFileAppender();
-    fappender->setFile("/home/book/Webserver/log/test_log.txt");
+    fappender->setFile("/home/lim/Webserver/log/test_log.txt");
     fappender->setAppend(false);
 
     AsyncAppender::ptr asy_appender = build_asyncAppender(appender);

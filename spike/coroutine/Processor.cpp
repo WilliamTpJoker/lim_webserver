@@ -26,7 +26,7 @@ namespace lim_webserver
     Task *Processor::GetCurrentTask()
     {
         auto proc = GetCurrentProcessor();
-        return proc ? proc->m_curTask.get() : nullptr;
+        return proc ? proc->m_curTask : nullptr;
     }
 
     void Processor::CoYield()
@@ -59,23 +59,18 @@ namespace lim_webserver
 
     void Processor::addTask(Task *&task)
     {
-        m_newQueue.Enqueue(std::move(task));
+        m_newQueue.enqueue(task);
         tickle();
     }
 
-    bool Processor::getNextTask(bool flag)
+    void Processor::getNextTask(bool flag)
     {
-        // 有任务则取任务
-        if (m_runableQueue.Dequeue(m_curTask))
+        // 没任务则尝试添加新任务
+        if (!m_runableQueue.dequeue(m_curTask))
         {
-            return true;
-        }
-        else
-        {
-            // 没任务则尝试添加新任务
             if (flag || (m_addNewRemain > 0))
             {
-                addNewTask();
+                m_runableQueue.concatenate(m_newQueue);
 
                 if (!flag)
                 {
@@ -83,32 +78,16 @@ namespace lim_webserver
                 }
             }
 
-            // 添加成功则取任务
-            if (m_runableQueue.Dequeue(m_curTask))
+            // 失败则有其他操作 TODO:
+            if (!m_runableQueue.dequeue(m_curTask))
             {
-                return true;
-            }
-            // 失败则返回失败
-            else
-            {
-                return false;
             }
         }
     }
 
-    void Processor::wakeupTask(uint64_t id)
+    void Processor::wakeupTask(Task *task)
     {
-        {
-            MutexType::Lock lock(m_mutex);
-            auto it = m_waitMap.find(id);
-            if (it == m_waitMap.end())
-            {
-                return;
-            }
-            m_runableQueue.Enqueue(std::move(it->second));
-            m_waitMap.erase(it);
-        }
-
+        m_scheduler->addTask(task);
         tickle();
     }
 
@@ -163,12 +142,13 @@ namespace lim_webserver
         GetCurrentProcessor() = this;
         while (m_scheduler->m_started)
         {
-            if (!getNextTask(true)) // 获取任务失败则表示当前处理器空闲
+            getNextTask(true);
+            if (m_curTask == nullptr) // 无任务 闲置
             {
                 // 执行空闲任务
                 idle();
                 // 回到了工作状态，说明调度了新任务到队列中
-                addNewTask();
+                m_runableQueue.concatenate(m_newQueue);
                 continue;
             }
             m_addNewRemain = 1;
@@ -181,24 +161,22 @@ namespace lim_webserver
 
                 // 此时回到了Processor中
                 // 若为ready态则重新加入调度队列
-                if (m_curTask->state() == TaskState::READY)
+                switch (m_curTask->state())
                 {
-                    m_runableQueue.Enqueue(std::move(m_curTask));
-                }
-                // 若为hold态则加入等待队列
-                else if (m_curTask->state() == TaskState::HOLD)
-                {
-                    m_waitMap[m_curTask->id()] = std::move(m_curTask);
-                }
-                // 若为term态则加入垃圾队列，等待析构
-                else if (m_curTask->state() == TaskState::TERM)
-                {
+                case TaskState::READY:
+                    m_runableQueue.enqueue(m_curTask);
+                    break;
+                case TaskState::HOLD:
+                    break;
+                case TaskState::TERM:
+                default:
                     if (m_garbageList.size() > 16)
                     {
                         garbageCollection();
                     }
-                    m_garbageList.push_back(std::move(m_curTask));
+                    m_garbageList.push_back(m_curTask);
                 }
+                m_curTask = nullptr;
                 getNextTask();
             }
         }

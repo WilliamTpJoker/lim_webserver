@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
     lim_webserver::LogLevel level = LogLevel_INFO;
     LOG_SYS()->setLevel(level);
 
-    co_sched->start();
-    co run;
+    fiber_sched->start();
+    fiber run;
     g_net->run();
     return 0;
 }

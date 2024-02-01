@@ -18,7 +18,7 @@ namespace lim_webserver
             LOG_ERROR(g_logger) << "Scheduler not started";
             return;
         }
-        Task::ptr tk = Task::Create(func, 128 * 1024);
+        Task* tk = new Task(func, 128 * 1024);
         addTask(tk);
     }
 
@@ -74,7 +74,7 @@ namespace lim_webserver
 
     Scheduler::~Scheduler() { stop(); }
 
-    void Scheduler::addTask(Task::ptr &task)
+    void Scheduler::addTask(Task* &task)
     {
         // 如果任务指定了处理器则直接调度
         Processor *processor = task->getProcessor();

@@ -29,5 +29,5 @@ namespace lim_webserver
      * @param prefix 每行前缀，通常是输出的日志级别和位置信息。
      * @return       格式化的字符串，表示调用栈。
      */
-    std::string BackTraceToString(int size=64, int skip=0, const std::string &prefix = "");
+    std::string BackTraceToString(int size=64, int skip=0);
 }

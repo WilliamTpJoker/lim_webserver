@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
     }
     LOG_SYS()->setLevel(level);
 
-    co_sched->start();
-    co test_socket;
-    co stop_sched;
+    fiber_sched->start();
+    fiber test_socket;
+    fiber stop_sched;
     g_net->run();
     return 0;
 }

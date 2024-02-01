@@ -14,13 +14,13 @@ lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 void test_sleep()
 {
     LOG_INFO(g_logger) << "test_sleep: start";
-    co[]
+    fiber[]
     {
         sleep(2);
         LOG_INFO(g_logger) << "test_sleep: 2 seconds";
     };
 
-    co[]
+    fiber[]
     {
         sleep(3);
         LOG_INFO(g_logger) << "test_sleep: 3 seconds";
@@ -78,10 +78,10 @@ int main(int argc, char *args[])
         level = LogLevel_TRACE;
     }
     LOG_SYS()->setLevel(level);
-    co_sched->start();
+    fiber_sched->start();
     // co test_sleep;
     // sleep(4);
-    co test_socket;
+    fiber test_socket;
     lim_webserver::EventLoop::GetInstance()->run();
     return 0;
 }

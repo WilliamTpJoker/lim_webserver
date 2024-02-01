@@ -28,7 +28,7 @@ void test_config()
 {
     // LOG_INFO(LOG_ROOT()) << g_int_value_config->getValue();
 
-    YAML::Node r = YAML::LoadFile("home/book/Webserver/config/log.yaml");
+    YAML::Node r = YAML::LoadFile("home/lim/Webserver/config/log.yaml");
     Configer::LoadFromYaml(r);
     Configer::LoadFromYaml("./config/test.yaml");
     Configer::Visit([](ConfigerVarBase::ptr var){
@@ -62,7 +62,7 @@ void test_change_callback()
 
 void test_visit()
 {
-    Configer::LoadFromYaml("/home/book/Webserver/config/log.yaml");
+    Configer::LoadFromYaml("/home/lim/Webserver/config/log.yaml");
 
     auto f = [](ConfigerVarBase::ptr var)
     {

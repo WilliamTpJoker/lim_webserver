@@ -116,6 +116,5 @@ namespace lim_webserver
         Context m_context;                    // 协程上下文
         Processor *m_processor = nullptr;     // 对应的执行器
         TaskFunc m_callback;                  // 回调函数
-        Task *m_next = nullptr;               // 下一个任务
     };
 } // namespace lim_webserver

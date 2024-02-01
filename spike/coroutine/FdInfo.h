@@ -26,10 +26,10 @@ namespace lim_webserver
         bool close();
 
         bool getUserNonblock() const { return m_userNonblock; }
-        bool setUserNonblock(bool v) { m_userNonblock = v; }
+        void setUserNonblock(bool v) { m_userNonblock = v; }
 
         bool getSysNonblock() const { return m_sysNonblock; }
-        bool setSysNonblock(bool v) { m_sysNonblock = v; }
+        void setSysNonblock(bool v) { m_sysNonblock = v; }
 
         /**
          * @brief 设置超时时间(毫秒单位)

@@ -25,7 +25,7 @@ namespace lim_webserver
     void Task::wake()
     {
         LOG_TRACE(g_logger) << "try wake task("<<m_id<<").";
-        m_processor->wakeupTask(m_id);
+        m_processor->wakeupTask(this);
     }
 
     void Task::run()
