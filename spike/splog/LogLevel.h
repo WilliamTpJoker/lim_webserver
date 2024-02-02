@@ -1,6 +1,5 @@
 #pragma once
 
-#include <unordered_map>
 #include <string>
 
 #define LogLevel_UNKNOWN lim_webserver::LogLevel::UNKNOWN

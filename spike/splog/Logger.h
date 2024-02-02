@@ -10,7 +10,6 @@
 #include <vector>
 #include <functional>
 #include <assert.h>
-#include <unordered_map>
 
 #include "splog/LogAppender.h"
 #include "splog/LogMessage.h"
