@@ -10,125 +10,77 @@ namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_SYS();
 
-    Poller::Poller() { channelVecResize(32); }
-
-    bool Poller::addEvent(int fd, IoEvent event)
-    {
-        MutexType::Lock lock(m_mutex);
-        if ((int)m_channel_vec.size() <= fd)
-        {
-            lock.unlock();
-            channelVecResize(fd * 2);
-        }
-        lock.lock();
-        IoChannel *channel = m_channel_vec[fd];
-        return channel->addEvent(event);
-    }
-
-    bool Poller::cancelEvent(int fd, IoEvent event)
-    {
-        MutexType::Lock lock(m_mutex);
-        if ((int)m_channel_vec.size() <= fd)
-        {
-            return false;
-        }
-        IoChannel *channel = m_channel_vec[fd];
-        return channel->cancelEvent(event);
-    }
-
-    bool Poller::clearEvent(int fd)
-    {
-        MutexType::Lock lock(m_mutex);
-        if ((int)m_channel_vec.size() <= fd)
-        {
-            return false;
-        }
-        IoChannel *channel = m_channel_vec[fd];
-        return channel->clearEvent();
-    }
-
-    void Poller::channelVecResize(size_t size)
-    {
-        MutexType::Lock lock(m_mutex);
-        m_channel_vec.resize(size);
-        for (size_t i = 0; i < m_channel_vec.size(); ++i)
-        {
-            if (!m_channel_vec[i])
-            {
-                m_channel_vec[i] = new IoChannel(i);
-            }
-        }
-    }
+    Poller::Poller() {}
 
     EpollPoller::EpollPoller() : m_epfd(epoll_create(1)), m_event_vec(16) {}
 
     EpollPoller::~EpollPoller() { ::close(m_epfd); }
 
-    bool EpollPoller::addEvent(int fd, IoEvent event)
+    void EpollPoller::updateChannel(IoChannel::ptr channel)
     {
-        if (!Poller::addEvent(fd, event))
-        {
-            return false;
-        }
-        IoChannel *channel = m_channel_vec[fd];
         IoChannelState state = channel->state();
-
-        // (老event)无event加，有event改
+        LOG_TRACE(g_logger) << "fd = " << channel->fd() << " events = " << channel->eventsToString() << " state = " << channel->stateToString();
         if (state == IoChannelState::NEW || state == IoChannelState::DISCARD)
         {
-            update(EPOLL_CTL_ADD, channel);
+            // a new one, add with EPOLL_CTL_ADD
+            int fd = channel->fd();
+            if (state == IoChannelState::NEW)
+            {
+                ASSERT(m_channel_map.find(fd) == m_channel_map.end());
+                m_channel_map[fd] = channel;
+            }
+            else // index == kDeleted
+            {
+                ASSERT(m_channel_map.find(fd) != m_channel_map.end());
+                ASSERT(m_channel_map[fd] == channel);
+            }
+
             channel->setState(IoChannelState::EXIST);
+            update(EPOLL_CTL_ADD, channel);
         }
         else
         {
+            // update existing one with EPOLL_CTL_MOD/DEL
+            int fd = channel->fd();
+            (void)fd;
+            ASSERT(m_channel_map.find(fd) != m_channel_map.end());
+            ASSERT(m_channel_map[fd] == channel);
             ASSERT(state == IoChannelState::EXIST);
-            update(EPOLL_CTL_MOD, channel);
+            if (channel->isNoneEvent())
+            {
+                update(EPOLL_CTL_DEL, channel);
+                channel->setState(IoChannelState::DISCARD);
+            }
+            else
+            {
+                update(EPOLL_CTL_MOD, channel);
+            }
         }
-        return true;
     }
 
-    bool EpollPoller::cancelEvent(int fd, IoEvent event)
+    void EpollPoller::removeChannel(IoChannel::ptr channel)
     {
-        if (!Poller::cancelEvent(fd, event))
-        {
-            return false;
-        }
-        IoChannel *channel = m_channel_vec[fd];
+        int fd = channel->fd();
+        LOG_TRACE(g_logger) << "fd = " << fd << "removeChannel";
+        ASSERT(m_channel_map.find(fd) != m_channel_map.end());
+        ASSERT(m_channel_map[fd] == channel);
+        ASSERT(channel->isNoneEvent());
         IoChannelState state = channel->state();
-
-        // (新event)无event删，有event改
-        if (channel->isNoneEvent())
-        {
-            update(EPOLL_CTL_DEL, channel);
-            channel->setState(IoChannelState::DISCARD);
-        }
-        else
-        {
-            ASSERT(state == IoChannelState::EXIST);
-            update(EPOLL_CTL_MOD, channel);
-        }
-        return true;
-    }
-
-    bool EpollPoller::clearEvent(int fd)
-    {
-        if (!Poller::clearEvent(fd))
-        {
-            return false;
-        }
-        IoChannel *channel = m_channel_vec[fd];
-        IoChannelState state = channel->state();
+        ASSERT(state == IoChannelState::EXIST || state == IoChannelState::DISCARD);
+        size_t n = m_channel_map.erase(fd);
+        (void)n;
+        ASSERT(n == 1);
 
         if (state == IoChannelState::EXIST)
         {
             update(EPOLL_CTL_DEL, channel);
-            channel->setState(IoChannelState::DISCARD);
         }
-        return true;
+        channel->setState(IoChannelState::NEW);
     }
 
     void EpollPoller::poll(int ms)
     {
+        LOG_TRACE(g_logger) << "current fd total count " << m_channel_map.size();
         int n = ::epoll_wait(m_epfd, &*m_event_vec.begin(), m_event_vec.size(), ms);
         int savedErrno = errno;
         // 若有则触发
@@ -162,11 +114,11 @@ namespace lim_webserver
         }
     }
 
-    void EpollPoller::update(int op, IoChannel *channel)
+    void EpollPoller::update(int op, IoChannel::ptr channel)
     {
         struct epoll_event ev;
         ev.events = channel->event() | EPOLLET;
-        ev.data.ptr = channel;
+        ev.data.ptr = channel.get();
         int fd = channel->fd();
         LOG_TRACE(g_logger) << "epoll_ctl op = " << opToString(op) << " fd = " << fd << " event = { " << channel->eventsToString() << " }";
         if (::epoll_ctl(m_epfd, op, fd, &ev) < 0)

@@ -3,21 +3,16 @@
 #include "coroutine.h"
 #include "splog.h"
 
-#include <sys/epoll.h>
 #include <sstream>
+#include <sys/epoll.h>
 
 namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_SYS();
 
-    IoChannel::IoChannel(int fd)
-        : m_fd(fd)
-    {
-    }
+    IoChannel::IoChannel(int fd) : m_fd(fd) {}
 
-    IoChannel::~IoChannel()
-    {
-    }
+    IoChannel::~IoChannel() {}
 
     void IoChannel::trigger(uint32_t op)
     {
@@ -34,23 +29,6 @@ namespace lim_webserver
             op |= (EPOLLIN | EPOLLOUT) & m_events;
         }
 
-        // // 读操作   紧急读操作  关闭写半部分
-        // if (op & (EPOLLIN | EPOLLPRI | EPOLLRDHUP))
-        // {
-        //     if (m_readTask)
-        //     {
-        //         m_readTask->wake();
-        //     }
-        // }
-
-        // // 写操作
-        // if (op & EPOLLOUT)
-        // {
-        //     if (m_writeTask)
-        //     {
-        //         m_writeTask->wake();
-        //     }
-        // }
         // 读操作   紧急读操作  关闭写半部分 写操作
         if (op & (EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLOUT))
         {
@@ -60,6 +38,8 @@ namespace lim_webserver
             }
         }
     }
+
+    void IoChannel::close() { trigger(EPOLLERR); }
 
     bool IoChannel::addEvent(IoEvent event)
     {
@@ -74,14 +54,6 @@ namespace lim_webserver
         Task *task = Processor::GetCurrentTask();
         if (task)
         {
-            // if (event == IoEvent::READ)
-            // {
-            //     m_readTask = task;
-            // }
-            // else if (event == IoEvent::WRITE)
-            // {
-            //     m_writeTask = task;
-            // }
             m_task = task;
         }
         m_events = m_events | event;
@@ -94,7 +66,8 @@ namespace lim_webserver
         // 不存在则报错
         if (!(m_events & event))
         {
-            LOG_ERROR(g_logger) << "cancelEvent assert fd = " << m_fd << " event = {" << eventsToString(event) << "} channel.event = {" << eventsToString(m_events) << "}";
+            LOG_ERROR(g_logger) << "cancelEvent assert fd = " << m_fd << " event = {" << eventsToString(event) << "} channel.event = {"
+                                << eventsToString(m_events) << "}";
             return false;
         }
 
@@ -114,15 +87,9 @@ namespace lim_webserver
         return true;
     }
 
-    std::string IoChannel::stateToString() const
-    {
-        return stateToString(m_state);
-    }
+    std::string IoChannel::stateToString() const { return stateToString(m_state); }
 
-    std::string IoChannel::eventsToString() const
-    {
-        return eventsToString(m_events);
-    }
+    std::string IoChannel::eventsToString() const { return eventsToString(m_events); }
 
     std::string IoChannel::stateToString(IoChannelState state)
     {

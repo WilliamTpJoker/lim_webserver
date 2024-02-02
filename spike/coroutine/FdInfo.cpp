@@ -1,5 +1,6 @@
 #include "FdInfo.h"
 #include "Hook.h"
+#include "splog.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -7,11 +8,13 @@
 
 namespace lim_webserver
 {
-    FdInfo::FdInfo(int fd) : m_isSocket(false), m_sysNonblock(false), m_userNonblock(false), m_fd(fd)
+    static Logger::ptr g_logger = LOG_SYS();
+
+    FdInfo::FdInfo(int fd) : IoChannel(fd), m_isSocket(false), m_sysNonblock(false), m_userNonblock(false)
     {
         // 获取文件描述符的状态信息
         struct stat fd_stat;
-        if (-1 != fstat(m_fd, &fd_stat))
+        if (-1 != fstat(fd, &fd_stat))
         {
             // 获取成功，判断是否是套接字
             m_isSocket = S_ISSOCK(fd_stat.st_mode);
@@ -20,13 +23,13 @@ namespace lim_webserver
         // 如果是套接字
         if (m_isSocket)
         {
-            // 获取文件描述符的标志
-            int flag = fcntl_f(m_fd, F_GETFL, 0);
+            // 使用原生函数获取文件描述符的标志
+            int flag = fcntl_f(fd, F_GETFL, 0);
 
             // 如果未设置非阻塞标志，则设置为非阻塞
             if (!(flag & O_NONBLOCK))
             {
-                fcntl_f(m_fd, F_SETFL, flag | O_NONBLOCK);
+                fcntl_f(fd, F_SETFL, flag | O_NONBLOCK);
             }
             // 标记系统非阻塞为 true
             m_sysNonblock = true;
@@ -35,63 +38,107 @@ namespace lim_webserver
 
     FdInfo::~FdInfo() {}
 
-    bool FdInfo::close() { return false; }
-
-    void FdInfo::setTimeout(int type, uint64_t ms)
+    void FdInfo::close()
     {
-        if (type = SO_RCVTIMEO)
+        IoChannel::close();
+        LOG_DEBUG(g_logger) << "Close FdInfo(fd = " << m_fd << ")";
+    }
+
+    void FdInfo::setSocketTimeout(int type, uint64_t ms)
+    {
+        switch (type)
         {
+        case SO_RCVTIMEO:
             m_recvTimeout = ms;
-        }
-        else if (type = SO_SNDTIMEO)
-        {
+            break;
+        case SO_SNDTIMEO:
             m_sendTimeout = ms;
+            break;
         }
     }
 
-    uint64_t FdInfo::getTimeout(int type)
+    uint64_t FdInfo::getSocketTimeout(int type)
     {
-        if (type = SO_RCVTIMEO)
+        switch (type)
         {
+        case SO_RCVTIMEO:
             return m_recvTimeout;
-        }
-        else if (type = SO_SNDTIMEO)
-        {
+        case SO_SNDTIMEO:
             return m_sendTimeout;
+        default:
+            return 0;
         }
-        return -1;
     }
 
-    FdManager::FdManager() { m_fd_vec.resize(64); }
+    FdManager::FdManager() {}
 
-    void FdManager::insert(int fd)
+    void FdManager::create(int fd)
     {
-        RWMutexType::WriteLock lock(m_mutex);
         FdInfo::ptr fdInfo = FdInfo::Create(fd);
-        if (fd >= (int)m_fd_vec.size())
-        {
-            m_fd_vec.resize(fd * 2);
-        }
-        m_fd_vec[fd] = fdInfo;
+        insert(fd, fdInfo);
     }
 
     FdInfo::ptr FdManager::get(int fd)
     {
-        RWMutexType::ReadLock lock(m_mutex);
-        if ((int)m_fd_vec.size() <= fd)
-        {
-            return nullptr;
-        }
-        return m_fd_vec[fd];
+        FdSlotPtr slot = getSlot(fd);
+        if (!slot)
+            return FdInfo::ptr();
+
+        Spinlock::Lock lock(slot->mutex_);
+        FdInfo::ptr info(slot->data_);
+        return info;
     }
 
     void FdManager::del(int fd)
     {
-        RWMutexType::WriteLock lock(m_mutex);
-        if ((int)m_fd_vec.size() <= fd)
-        {
+        FdSlotPtr slot = getSlot(fd);
+        if (!slot)
             return;
+
+        FdInfo::ptr info;
+        {
+            Spinlock::Lock lock(slot->mutex_);
+            slot->data_.swap(info);
         }
-        m_fd_vec[fd].reset();
+
+        if (info)
+        {
+            info->close();
+        }
+    }
+
+    FdManager::FdSlotPtr FdManager::getSlot(int fd)
+    {
+        int bucketIdx = fd & kBucketCount;
+        std::unique_lock<std::mutex> lock(m_bucketMtx[bucketIdx]);
+        auto &bucket = m_buckets[bucketIdx];
+        auto itr = bucket.find(fd);
+        if (itr == bucket.end())
+            return FdSlotPtr();
+        return itr->second;
+    }
+
+    void FdManager::insert(int fd, FdInfo::ptr info)
+    {
+        int bucketIdx = fd & kBucketCount;
+
+        std::unique_lock<std::mutex> lock(m_bucketMtx[bucketIdx]);
+        auto &bucket = m_buckets[bucketIdx];
+        FdSlotPtr &slot = bucket[fd];
+        if (!slot)
+            slot.reset(new FdSlot);
+        lock.unlock();
+
+        FdInfo::ptr closedInfo;
+        {
+            Spinlock::Lock lock2(slot->mutex_);
+            closedInfo.swap(slot->data_);
+            slot->data_ = info;
+        }
+
+        if (closedInfo)
+        {
+            closedInfo->close();
+        }
     }
 }

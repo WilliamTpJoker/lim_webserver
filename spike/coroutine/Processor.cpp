@@ -87,8 +87,7 @@ namespace lim_webserver
 
     void Processor::wakeupTask(Task *task)
     {
-        m_scheduler->addTask(task);
-        tickle();
+        addTask(task);
     }
 
     inline void Processor::garbageCollection() { m_garbageList.clear(); }

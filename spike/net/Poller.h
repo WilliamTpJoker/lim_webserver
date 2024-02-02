@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 
 struct epoll_event;
 
@@ -23,34 +24,9 @@ namespace lim_webserver
         Poller();
         virtual ~Poller() {}
 
-        /**
-         * @brief 添加event
-         *
-         * @param fd
-         * @param event
-         * @return true
-         * @return false
-         */
-        virtual bool addEvent(int fd, IoEvent event);
-
-        /**
-         * @brief 取消event
-         *
-         * @param fd
-         * @param event
-         * @return true
-         * @return false
-         */
-        virtual bool cancelEvent(int fd, IoEvent event);
-
-        /**
-         * @brief 清空event
-         *
-         * @param fd
-         * @return true
-         * @return false
-         */
-        virtual bool clearEvent(int fd);
+        virtual void updateChannel(IoChannel::ptr channel)=0;
+        
+        virtual void removeChannel(IoChannel::ptr channel)=0;
 
         /**
          * @brief 读取io
@@ -60,10 +36,7 @@ namespace lim_webserver
         virtual void poll(int ms) = 0;
 
     protected:
-        void channelVecResize(size_t size);
-
-    protected:
-        std::vector<IoChannel *> m_channel_vec; // 管理的所有channel
+        std::map<int, IoChannel::ptr> m_channel_map; // 管理的所有channel
         MutexType m_mutex;
     };
 
@@ -76,34 +49,9 @@ namespace lim_webserver
         EpollPoller();
         ~EpollPoller();
 
-        /**
-         * @brief 添加event
-         *
-         * @param fd
-         * @param event
-         * @return true
-         * @return false
-         */
-        bool addEvent(int fd, IoEvent event) override;
-
-        /**
-         * @brief 取消event
-         *
-         * @param fd
-         * @param event
-         * @return true
-         * @return false
-         */
-        bool cancelEvent(int fd, IoEvent event) override;
-
-        /**
-         * @brief 清空event
-         *
-         * @param fd
-         * @return true
-         * @return false
-         */
-        bool clearEvent(int fd) override;
+        void updateChannel(IoChannel::ptr channel) override;
+        
+        void removeChannel(IoChannel::ptr channel) override;
 
         /**
          * @brief 读取io
@@ -119,7 +67,7 @@ namespace lim_webserver
          * @param op
          * @param channel
          */
-        void update(int op, IoChannel *channel);
+        void update(int op, IoChannel::ptr channel);
 
         static const char *opToString(int op);
 

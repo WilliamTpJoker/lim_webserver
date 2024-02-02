@@ -3,6 +3,8 @@
 #include "base/Mutex.h"
 #include "base/Noncopyable.h"
 
+#include <memory>
+
 namespace lim_webserver
 {
     enum IoEvent
@@ -25,6 +27,9 @@ namespace lim_webserver
     {
     public:
         using MutexType = Spinlock;
+        using ptr = std::shared_ptr<IoChannel>;
+        
+        static ptr Create(int fd) { return std::make_shared<IoChannel>(fd); }
 
     public:
         IoChannel(int fd);
@@ -112,17 +117,24 @@ namespace lim_webserver
 
         std::string eventsToString() const;
 
+    protected:
+        /**
+         * @brief 没有正常析构则会通过该函数关闭
+         *
+         */
+        virtual void close();
+
     private:
         static std::string stateToString(IoChannelState state);
 
         static std::string eventsToString(int ev);
 
+    protected:
+        const int m_fd; // 管理的fd
+
     private:
-        const int m_fd;                               // 管理的fd
         IoChannelState m_state = IoChannelState::NEW; // fd状态
         int m_events = 0;                             // fd的Event
-        // Task *m_readTask = nullptr;                   // 读协程
-        // Task *m_writeTask = nullptr;                  // 写协程
         Task *m_task = nullptr;
         MutexType m_mutex;
     };

@@ -98,7 +98,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
     }
 
     // 获取超时时间
-    uint64_t to = fdInfo->getTimeout(timeout_so);
+    uint64_t to = fdInfo->getSocketTimeout(timeout_so);
     lim_webserver::Timer::ptr timer;
 
     // 重试IO 操作(一般循环一次)
@@ -127,38 +127,39 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         // 后续则为函数因为资源不可用的调用失败,阻塞等待
         lim_webserver::EventLoop *eventloop = lim_webserver::EventLoop::GetInstance();
 
-        // bool expired = false;
+        bool expired = false;
 
-        // // 若设置了超时时间，则创建一个条件定时器来处理超时事件
-        // if (to != (uint64_t)-1)
-        // {
-        //     // 超时则触发回调
-        //     timer = lim_webserver::TimerManager::GetInstance()->addTimer(
-        //         to,
-        //         [eventloop, fd, event, &expired]()
-        //         {
-        //             eventloop->cancelEvent(fd, (lim_webserver::IoEvent)event);
-        //             expired = true;
-        //         });
-        // }
+        // 若设置了超时时间，则创建一个条件定时器来处理超时事件
+        if (to != (uint64_t)-1)
+        {
+            // 超时则触发回调
+            timer = lim_webserver::TimerManager::GetInstance()->addTimer(to,
+                                                                         [eventloop, fdInfo, event, &expired]()
+                                                                         {
+                                                                             fdInfo->cancelEvent((lim_webserver::IoEvent)event);
+                                                                             eventloop->updateChannel(fdInfo);
+                                                                             expired = true;
+                                                                         });
+        }
 
         // 添加该协程事件，即后续内容
-        lim_webserver::EventLoop::GetInstance()->addEvent(fd, (lim_webserver::IoEvent)event);
+        fdInfo->addEvent((lim_webserver::IoEvent)event);
+        lim_webserver::EventLoop::GetInstance()->updateChannel(fdInfo);
 
         LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << " hold.";
         lim_webserver::Processor::CoHold();
         LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << " wake.";
-        // if (timer)
-        // {
-        //     LOG_TRACE(g_logger) << "cancel timer";
-        //     timer->cancel();
-        // }
-        // // 如果定时器信息为超时，则表明事件超时，设置错误码为超时并返回 -1
-        // if (expired)
-        // {
-        //     errno = ETIMEDOUT;
-        //     return -1;
-        // }
+        if (timer)
+        {
+            LOG_TRACE(g_logger) << "cancel timer";
+            timer->cancel();
+        }
+        // 如果定时器信息为超时，则表明事件超时，设置错误码为超时并返回 -1
+        if (expired)
+        {
+            errno = ETIMEDOUT;
+            return -1;
+        }
     }
 }
 
@@ -228,8 +229,8 @@ extern "C"
         int res = pipe_f(pipefd);
         if (res == 0)
         {
-            lim_webserver::FdManager::GetInstance()->insert(pipefd[0]);
-            lim_webserver::FdManager::GetInstance()->insert(pipefd[1]);
+            lim_webserver::FdManager::GetInstance()->create(pipefd[0]);
+            lim_webserver::FdManager::GetInstance()->create(pipefd[1]);
         }
         return res;
     }
@@ -244,7 +245,7 @@ extern "C"
         int fd = socket_f(domain, type, protocol);
         if (fd > 0)
         {
-            lim_webserver::FdManager::GetInstance()->insert(fd);
+            lim_webserver::FdManager::GetInstance()->create(fd);
         }
         if (task)
         {
@@ -292,7 +293,7 @@ extern "C"
 
         // 若定义了超时，则创建超时定时器
         lim_webserver::Timer::ptr timer;
-        uint64_t timeout_ms = fdInfo->getConnectTimeout();
+        uint64_t timeout_ms = fdInfo->getTcpConnectTimeout();
         lim_webserver::EventLoop *eventloop = lim_webserver::EventLoop::GetInstance();
         bool expired = false;
         // 如果设置了连接超时时间 timeout_ms  不等于 (uint64_t)-1
@@ -300,15 +301,17 @@ extern "C"
         {
             // 创建一个定时器，当超时时取消连接
             timer = lim_webserver::TimerManager::GetInstance()->addTimer(timeout_ms,
-                                                                         [eventloop, &sockfd, &expired]()
+                                                                         [eventloop, &expired, fdInfo]()
                                                                          {
-                                                                             eventloop->cancelEvent(sockfd, lim_webserver::WRITE);
+                                                                             fdInfo->cancelEvent(lim_webserver::WRITE);
+                                                                             eventloop->updateChannel(fdInfo);
                                                                              expired = true;
                                                                          });
         }
 
         // 添加读事件监听
-        lim_webserver::EventLoop::GetInstance()->addEvent(sockfd, lim_webserver::WRITE);
+        fdInfo->addEvent(lim_webserver::WRITE);
+        lim_webserver::EventLoop::GetInstance()->updateChannel(fdInfo);
         lim_webserver::Processor::CoHold();
 
         // 协程被唤醒
@@ -344,7 +347,7 @@ extern "C"
         int fd = do_io(s, accept_f, "accept", lim_webserver::READ, SO_RCVTIMEO, addr, addrlen);
         if (fd >= 0)
         {
-            lim_webserver::FdManager::GetInstance()->insert(fd);
+            lim_webserver::FdManager::GetInstance()->create(fd);
         }
         return fd;
     }
@@ -378,7 +381,8 @@ extern "C"
         lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(fd);
         if (fdInfo)
         {
-            lim_webserver::EventLoop::GetInstance()->clearEvent(fd);
+            fdInfo->clearEvent();
+            lim_webserver::EventLoop::GetInstance()->updateChannel(fdInfo);
             lim_webserver::FdManager::GetInstance()->del(fd);
         }
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();
@@ -540,7 +544,7 @@ extern "C"
                     // 将 optval 转换为 timeval 结构体指针
                     const timeval *v = (const timeval *)optval;
                     // 计算超时值（以毫秒为单位）并设置到 FdInfo 对象中
-                    fdInfo->setTimeout(optname, v->tv_sec * 1000 + v->tv_usec / 1000);
+                    fdInfo->setSocketTimeout(optname, v->tv_sec * 1000 + v->tv_usec / 1000);
                 }
             }
         }

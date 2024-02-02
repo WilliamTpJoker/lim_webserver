@@ -20,34 +20,9 @@ namespace lim_webserver
         ~EventLoop();
         void stop();
 
-        /**
-         * @brief 添加event
-         *
-         * @param fd
-         * @param event
-         * @return true
-         * @return false
-         */
-        bool addEvent(int fd, IoEvent event);
+        inline void updateChannel(IoChannel::ptr channel) { m_poller->updateChannel(channel); }
 
-        /**
-         * @brief 取消event
-         *
-         * @param fd
-         * @param event
-         * @return true
-         * @return false
-         */
-        bool cancelEvent(int fd, IoEvent event);
-
-        /**
-         * @brief 清空event
-         *
-         * @param fd
-         * @return true
-         * @return false
-         */
-        bool clearEvent(int fd);
+        inline void removeChannel(IoChannel::ptr channel) { m_poller->removeChannel(channel); }
 
         /**
          * @brief 唤醒
@@ -65,5 +40,6 @@ namespace lim_webserver
         bool m_started = true; // 开始标志符
         Poller::ptr m_poller;  // IO模块
         int m_wakeFd;
+        IoChannel::ptr m_wakeChannel;
     };
 } // namespace lim_webserver

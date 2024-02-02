@@ -17,13 +17,14 @@ namespace lim_webserver
     {
         m_wakeFd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
         LOG_TRACE(g_logger) << "EventLoop create wakeFd = " << m_wakeFd;
-        addEvent(m_wakeFd, IoEvent::READ);
+        m_wakeChannel = IoChannel::Create(m_wakeFd);
+        m_wakeChannel->addEvent(IoEvent::READ);
     }
 
     EventLoop::~EventLoop()
     {
         stop();
-        clearEvent(m_wakeFd);
+        m_wakeChannel->clearEvent();
         ::close(m_wakeFd);
     }
 
@@ -35,21 +36,6 @@ namespace lim_webserver
         }
         m_started = false;
         tickle();
-    }
-
-    bool EventLoop::addEvent(int fd, IoEvent event)
-    {
-        return m_poller->addEvent(fd, event);
-    }
-
-    bool EventLoop::cancelEvent(int fd, IoEvent event)
-    {
-        return m_poller->cancelEvent(fd, event);
-    }
-
-    bool EventLoop::clearEvent(int fd)
-    {
-        return m_poller->clearEvent(fd);
     }
 
     void EventLoop::tickle()

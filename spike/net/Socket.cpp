@@ -74,7 +74,7 @@ namespace lim_webserver
         FdInfo::ptr fdInfo = FdManager::GetInstance()->get(m_fd);
         if (fdInfo)
         {
-            return fdInfo->getTimeout(SO_SNDTIMEO);
+            return fdInfo->getSocketTimeout(SO_SNDTIMEO);
         }
         return -1;
     }
@@ -93,7 +93,7 @@ namespace lim_webserver
         FdInfo::ptr fdInfo = FdManager::GetInstance()->get(m_fd);
         if (fdInfo)
         {
-            return fdInfo->getTimeout(SO_RCVTIMEO);
+            return fdInfo->getSocketTimeout(SO_RCVTIMEO);
         }
         return -1;
     }
@@ -197,7 +197,7 @@ namespace lim_webserver
         if (timeout_ms != (uint64_t)-1)
         {
 
-            fdInfo->setConnectTimeout(timeout_ms);
+            fdInfo->setTcpConnectTimeout(timeout_ms);
         }
 
         if (::connect(m_fd, addr->getAddr(), addr->getAddrLen()))
