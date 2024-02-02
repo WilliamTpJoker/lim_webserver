@@ -19,8 +19,6 @@ namespace lim_webserver
         DISCARD // 废弃句柄
     };
 
-    class EventLoop;
-
     class Task;
 
     class IoChannel : public Noncopyable
@@ -123,8 +121,8 @@ namespace lim_webserver
         const int m_fd;                               // 管理的fd
         IoChannelState m_state = IoChannelState::NEW; // fd状态
         int m_events = 0;                             // fd的Event
-        Task *m_readTask = nullptr;                   // 读协程
-        Task *m_writeTask = nullptr;                  // 写协程
+        // Task *m_readTask = nullptr;                   // 读协程
+        // Task *m_writeTask = nullptr;                  // 写协程
         Task *m_task = nullptr;
         MutexType m_mutex;
     };

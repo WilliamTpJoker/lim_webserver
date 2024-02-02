@@ -5,6 +5,7 @@
 #include "base/Mutex.h"
 #include "base/Noncopyable.h"
 #include "base/Thread.h"
+#include "base/ConcurrentLinkedQueue.h"
 
 #include <assert.h>
 #include <atomic>
@@ -136,6 +137,7 @@ namespace lim_webserver
 
     private:
         using TaskQueue = LFQueue<Task *>;
+        // using TaskQueue = ConcurrentQueue<Task *>;
         Task *m_curTask = nullptr;           // 当前运行的任务
         TaskQueue m_newQueue;                // 新任务队列
         TaskQueue m_runableQueue;            // 可工作队列

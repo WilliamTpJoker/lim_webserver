@@ -32,21 +32,21 @@ public:
     ConcurrentQueue &operator=(const ConcurrentQueue &other) = delete;
     ConcurrentQueue &operator=(ConcurrentQueue &&other) = delete;
 
-    template <typename... Args> void Emplace(Args &&...args);
+    template <typename... Args> void emplace(Args &&...args);
 
-    void Enqueue(const T &value)
+    void enqueue(const T &value)
     {
         static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible");
-        Emplace(value);
+        emplace(value);
     };
 
-    void Enqueue(T &&value)
+    void enqueue(T &&value)
     {
         static_assert(std::is_constructible_v<T, T &&>, "T must be constructible with T&&");
-        Emplace(std::forward<T>(value));
+        emplace(std::forward<T>(value));
     }
 
-    bool Dequeue(T &data);
+    bool dequeue(T &data);
     size_t size() const { return size_.load(std::memory_order_relaxed); }
 
 private:
@@ -140,7 +140,7 @@ void ConcurrentQueue<T>::AcquireSafeNodeAndNext(std::atomic<Node *> &atomic_node
     *next_ptr = next;
 }
 
-template <typename T> template <typename... Args> void ConcurrentQueue<T>::Emplace(Args &&...args)
+template <typename T> template <typename... Args> void ConcurrentQueue<T>::emplace(Args &&...args)
 {
     static_assert(std::is_constructible_v<T, Args &&...>, "T must be constructible with Args&&...");
     RegularNode *new_node = new RegularNode(std::forward<Args>(args)...);
@@ -169,7 +169,7 @@ template <typename T> template <typename... Args> void ConcurrentQueue<T>::Empla
     size_.fetch_add(1, std::memory_order_relaxed);
 }
 
-template <typename T> bool ConcurrentQueue<T>::Dequeue(T &value)
+template <typename T> bool ConcurrentQueue<T>::dequeue(T &value)
 {
     HazardPointer head_hp;
     HazardPointer next_hp;

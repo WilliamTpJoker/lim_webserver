@@ -51,6 +51,7 @@ namespace lim_webserver
         //         m_writeTask->wake();
         //     }
         // }
+        // 读操作   紧急读操作  关闭写半部分 写操作
         if (op & (EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLOUT))
         {
             if (m_task)

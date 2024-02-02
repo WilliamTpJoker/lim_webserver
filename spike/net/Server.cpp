@@ -64,10 +64,6 @@ namespace lim_webserver
 
     void TcpServer::start()
     {
-        if (m_started)
-        {
-            return;
-        }
         m_started = true;
         for (auto socket : m_socket_vec)
         {

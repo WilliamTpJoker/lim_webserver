@@ -43,7 +43,12 @@ namespace lim_webserver
             if (old_head)
             {
                 value = old_head->data_;
+                if (!old_head->next_)
+                {
+                    tail_.exchange(nullptr);
+                }
                 delete old_head;
+
                 return true;
             }
             tail_.exchange(nullptr);

@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         level = LogLevel_DEBUG;
     }
     LOG_SYS()->setLevel(level);
-    LOG_SYS()->addAppender(aysnc);
+    // LOG_SYS()->addAppender(aysnc);
     LOG_SYS()->detachAppender("console");
     
     fiber_sched->start();
