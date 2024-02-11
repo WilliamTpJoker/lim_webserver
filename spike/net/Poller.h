@@ -19,7 +19,7 @@ namespace lim_webserver
     public:
         using ptr = std::unique_ptr<Poller>;
         using MutexType = Spinlock;
-
+        using ChannelMap = std::map<int, IoChannel::ptr>;
     public:
         Poller();
         virtual ~Poller() {}
@@ -27,6 +27,8 @@ namespace lim_webserver
         virtual void updateChannel(IoChannel::ptr channel)=0;
         
         virtual void removeChannel(IoChannel::ptr channel)=0;
+
+        bool hasChannel(IoChannel::ptr channel) const;
 
         /**
          * @brief 读取io
@@ -36,7 +38,7 @@ namespace lim_webserver
         virtual void poll(int ms) = 0;
 
     protected:
-        std::map<int, IoChannel::ptr> m_channel_map; // 管理的所有channel
+        ChannelMap m_channel_map; // 管理的所有channel
         MutexType m_mutex;
     };
 

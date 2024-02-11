@@ -12,8 +12,8 @@ namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_SYS();
 
-    EventLoop::EventLoop()
-        : m_poller(new EpollPoller())
+    EventLoop::EventLoop(Scheduler *scheduler, int id)
+        : m_poller(new EpollPoller()), Processor(scheduler, id)
     {
         m_wakeFd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
         LOG_TRACE(g_logger) << "EventLoop create wakeFd = " << m_wakeFd;
@@ -49,7 +49,7 @@ namespace lim_webserver
         }
     }
 
-    void EventLoop::run()
+    void EventLoop::idle()
     {
         while (m_started)
         {

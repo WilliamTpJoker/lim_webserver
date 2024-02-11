@@ -82,6 +82,6 @@ int main(int argc, char *args[])
     // co test_sleep;
     // sleep(4);
     fiber test_socket;
-    lim_webserver::EventLoop::GetInstance()->run();
+    lim_webserver::EventLoop::GetInstance()->idle();
     return 0;
 }

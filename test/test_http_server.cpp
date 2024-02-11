@@ -24,6 +24,6 @@ int main(int argc, char *argv[])
 
     fiber_sched->start();
     fiber run;
-    g_net->run();
+    g_net->idle();
     return 0;
 }

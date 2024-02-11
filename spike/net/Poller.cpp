@@ -12,6 +12,12 @@ namespace lim_webserver
 
     Poller::Poller() {}
 
+    bool Poller::hasChannel(IoChannel::ptr channel) const
+    {
+        ChannelMap::const_iterator it = m_channel_map.find(channel->fd());
+        return it != m_channel_map.end() && it->second == channel;
+    }
+
     EpollPoller::EpollPoller() : m_epfd(epoll_create(1)), m_event_vec(16) {}
 
     EpollPoller::~EpollPoller() { ::close(m_epfd); }
@@ -61,7 +67,7 @@ namespace lim_webserver
     void EpollPoller::removeChannel(IoChannel::ptr channel)
     {
         int fd = channel->fd();
-        LOG_TRACE(g_logger) << "fd = " << fd << "removeChannel";
+        LOG_TRACE(g_logger) << "fd = " << fd << " removeChannel";
         ASSERT(m_channel_map.find(fd) != m_channel_map.end());
         ASSERT(m_channel_map[fd] == channel);
         ASSERT(channel->isNoneEvent());

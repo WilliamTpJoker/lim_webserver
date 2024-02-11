@@ -382,7 +382,10 @@ extern "C"
         if (fdInfo)
         {
             fdInfo->clearEvent();
-            lim_webserver::EventLoop::GetInstance()->updateChannel(fdInfo);
+            if(lim_webserver::EventLoop::GetInstance()->hasChannel(fdInfo))
+            {
+                lim_webserver::EventLoop::GetInstance()->removeChannel(fdInfo);
+            }
             lim_webserver::FdManager::GetInstance()->del(fd);
         }
         lim_webserver::Task *task = lim_webserver::Processor::GetCurrentTask();

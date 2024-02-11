@@ -33,7 +33,7 @@ void test_reactor()
         LOG_INFO(g_logger)<<"!";
     }
 
-    eventloop->run();
+    eventloop->idle();
 }
 
 int main()

@@ -29,8 +29,8 @@ namespace lim_webserver
                 rsp->setBody("hello world");
                 session->sendResponse(rsp);
 
-                LOG_TRACE(g_logger)<<"cliet: "<< session->peerAddressString()<<", request:\n"<<req->toString();
-                LOG_TRACE(g_logger)<<"cliet: "<< session->peerAddressString()<<", response:\n"<<rsp->toString();
+                LOG_TRACE(g_logger) << "cliet: " << session->peerAddressString() << ", request:\n" << req->toString();
+                LOG_TRACE(g_logger) << "cliet: " << session->peerAddressString() << ", response:\n" << rsp->toString();
 
                 if (!m_isKeepalive || req->isClose())
                 {

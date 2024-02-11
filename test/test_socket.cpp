@@ -68,6 +68,6 @@ int main(int argc, char *argv[])
     fiber_sched->start();
     fiber test_socket;
     fiber stop_sched;
-    g_net->run();
+    g_net->idle();
     return 0;
 }

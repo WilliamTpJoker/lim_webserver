@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Task.h"
+#include "base/ConcurrentLinkedQueue.h"
 #include "base/LFQueue.h"
 #include "base/Mutex.h"
 #include "base/Noncopyable.h"
 #include "base/Thread.h"
-#include "base/ConcurrentLinkedQueue.h"
 
 #include <assert.h>
 #include <atomic>
@@ -65,10 +65,35 @@ namespace lim_webserver
          */
         void wakeupTask(Task *task);
 
-    private:
+    protected:
         Processor();
         explicit Processor(Scheduler *scheduler, int id);
 
+        /**
+         * @brief 生命周期开始
+         *
+         */
+        void start();
+
+        /**
+         * @brief 唤醒
+         *
+         */
+        virtual void tickle();
+
+        /**
+         * @brief 空闲时执行任务
+         *
+         */
+        virtual void idle();
+
+        /**
+         * @brief 线程执行任务
+         *
+         */
+        void run();
+
+    private:
         /**
          * @brief 当前Processor的task主动让出线程并重新入队
          *
@@ -110,30 +135,6 @@ namespace lim_webserver
          *
          */
         inline void garbageCollection();
-
-        /**
-         * @brief 生命周期开始
-         *
-         */
-        void start();
-
-        /**
-         * @brief 唤醒
-         *
-         */
-        void tickle();
-
-        /**
-         * @brief 空闲时执行任务
-         *
-         */
-        void idle();
-
-        /**
-         * @brief 线程执行任务
-         *
-         */
-        void run();
 
     private:
         using TaskQueue = LFQueue<Task *>;
