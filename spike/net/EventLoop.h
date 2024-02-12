@@ -13,9 +13,6 @@ namespace lim_webserver
     class EventLoop : public Processor
     {
     public:
-        using MutexType = Mutex;
-
-    public:
         EventLoop(Scheduler *scheduler, int id);
         ~EventLoop();
         void stop();
@@ -39,8 +36,15 @@ namespace lim_webserver
          */
         void idle() override;
 
+        /**
+         * @brief 停止
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool stopping() override;
+
     private:
-        bool m_started = true; // 开始标志符
         Poller::ptr m_poller;  // IO模块
         int m_wakeFd;
         IoChannel::ptr m_wakeChannel;

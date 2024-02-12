@@ -1,4 +1,3 @@
-#include "coroutine.h"
 #include "net.h"
 #include "splog.h"
 
@@ -6,10 +5,12 @@ using namespace lim_webserver;
 
 static Logger::ptr g_logger = LOG_ROOT();
 
+static Scheduler* g_net = Scheduler::CreateNetScheduler();
+
 class EchoServer : public TcpServer
 {
 public:
-    EchoServer(const std::string &name) : TcpServer(name) {}
+    EchoServer(){}
 
     void handleClient(Socket::ptr client) override;
 };
@@ -43,7 +44,8 @@ void EchoServer::handleClient(Socket::ptr client)
 void run()
 {
     LOG_INFO(g_logger) << "server start";
-    EchoServer *es = new EchoServer("echo");
+    EchoServer *es = new EchoServer();
+    es->setName("echo");
     auto addr = Address::LookupAny("0.0.0.0:8020");
     while (!es->bind(addr))
     {
@@ -57,7 +59,7 @@ int main(int argc, char *argv[])
     lim_webserver::LogLevel level = LogLevel_TRACE;
     lim_webserver::AsyncAppender::ptr aysnc = AppenderFactory::GetInstance()->defaultAsyncAppender();
     auto fileapd = AppenderFactory::GetInstance()->defaultFileAppender();
-    fileapd->setFile("echo_log.txt");
+    fileapd->setFile("./log/echo_log.txt");
     aysnc->bindAppender(fileapd);
     if (argc == 2)
     {
@@ -66,8 +68,7 @@ int main(int argc, char *argv[])
     LOG_SYS()->setLevel(level);
     LOG_SYS()->addAppender(aysnc);
 
-    fiber_sched->start();
-    fiber run;
-    g_net->idle();
+    g_net->createTask(&run);
+    g_net->start();
     return 0;
 }

@@ -10,14 +10,6 @@
 #include <sys/socket.h>
 #include <stdarg.h>
 
-namespace lim_webserver
-{
-    /**
-     * @brief 当前线程是否hook
-     */
-    bool is_hook_enable();
-}
-
 extern "C"
 {
     /**

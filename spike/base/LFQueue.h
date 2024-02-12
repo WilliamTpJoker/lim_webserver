@@ -83,6 +83,11 @@ namespace lim_webserver
             }
         }
 
+        bool empty()
+        {
+            return head_==nullptr;
+        }
+
     private:
         struct Node
         {

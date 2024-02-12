@@ -3,8 +3,8 @@
 #include <string>
 
 #include "coroutine.h"
-#include "net/Socket.h"
 #include "net/EventLoop.h"
+#include "net/Socket.h"
 
 #include <vector>
 
@@ -13,23 +13,25 @@ namespace lim_webserver
     class Server
     {
     public:
-        Server(const std::string &name) : m_name(name) {}
+        Server() {}
         ~Server() {}
+
+        inline void setName(const std::string &name) { m_name = name; }
+        inline const std::string &name() const { return m_name; }
 
         virtual void start() = 0;
 
         virtual void stop() = 0;
 
     protected:
-        EventLoop *m_eventloop;
         bool m_started = false;
-        std::string m_name;
+        std::string m_name = "default_server";
     };
 
     class TcpServer : public Server
     {
     public:
-        TcpServer(const std::string &name);
+        TcpServer(Scheduler *accepter = EventLoop::GetCurrentScheduler(), Scheduler *worker = EventLoop::GetCurrentScheduler());
         ~TcpServer();
 
         bool bind(Address::ptr addr, bool ssl = false);
@@ -52,6 +54,8 @@ namespace lim_webserver
         std::vector<Socket::ptr> m_socket_vec;
         uint64_t m_recvTimeout;
         bool m_ssl;
+        Scheduler *m_worker;
+        Scheduler *m_accepter;
     };
 
 } // namespace lim_webserver

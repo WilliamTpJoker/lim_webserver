@@ -21,7 +21,7 @@ namespace lim_webserver
              * @param[in] keepalive 是否长连接
              * @param[in] accept_worker 接收连接调度器
              */
-            HttpServer(const std::string &name, bool keepalive = false);
+            HttpServer(bool keepalive = false, Scheduler *accepter = EventLoop::GetCurrentScheduler(), Scheduler *worker = EventLoop::GetCurrentScheduler());
 
         protected:
             virtual void handleClient(Socket::ptr client) override;

@@ -21,6 +21,8 @@ namespace lim_webserver
 
         static Scheduler *Create();
 
+        static Scheduler *CreateNetScheduler();
+
     public:
         /**
          * @brief 创建新协程任务
@@ -46,12 +48,14 @@ namespace lim_webserver
         Scheduler();
         ~Scheduler();
 
+        inline void setProcessor(Processor *processor) { m_mainProcessor = processor; }
+
         /**
          * @brief 添加任务
          *
          * @param task 任务
          */
-        void addTask(Task* &task);
+        void addTask(Task *&task);
 
         /**
          * @brief 线程工作函数，负责为处理器线程分发协程任务
@@ -68,7 +72,7 @@ namespace lim_webserver
     private:
         size_t m_threadCounts;                 // 工作线程数
         std::vector<Processor *> m_processors; // 处理器池
-        Processor *m_mainProcessor;            // 主处理器
+        Processor *m_mainProcessor = nullptr;  // 主处理器
         size_t m_lastActiveIdx;                // 最后一次调度的处理器
         int m_threadId;                        // Scheduler所在线程
         bool m_started;                        // 开始标志位

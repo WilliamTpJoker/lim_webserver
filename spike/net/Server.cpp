@@ -1,23 +1,19 @@
 #include "Server.h"
-#include "splog.h"
 #include "base/Configer.h"
+#include "splog.h"
 
 namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_SYS();
 
-    static ConfigerVar<uint64_t>::ptr g_tcp_server_read_timeout = Configer::Lookup("tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2),
-                                                                                   "tcp server read timeout");
+    static ConfigerVar<uint64_t>::ptr g_tcp_server_read_timeout =
+        Configer::Lookup("tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2), "tcp server read timeout");
 
-    TcpServer::TcpServer(const std::string &name)
-        : Server(name), m_recvTimeout(g_tcp_server_read_timeout->getValue())
+    TcpServer::TcpServer(Scheduler *accepter, Scheduler *worker) : m_accepter(accepter), m_worker(worker), m_recvTimeout(g_tcp_server_read_timeout->getValue())
     {
     }
 
-    TcpServer::~TcpServer()
-    {
-        stop();
-    }
+    TcpServer::~TcpServer() { stop(); }
 
     bool TcpServer::bind(Address::ptr addr, bool ssl)
     {
@@ -30,17 +26,13 @@ namespace lim_webserver
             Socket::ptr sock = Socket::CreateTCP(addr);
             if (!sock->bind(addr))
             {
-                LOG_ERROR(g_logger) << "bind fail errno="
-                                    << errno << " errstr=" << strerror(errno)
-                                    << " addr=[" << addr->toString() << "]";
+                LOG_ERROR(g_logger) << "bind fail errno=" << errno << " errstr=" << strerror(errno) << " addr=[" << addr->toString() << "]";
                 fails.push_back(addr);
                 continue;
             }
             if (!sock->listen())
             {
-                LOG_ERROR(g_logger) << "listen fail errno="
-                                    << errno << " errstr=" << strerror(errno)
-                                    << " addr=[" << addr->toString() << "]";
+                LOG_ERROR(g_logger) << "listen fail errno=" << errno << " errstr=" << strerror(errno) << " addr=[" << addr->toString() << "]";
                 fails.push_back(addr);
                 continue;
             }
@@ -55,9 +47,7 @@ namespace lim_webserver
 
         for (auto &socket : m_socket_vec)
         {
-            LOG_INFO(g_logger) << " name=" << m_name
-                               << " ssl=" << m_ssl
-                               << " server bind success: " << socket->localAddress()->toString();
+            LOG_INFO(g_logger) << " name=" << m_name << " ssl=" << m_ssl << " server bind success: " << socket->localAddress()->toString();
         }
         return true;
     }
@@ -67,10 +57,7 @@ namespace lim_webserver
         m_started = true;
         for (auto socket : m_socket_vec)
         {
-            fiber[this, socket]
-            {
-                this->accept(socket);
-            };
+            m_accepter->createTask([this, socket] { this->accept(socket); });
         }
     }
 
@@ -96,10 +83,7 @@ namespace lim_webserver
             if (client)
             {
                 client->setRecvTimeout(m_recvTimeout);
-                fiber[this, client]
-                {
-                    this->handleClient(client);
-                };
+                m_worker->createTask([this, client] { this->handleClient(client); });
             }
         }
     }

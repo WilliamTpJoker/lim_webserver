@@ -1,6 +1,7 @@
 #include "Scheduler.h"
 #include "Hook.h"
 #include "splog.h"
+#include "net/EventLoop.h"
 
 #include <iostream>
 #include <memory>
@@ -9,17 +10,26 @@ namespace lim_webserver
 {
     Logger::ptr g_logger = LOG_SYS();
 
-    Scheduler *Scheduler::Create() { return new Scheduler(); }
+    Scheduler *Scheduler::Create()
+    {
+        Scheduler *sched = new Scheduler();
+        Processor *proc = new Processor(sched, 0);
+        sched->setProcessor(proc);
+        return sched;
+    }
+
+    Scheduler *Scheduler::CreateNetScheduler()
+    {
+        Scheduler *sched = new Scheduler();
+        EventLoop *loop = new EventLoop(sched, 0);
+        sched->setProcessor(loop);
+        return sched;
+    }
 
     void Scheduler::createTask(TaskFunc const &func)
     {
-        if (!m_started)
-        {
-            LOG_ERROR(g_logger) << "Scheduler not started";
-            return;
-        }
-        Task* tk = new Task(func, 128 * 1024);
-        addTask(tk);
+        Task *tk = new Task(func, 128 * 1024);
+        this->addTask(tk);
     }
 
     void Scheduler::start(int num_threads)
@@ -43,9 +53,10 @@ namespace lim_webserver
         m_started = true;
 
         // 创建调度线程
-        m_thread = Thread::Create([this]() { this->run(); }, "Sched");
+        // m_thread = Thread::Create([this]() { this->run(); }, "Sched");
 
-        m_mainProcessor->start();
+        // 在当前线程运行
+        m_mainProcessor->run();
     }
 
     void Scheduler::stop()
@@ -70,11 +81,11 @@ namespace lim_webserver
         }
     }
 
-    Scheduler::Scheduler() : m_cond(m_mutex) { m_mainProcessor = new Processor(this, 0); }
+    Scheduler::Scheduler() : m_cond(m_mutex) {}
 
     Scheduler::~Scheduler() { stop(); }
 
-    void Scheduler::addTask(Task* &task)
+    void Scheduler::addTask(Task *&task)
     {
         // 如果任务指定了处理器则直接调度
         Processor *processor = task->getProcessor();
@@ -85,7 +96,7 @@ namespace lim_webserver
             return;
         }
 
-        // 没有则为当前协程分发任务
+        // 没有则为当前指定的处理器分发任务
         processor = Processor::GetCurrentProcessor();
         if (processor && processor->m_activated && processor->getScheduler() == this)
         {
@@ -107,7 +118,15 @@ namespace lim_webserver
                 break;
             }
         }
-        processor->addTask(task);
+
+        if (processor && processor->m_activated && processor->getScheduler() == this)
+        {
+            processor->addTask(task);
+            return;
+        }
+
+        // 都没有，则直接向主处理器添加
+        m_mainProcessor->addTask(task);
     }
 
     void Scheduler::run()

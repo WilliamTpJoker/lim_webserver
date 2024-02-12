@@ -87,6 +87,14 @@ namespace lim_webserver
         virtual void idle();
 
         /**
+         * @brief 停止
+         * 
+         * @return true 
+         * @return false 
+         */
+        virtual bool stopping();
+
+        /**
          * @brief 线程执行任务
          *
          */
@@ -135,15 +143,16 @@ namespace lim_webserver
          */
         inline void garbageCollection();
 
+    protected:
+        int m_id;               // 编号
+        Scheduler *m_scheduler; // 调度者
+
     private:
         using TaskQueue = LFQueue<Task *>;
-        // using TaskQueue = ConcurrentQueue<Task *>;
         Task *m_curTask = nullptr;           // 当前运行的任务
         TaskQueue m_newQueue;                // 新任务队列
         TaskQueue m_runableQueue;            // 可工作队列
         std::list<Task *> m_garbageList;     // 待回收队列
-        Scheduler *m_scheduler;              // 调度者
-        int m_id;                            // 编号
         volatile bool m_activated = true;    // 激活标志位
         volatile bool m_notified = false;    // 通知标志位
         std::atomic_bool m_idled{false};     // 空闲标志位

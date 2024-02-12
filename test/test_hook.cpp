@@ -1,14 +1,18 @@
-#include "splog.h"
 #include "coroutine.h"
 #include "net/EventLoop.h"
+#include "splog.h"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
-lim_webserver::Logger::ptr g_logger = LOG_ROOT();
+using namespace lim_webserver;
+
+static Logger::ptr g_logger = LOG_ROOT();
+
+static Scheduler *g_net = Scheduler::CreateNetScheduler();
 
 // 通过hook将同步的事件转换为异步的事件
 void test_sleep()
@@ -78,10 +82,8 @@ int main(int argc, char *args[])
         level = LogLevel_TRACE;
     }
     LOG_SYS()->setLevel(level);
-    fiber_sched->start();
-    // co test_sleep;
-    // sleep(4);
-    fiber test_socket;
-    lim_webserver::EventLoop::GetInstance()->idle();
+    // g_net->createTask(&test_sleep);
+    g_net->createTask(&test_socket);
+    g_net->start();
     return 0;
 }

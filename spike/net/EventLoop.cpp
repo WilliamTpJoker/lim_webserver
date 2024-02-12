@@ -3,20 +3,18 @@
 #include "coroutine.h"
 #include "splog.h"
 
-#include <sys/epoll.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <sys/epoll.h>
 #include <sys/eventfd.h>
+#include <unistd.h>
 
 namespace lim_webserver
 {
     static Logger::ptr g_logger = LOG_SYS();
 
-    EventLoop::EventLoop(Scheduler *scheduler, int id)
-        : m_poller(new EpollPoller()), Processor(scheduler, id)
+    EventLoop::EventLoop(Scheduler *scheduler, int id) : m_poller(new EpollPoller()), Processor(scheduler, id)
     {
         m_wakeFd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-        LOG_TRACE(g_logger) << "EventLoop create wakeFd = " << m_wakeFd;
         m_wakeChannel = IoChannel::Create(m_wakeFd);
         m_wakeChannel->addEvent(IoEvent::READ);
     }
@@ -28,15 +26,7 @@ namespace lim_webserver
         ::close(m_wakeFd);
     }
 
-    void EventLoop::stop()
-    {
-        if (!m_started)
-        {
-            return;
-        }
-        m_started = false;
-        tickle();
-    }
+    void EventLoop::stop() { tickle(); }
 
     void EventLoop::tickle()
     {
@@ -49,12 +39,8 @@ namespace lim_webserver
         }
     }
 
-    void EventLoop::idle()
-    {
-        while (m_started)
-        {
-            m_poller->poll(10000);
-        }
-    }
+    void EventLoop::idle() { m_poller->poll(10000); }
+
+    bool EventLoop::stopping() { return Processor::stopping(); }
 
 } // namespace lim_webserver

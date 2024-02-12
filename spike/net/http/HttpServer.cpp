@@ -8,7 +8,7 @@ namespace lim_webserver
     {
         static Logger::ptr g_logger = LOG_SYS();
 
-        HttpServer::HttpServer(const std::string &name, bool keepalive) : TcpServer(name), m_isKeepalive(keepalive) {}
+        HttpServer::HttpServer(bool keepalive, Scheduler *accepter, Scheduler *worker) : TcpServer(accepter, worker), m_isKeepalive(keepalive) {}
 
         void HttpServer::handleClient(Socket::ptr client)
         {

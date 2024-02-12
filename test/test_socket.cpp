@@ -1,12 +1,16 @@
-#include "splog.h"
 #include "coroutine.h"
 #include "net.h"
+#include "splog.h"
 
-static lim_webserver::Logger::ptr g_logger = LOG_ROOT();
+using namespace lim_webserver;
+
+static Logger::ptr g_logger = LOG_ROOT();
+
+static Scheduler *g_net = Scheduler::CreateNetScheduler();
 
 void test_socket()
 {
-    lim_webserver::IPAddress::ptr addr = lim_webserver::Address::LookupAnyIPAddress("www.baidu.com");
+    IPAddress::ptr addr = Address::LookupAnyIPAddress("www.baidu.com");
     if (addr)
     {
         LOG_INFO(g_logger) << "get address: " << addr->toString();
@@ -17,7 +21,7 @@ void test_socket()
         return;
     }
 
-    lim_webserver::Socket::ptr sock = lim_webserver::Socket::CreateTCP(addr);
+    Socket::ptr sock = Socket::CreateTCP(addr);
     addr->setPort(80);
     if (!sock->connect(addr))
     {
@@ -58,16 +62,15 @@ void stop_sched()
 
 int main(int argc, char *argv[])
 {
-    lim_webserver::LogLevel level = LogLevel_TRACE;
+    LogLevel level = LogLevel_TRACE;
     if (argc == 2)
     {
         level = LogLevel_DEBUG;
     }
     LOG_SYS()->setLevel(level);
 
-    fiber_sched->start();
-    fiber test_socket;
-    fiber stop_sched;
-    g_net->idle();
+    g_net->createTask(&test_socket);
+    g_net->createTask(&stop_sched);
+    g_net->start();
     return 0;
 }

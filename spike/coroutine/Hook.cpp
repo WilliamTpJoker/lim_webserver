@@ -125,7 +125,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         }
 
         // 后续则为函数因为资源不可用的调用失败,阻塞等待
-        lim_webserver::EventLoop *eventloop = lim_webserver::EventLoop::GetInstance();
+        lim_webserver::EventLoop *loop = reinterpret_cast<lim_webserver::EventLoop *>(lim_webserver::Processor::GetCurrentProcessor());
 
         bool expired = false;
 
@@ -134,17 +134,17 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
         {
             // 超时则触发回调
             timer = lim_webserver::TimerManager::GetInstance()->addTimer(to,
-                                                                         [eventloop, fdInfo, event, &expired]()
+                                                                         [loop, fdInfo, event, &expired]()
                                                                          {
                                                                              fdInfo->cancelEvent((lim_webserver::IoEvent)event);
-                                                                             eventloop->updateChannel(fdInfo);
+                                                                             loop->updateChannel(fdInfo);
                                                                              expired = true;
                                                                          });
         }
 
         // 添加该协程事件，即后续内容
         fdInfo->addEvent((lim_webserver::IoEvent)event);
-        lim_webserver::EventLoop::GetInstance()->updateChannel(fdInfo);
+        loop->updateChannel(fdInfo);
 
         LOG_TRACE(g_logger) << "task(" << task->id() << ") hook " << hook_fun_name << " hold.";
         lim_webserver::Processor::CoHold();
@@ -294,24 +294,25 @@ extern "C"
         // 若定义了超时，则创建超时定时器
         lim_webserver::Timer::ptr timer;
         uint64_t timeout_ms = fdInfo->getTcpConnectTimeout();
-        lim_webserver::EventLoop *eventloop = lim_webserver::EventLoop::GetInstance();
+        lim_webserver::EventLoop *loop = reinterpret_cast<lim_webserver::EventLoop *>(lim_webserver::Processor::GetCurrentProcessor());
+        std::cout << loop << std::endl;
         bool expired = false;
         // 如果设置了连接超时时间 timeout_ms  不等于 (uint64_t)-1
         if (timeout_ms != (uint64_t)-1)
         {
             // 创建一个定时器，当超时时取消连接
             timer = lim_webserver::TimerManager::GetInstance()->addTimer(timeout_ms,
-                                                                         [eventloop, &expired, fdInfo]()
+                                                                         [loop, &expired, fdInfo]()
                                                                          {
                                                                              fdInfo->cancelEvent(lim_webserver::WRITE);
-                                                                             eventloop->updateChannel(fdInfo);
+                                                                             loop->updateChannel(fdInfo);
                                                                              expired = true;
                                                                          });
         }
 
         // 添加读事件监听
         fdInfo->addEvent(lim_webserver::WRITE);
-        lim_webserver::EventLoop::GetInstance()->updateChannel(fdInfo);
+        loop->updateChannel(fdInfo);
         lim_webserver::Processor::CoHold();
 
         // 协程被唤醒
@@ -382,9 +383,10 @@ extern "C"
         if (fdInfo)
         {
             fdInfo->clearEvent();
-            if (lim_webserver::EventLoop::GetInstance()->hasChannel(fdInfo))
+            lim_webserver::EventLoop *loop = reinterpret_cast<lim_webserver::EventLoop *>(lim_webserver::Processor::GetCurrentProcessor());
+            if (loop->hasChannel(fdInfo))
             {
-                lim_webserver::EventLoop::GetInstance()->removeChannel(fdInfo);
+                loop->removeChannel(fdInfo);
             }
             lim_webserver::FdManager::GetInstance()->del(fd);
         }

@@ -85,10 +85,7 @@ namespace lim_webserver
         }
     }
 
-    void Processor::wakeupTask(Task *task)
-    {
-        addTask(task);
-    }
+    void Processor::wakeupTask(Task *task) { addTask(task); }
 
     inline void Processor::garbageCollection() { m_garbageList.clear(); }
 
@@ -136,10 +133,16 @@ namespace lim_webserver
         m_idled = false;
     }
 
+    bool Processor::stopping()
+    {
+        MutexType::Lock lock(m_mutex);
+        return !m_scheduler->m_started;
+    }
+
     void Processor::run()
     {
         GetCurrentProcessor() = this;
-        while (m_scheduler->m_started)
+        while (!stopping())
         {
             getNextTask(true);
             if (m_curTask == nullptr) // 无任务 闲置
@@ -152,7 +155,7 @@ namespace lim_webserver
             }
             m_addNewRemain = 1;
             // 每轮环形协程调度后都重置
-            while (m_curTask && m_scheduler->m_started)
+            while (m_curTask && !stopping())
             {
                 m_curTask->setProcessor(this);
                 ++m_switchCount;
