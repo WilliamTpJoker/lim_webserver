@@ -382,7 +382,7 @@ extern "C"
         if (fdInfo)
         {
             fdInfo->clearEvent();
-            if(lim_webserver::EventLoop::GetInstance()->hasChannel(fdInfo))
+            if (lim_webserver::EventLoop::GetInstance()->hasChannel(fdInfo))
             {
                 lim_webserver::EventLoop::GetInstance()->removeChannel(fdInfo);
             }

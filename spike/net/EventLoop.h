@@ -10,7 +10,7 @@
 
 namespace lim_webserver
 {
-    class EventLoop : public Processor, public Singleton<EventLoop>
+    class EventLoop : public Processor
     {
     public:
         using MutexType = Mutex;

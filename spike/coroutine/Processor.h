@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Task.h"
-#include "base/ConcurrentLinkedQueue.h"
 #include "base/LFQueue.h"
 #include "base/Mutex.h"
 #include "base/Noncopyable.h"

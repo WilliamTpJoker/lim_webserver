@@ -9,15 +9,6 @@ else ()
     message(FATAL_ERROR "Boost library not found")
 endif ()
 
-# 查找 yaml-cpp 库
-find_package(yaml-cpp REQUIRED)
-
-if (yaml-cpp_FOUND)
-    message(STATUS "Found yaml-cpp ${YAML_CPP_VERSION}")
-else ()
-    message(FATAL_ERROR "yaml-cpp library not found")
-endif ()
-
 # 创建名为 libconet 的静态库
 add_library(libspnet)
 

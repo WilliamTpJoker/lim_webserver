@@ -1,3 +1,5 @@
+project(lim_webserver)
+
 cmake_minimum_required(VERSION 3.10)
 
 # 设置全局编译选项
@@ -6,14 +8,14 @@ add_compile_options(-O3 -g -ggdb -Wno-unused-variable -Wno-deprecated -Wno-unuse
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(lim_webserver)
-
 set(CMAKE_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/output)
 # 设置库的输出路径
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+add_subdirectory(third-party/yaml-cpp)
 
 # 添加子目录
 add_subdirectory(test)
