@@ -1,7 +1,7 @@
 #include "Scheduler.h"
 #include "Hook.h"
-#include "splog.h"
 #include "net/EventLoop.h"
+#include "splog.h"
 
 #include <iostream>
 #include <memory>
@@ -28,6 +28,7 @@ namespace lim_webserver
 
     void Scheduler::createTask(TaskFunc const &func)
     {
+        LOG_TRACE(g_logger)<<"Scheduler: "<<m_name<<" createTask";
         Task *tk = new Task(func, 128 * 1024);
         this->addTask(tk);
     }
@@ -52,11 +53,12 @@ namespace lim_webserver
         }
         m_started = true;
 
-        // 创建调度线程
-        // m_thread = Thread::Create([this]() { this->run(); }, "Sched");
+        m_mainProcessor->start();
+    }
 
-        // 在当前线程运行
-        m_mainProcessor->run();
+    void Scheduler::startInNewThread(int num_threads)
+    {
+        m_thread = Thread::Create([this, num_threads]() { this->start(num_threads); }, m_name);
     }
 
     void Scheduler::stop()

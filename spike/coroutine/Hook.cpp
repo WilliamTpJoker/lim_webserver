@@ -93,7 +93,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t 
     lim_webserver::FdInfo::ptr fdInfo = lim_webserver::FdManager::GetInstance()->get(fd);
     if (!fdInfo || !fdInfo->isSocket() || fdInfo->getUserNonblock())
     {
-        LOG_TRACE(g_logger) << "return with unblock mode.";
+        LOG_TRACE(g_logger) << "return with nonblock mode.";
         return fun(fd, std::forward<Args>(args)...);
     }
 

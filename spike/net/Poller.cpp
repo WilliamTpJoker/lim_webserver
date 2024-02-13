@@ -96,8 +96,16 @@ namespace lim_webserver
             for (auto i = 0; i < n; ++i)
             {
                 epoll_event &event = m_event_vec[i];
+                // eventFd则读内容
+                if (event.data.fd == m_wakefd)
+                {
+                    uint8_t dummy[256];
+                    while (read(m_wakefd, dummy, sizeof(dummy)) > 0)
+                        ;
+                    continue;
+                }
+                // io句柄则触发
                 IoChannel *channel = static_cast<IoChannel *>(event.data.ptr);
-                // 根据得到的events触发
                 channel->trigger(event.events);
             }
             if ((size_t)n == m_event_vec.size())
@@ -118,6 +126,19 @@ namespace lim_webserver
                 LOG_ERROR(g_logger) << "EpollPoller::poll() errono = " << strerror(errno);
             }
         }
+    }
+
+    void EpollPoller::bindEventFd(int fd)
+    {
+        m_wakefd=fd;
+        struct epoll_event event;
+        memset(&event, 0, sizeof(epoll_event));
+        event.events = EPOLLIN | EPOLLET;
+        event.data.fd = fd;
+
+        fcntl(fd, F_SETFL, O_NONBLOCK);
+
+        epoll_ctl(m_epfd, EPOLL_CTL_ADD, fd, &event);
     }
 
     void EpollPoller::update(int op, IoChannel::ptr channel)

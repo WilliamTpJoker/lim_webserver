@@ -92,7 +92,7 @@ namespace lim_webserver
     void Processor::start()
     {
         MutexType::Lock lock(m_mutex);
-        m_thread = Thread::Create([this]() { this->run(); }, "Proc_" + std::to_string(m_id));
+        m_thread = Thread::Create([this]() { this->run(); }, m_scheduler->m_name + "_Proc_" + std::to_string(m_id));
     }
 
     void Processor::tickle()
@@ -116,10 +116,7 @@ namespace lim_webserver
 
     void Processor::idle()
     {
-        garbageCollection();
-
         MutexType::Lock lock(m_mutex);
-
         // 若在企图休眠前接受到了调度器的通知，则不休眠
         if (m_notified)
         {
@@ -147,6 +144,7 @@ namespace lim_webserver
             getNextTask(true);
             if (m_curTask == nullptr) // 无任务 闲置
             {
+                garbageCollection();
                 // 执行空闲任务
                 idle();
                 // 回到了工作状态，说明调度了新任务到队列中

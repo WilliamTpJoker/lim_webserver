@@ -31,7 +31,7 @@ namespace lim_webserver
     class TcpServer : public Server
     {
     public:
-        TcpServer(Scheduler *accepter = EventLoop::GetCurrentScheduler(), Scheduler *worker = EventLoop::GetCurrentScheduler());
+        TcpServer(Scheduler *worker = EventLoop::GetCurrentScheduler(), Scheduler *accepter = EventLoop::GetCurrentScheduler());
         ~TcpServer();
 
         bool bind(Address::ptr addr, bool ssl = false);

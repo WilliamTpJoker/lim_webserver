@@ -7,11 +7,12 @@ using namespace lim_webserver;
 
 static lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 
-static Scheduler *g_net = Scheduler::CreateNetScheduler();
-
 void run()
 {
-    http::HttpServer *server = new http::HttpServer(true);
+    Scheduler *work_sched = Scheduler::CreateNetScheduler();
+    work_sched->setName("workSched");
+    work_sched->start();
+    http::HttpServer *server = new http::HttpServer(true, work_sched);
     server->setName("http");
     Address::ptr addr = Address::LookupAnyIPAddress("0.0.0.0:8020");
     while (!server->bind(addr))
@@ -21,22 +22,33 @@ void run()
     server->start();
 }
 
-int main(int argc, char *argv[])
+void add_asyncLogger()
 {
-    lim_webserver::LogLevel level = LogLevel_TRACE;
-    lim_webserver::AsyncAppender::ptr aysnc = AppenderFactory::GetInstance()->defaultAsyncAppender();
+    AsyncAppender::ptr aysnc = AppenderFactory::GetInstance()->defaultAsyncAppender();
     auto fileapd = AppenderFactory::GetInstance()->defaultFileAppender();
     fileapd->setFile("./log/http_log.txt");
     aysnc->bindAppender(fileapd);
+    LOG_SYS()->addAppender(aysnc);
+}
+
+int main(int argc, char *argv[])
+{
+    lim_webserver::LogLevel level = LogLevel_TRACE;
+
     if (argc == 2)
     {
         level = LogLevel_DEBUG;
     }
     LOG_SYS()->setLevel(level);
-    LOG_SYS()->addAppender(aysnc);
     LOG_SYS()->detachAppender("console");
+    add_asyncLogger();
 
-    g_net->createTask(&run);
-    g_net->start();
+    Scheduler *accept_sched = Scheduler::CreateNetScheduler();
+    
+
+    accept_sched->setName("acceptSched");
+    accept_sched->createTask(&run);
+    accept_sched->start();
+    sleep(100);
     return 0;
 }

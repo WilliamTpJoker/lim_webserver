@@ -4,9 +4,9 @@
 #include "base/Noncopyable.h"
 #include "net/IoChannel.h"
 
+#include <map>
 #include <memory>
 #include <vector>
-#include <map>
 
 struct epoll_event;
 
@@ -20,13 +20,14 @@ namespace lim_webserver
         using ptr = std::unique_ptr<Poller>;
         using MutexType = Spinlock;
         using ChannelMap = std::map<int, IoChannel::ptr>;
+
     public:
         Poller();
         virtual ~Poller() {}
 
-        virtual void updateChannel(IoChannel::ptr channel)=0;
-        
-        virtual void removeChannel(IoChannel::ptr channel)=0;
+        virtual void updateChannel(IoChannel::ptr channel) = 0;
+
+        virtual void removeChannel(IoChannel::ptr channel) = 0;
 
         bool hasChannel(IoChannel::ptr channel) const;
 
@@ -37,7 +38,10 @@ namespace lim_webserver
          */
         virtual void poll(int ms) = 0;
 
+        virtual void bindEventFd(int fd) = 0;
+
     protected:
+        int m_wakefd;             // 唤醒句柄
         ChannelMap m_channel_map; // 管理的所有channel
         MutexType m_mutex;
     };
@@ -52,7 +56,7 @@ namespace lim_webserver
         ~EpollPoller();
 
         void updateChannel(IoChannel::ptr channel) override;
-        
+
         void removeChannel(IoChannel::ptr channel) override;
 
         /**
@@ -61,6 +65,8 @@ namespace lim_webserver
          * @param ms
          */
         void poll(int ms) override;
+
+        void bindEventFd(int fd) override;
 
     private:
         /**

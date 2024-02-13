@@ -39,10 +39,26 @@ namespace lim_webserver
         void start(int num_threads = 1);
 
         /**
+         * @brief 在新线程开始调度任务
+         *
+         * @param num_threads
+         */
+        void startInNewThread(int num_threads = 1);
+
+        /**
          * @brief 关闭调度
          *
          */
         void stop();
+
+        /**
+         * @brief 设置名字
+         *
+         * @param name
+         */
+        inline void setName(const std::string &name) { m_name = name; }
+
+        inline const std::string &name() const { return m_name; }
 
     private:
         Scheduler();
@@ -76,6 +92,7 @@ namespace lim_webserver
         size_t m_lastActiveIdx;                // 最后一次调度的处理器
         int m_threadId;                        // Scheduler所在线程
         bool m_started;                        // 开始标志位
+        std::string m_name;                    // 名字
         Thread::ptr m_thread = nullptr;        // 绑定线程
         MutexType m_mutex;                     // 锁
         ConditionVariable m_cond;              // 条件变量

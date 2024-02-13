@@ -85,12 +85,12 @@ namespace lim_webserver
          *
          */
         virtual void idle();
-
+    
         /**
          * @brief 停止
-         * 
-         * @return true 
-         * @return false 
+         *
+         * @return true
+         * @return false
          */
         virtual bool stopping();
 
@@ -146,6 +146,8 @@ namespace lim_webserver
     protected:
         int m_id;               // 编号
         Scheduler *m_scheduler; // 调度者
+        std::atomic_bool m_idled{false};     // 空闲标志位
+        std::atomic_bool m_notified{false};    // 通知标志位
 
     private:
         using TaskQueue = LFQueue<Task *>;
@@ -154,8 +156,6 @@ namespace lim_webserver
         TaskQueue m_runableQueue;            // 可工作队列
         std::list<Task *> m_garbageList;     // 待回收队列
         volatile bool m_activated = true;    // 激活标志位
-        volatile bool m_notified = false;    // 通知标志位
-        std::atomic_bool m_idled{false};     // 空闲标志位
         Thread::ptr m_thread;                // 绑定线程
         volatile uint64_t m_switchCount = 0; // 调度次数
         int m_addNewRemain;                  // 每轮调度可添加新任务次数

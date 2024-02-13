@@ -47,6 +47,5 @@ namespace lim_webserver
     private:
         Poller::ptr m_poller;  // IO模块
         int m_wakeFd;
-        IoChannel::ptr m_wakeChannel;
     };
 } // namespace lim_webserver

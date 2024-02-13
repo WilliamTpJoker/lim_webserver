@@ -9,7 +9,7 @@ namespace lim_webserver
     static ConfigerVar<uint64_t>::ptr g_tcp_server_read_timeout =
         Configer::Lookup("tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2), "tcp server read timeout");
 
-    TcpServer::TcpServer(Scheduler *accepter, Scheduler *worker) : m_accepter(accepter), m_worker(worker), m_recvTimeout(g_tcp_server_read_timeout->getValue())
+    TcpServer::TcpServer(Scheduler *worker, Scheduler *accepter) : m_accepter(accepter), m_worker(worker), m_recvTimeout(g_tcp_server_read_timeout->getValue())
     {
     }
 
@@ -80,6 +80,7 @@ namespace lim_webserver
         while (m_started)
         {
             Socket::ptr client = socket->accept();
+            LOG_TRACE(g_logger)<<"accept client: "<<client->peerAddress()->toString();
             if (client)
             {
                 client->setRecvTimeout(m_recvTimeout);
