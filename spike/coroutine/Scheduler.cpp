@@ -53,7 +53,7 @@ namespace lim_webserver
         }
         m_started = true;
 
-        m_mainProcessor->start();
+        m_mainProcessor->run();
     }
 
     void Scheduler::startInNewThread(int num_threads)

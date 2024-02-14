@@ -1,5 +1,93 @@
 # 开发更新日志
 
+## 2024/02/14
+
+将epoll线程融入调度系统，从而支持主从reactor架构，使得短连接性能提升，ab结果如下：
+
+``` bash
+Server Software:        http
+Server Hostname:        192.168.144.136
+Server Port:            8020
+
+Document Path:          /http
+Document Length:        11 bytes
+
+Concurrency Level:      200
+Time taken for tests:   5.500 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      830000 bytes
+HTML transferred:       110000 bytes
+Requests per second:    1818.21 [#/sec] (mean)
+Time per request:       109.998 [ms] (mean)
+Time per request:       0.550 [ms] (mean, across all concurrent requests)
+Transfer rate:          147.37 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   1.4      0      52
+Processing:     2  108  49.3     90     258
+Waiting:        0   66  43.8     57     238
+Total:          2  109  49.5     90     260
+
+Percentage of the requests served within a certain time (ms)
+  50%     90
+  66%    110
+  75%    139
+  80%    163
+  90%    193
+  95%    207
+  98%    217
+  99%    230
+ 100%    260 (longest request)
+```
+
+``` bash
+Server Software:        http
+Server Hostname:        192.168.144.136
+Server Port:            8020
+
+Document Path:          /http
+Document Length:        11 bytes
+
+Concurrency Level:      200
+Time taken for tests:   0.995 seconds
+Complete requests:      10000
+Failed requests:        0
+Keep-Alive requests:    10000
+Total transferred:      880000 bytes
+HTML transferred:       110000 bytes
+Requests per second:    10053.38 [#/sec] (mean)
+Time per request:       19.894 [ms] (mean)
+Time per request:       0.099 [ms] (mean, across all concurrent requests)
+Transfer rate:          863.96 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.1      0       3
+Processing:     0   19   8.4     20      84
+Waiting:        0   19   8.4     20      83
+Total:          0   19   8.4     20      84
+
+Percentage of the requests served within a certain time (ms)
+  50%     20
+  66%     21
+  75%     23
+  80%     25
+  90%     27
+  95%     30
+  98%     39
+  99%     42
+ 100%     84 (longest request)
+```
+
+> ab测试环境:ubuntu18.04 4核4GB\
+> 采用主从reactor结构：1 accepter, 1 worker\
+> 短连接:1800RPS; 长连接:11000RPS
+>
+> 同环境下Nginx服务器性能如下:\
+> 短连接:900RPS; 长连接:14000RPS
+
 ## 2024/02/02
 
 使用哈希表管理fd（取代数组），优化内存使用；使用红黑树记录所eventloop所管理的channel（取代数组），优化内存使用。经过测试实验发现，造成内存错误的原因是close函数的问题，具体问题出在哪里需要进一步排查。
@@ -49,7 +137,7 @@ Percentage of the requests served within a certain time (ms)
 ```
 
 > 第二版测试数据：单epoll线程单协程线程\
-> 短连接 1100 PRS   (800->1100)\
+> 短连接 1100 RPS   (800->1100)\
 > 长连接 11000 RPS (5000->11000)\
 > 可以发现，对唤醒机制的优化效果明显（在长连接中唤醒是频繁操作），而对短连接优化提升较少\
 > 同时，实验发现存在意外退出程序的风险，待进一步检测

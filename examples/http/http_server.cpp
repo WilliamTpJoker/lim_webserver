@@ -10,8 +10,8 @@ static lim_webserver::Logger::ptr g_logger = LOG_ROOT();
 void run()
 {
     Scheduler *work_sched = Scheduler::CreateNetScheduler();
-    work_sched->setName("workSched");
-    work_sched->start();
+    work_sched->setName("worker");
+    work_sched->startInNewThread();
     http::HttpServer *server = new http::HttpServer(true, work_sched);
     server->setName("http");
     Address::ptr addr = Address::LookupAnyIPAddress("0.0.0.0:8020");
@@ -46,9 +46,8 @@ int main(int argc, char *argv[])
     Scheduler *accept_sched = Scheduler::CreateNetScheduler();
     
 
-    accept_sched->setName("acceptSched");
+    accept_sched->setName("accepter");
     accept_sched->createTask(&run);
     accept_sched->start();
-    sleep(100);
     return 0;
 }
