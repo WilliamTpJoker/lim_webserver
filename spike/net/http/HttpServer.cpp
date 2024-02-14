@@ -26,7 +26,7 @@ namespace lim_webserver
 
                 HttpResponse::ptr rsp(new HttpResponse(req->version(), req->isClose() || !m_isKeepalive));
                 rsp->setHeader("Server", m_name);
-                rsp->setBody("hello world");
+                rsp->setBody("hello world, If you see this page, the lim web server is successfully installed and working. Further configuration is required.");
                 session->sendResponse(rsp);
 
                 LOG_TRACE(g_logger) << "cliet: " << session->peerAddressString() << ", request:\n" << req->toString();

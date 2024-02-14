@@ -88,6 +88,101 @@ Percentage of the requests served within a certain time (ms)
 > 同环境下Nginx服务器性能如下:\
 > 短连接:900RPS; 长连接:14000RPS
 
+``` bash
+Server Software:        nginx/1.24.0
+Server Hostname:        192.168.144.136
+Server Port:            80
+
+Document Path:          /http
+Document Length:        153 bytes
+
+Concurrency Level:      200
+Time taken for tests:   0.719 seconds
+Complete requests:      10000
+Failed requests:        0
+Non-2xx responses:      10000
+Keep-Alive requests:    10000
+Total transferred:      3080000 bytes
+HTML transferred:       1530000 bytes
+Requests per second:    13906.00 [#/sec] (mean)
+Time per request:       14.382 [ms] (mean)
+Time per request:       0.072 [ms] (mean, across all concurrent requests)
+Transfer rate:          4182.66 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.2      0       5
+Processing:     1   13  13.9     11     223
+Waiting:        1   13  13.8     11     223
+Total:          1   13  13.9     11     223
+
+Percentage of the requests served within a certain time (ms)
+  50%     11
+  66%     14
+  75%     15
+  80%     15
+  90%     19
+  95%     22
+  98%     43
+  99%     68
+ 100%    223 (longest request)
+```
+
+``` bash
+Benchmarking 192.168.144.136 (be patient)
+Completed 1000 requests
+Completed 2000 requests
+Completed 3000 requests
+Completed 4000 requests
+Completed 5000 requests
+Completed 6000 requests
+Completed 7000 requests
+Completed 8000 requests
+Completed 9000 requests
+Completed 10000 requests
+Finished 10000 requests
+
+
+Server Software:        nginx/1.24.0
+Server Hostname:        192.168.144.136
+Server Port:            80
+
+Document Path:          /http
+Document Length:        153 bytes
+
+Concurrency Level:      200
+Time taken for tests:   10.481 seconds
+Complete requests:      10000
+Failed requests:        0
+Non-2xx responses:      10000
+Total transferred:      3030000 bytes
+HTML transferred:       1530000 bytes
+Requests per second:    954.10 [#/sec] (mean)
+Time per request:       209.623 [ms] (mean)
+Time per request:       1.048 [ms] (mean, across all concurrent requests)
+Transfer rate:          282.32 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   1.7      0      95
+Processing:     3  208  45.2    204     384
+Waiting:        0  121  64.9    119     313
+Total:          3  209  45.4    205     385
+
+Percentage of the requests served within a certain time (ms)
+  50%    205
+  66%    221
+  75%    232
+  80%    239
+  90%    268
+  95%    287
+  98%    312
+  99%    338
+ 100%    385 (longest request)
+```
+
+> 从实验数据可以发现，nginx的长连接最快效率较高，但会有部分的连接有高时延；理论上来说，本作的设计更加合理，但造成最优性能不及nginx的原因可能是定时器的独立设计，后续考虑将定时器也融入到调度线程，并使用时间轮的方式优化性能。
+
 ## 2024/02/02
 
 使用哈希表管理fd（取代数组），优化内存使用；使用红黑树记录所eventloop所管理的channel（取代数组），优化内存使用。经过测试实验发现，造成内存错误的原因是close函数的问题，具体问题出在哪里需要进一步排查。
